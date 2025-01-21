@@ -129,6 +129,10 @@ GEM
       railties (>= 6.1)
     drb (2.2.1)
     ed25519 (1.3.0)
+    enumerations (2.6.0)
+      activerecord
+      activesupport
+      i18n
     erubi (1.13.1)
     et-orbi (1.2.11)
       tzinfo
@@ -428,6 +432,7 @@ DEPENDENCIES
   debug
   devise
   dotenv-rails
+  enumerations
   font-awesome-sass (~> 6.1)
   importmap-rails
   jbuilder

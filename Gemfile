@@ -71,3 +71,4 @@ end
 
 gem "tailwindcss-rails", "~> 3.2"
 gem "devise"
+gem "enumerations"

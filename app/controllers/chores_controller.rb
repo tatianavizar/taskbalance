@@ -1,5 +1,7 @@
 class ChoresController < ApplicationController
+  def initializer
 
+  end
   def index
     @chores = Chore.all
   end
@@ -13,20 +15,37 @@ class ChoresController < ApplicationController
     add_task_to_chores
   end
 
-private
+  def add
+    # 1) Récupérer la liste d'IDs des tâches cochées
+    task_ids = params[:task_ids] || []  # tableau ou liste vide par défaut
+    household_id = params[:household_id] || current_user.household.id
 
-  def add_task_to_chores
-    @task = Task.find(params[:id])
-    @chore = Chore.new(@task)
-    if @chore.save
-      redirect_to household_path
+    # 2) Pour chaque tâche sélectionnée, on crée un Chore
+    if task_ids.any?
+      task_ids.each do |task_id|
+        Chore.create!(
+          task_id: task_id,
+          household_id: household_id,
+          status: 0  # => 'pending'
+        )
+      end
+      redirect_to chores_path, notice: "Les tâches sélectionnées ont été ajoutées comme chores."
     else
-      render :new, status: :unprocessable_entity
+      redirect_to tasks_path, alert: "Aucune tâche sélectionnée."
     end
   end
 
-  def tasks_params
-    params.require(:task).permit(:name, :time_required, :frequency)
+private
+
+  def add_task_to_chores
+    @chore = Chore.new(chore_params)
+    @chore.status = 0
+    if @chore.save
+      redirect_to household_path
+    else
+      @tasks = Task.all
+      render :new, status: :unprocessable_entity
+    end
   end
 
   def chore_params
