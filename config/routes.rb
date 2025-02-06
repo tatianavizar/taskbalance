@@ -25,10 +25,8 @@ Rails.application.routes.draw do
   delete 'chores/remove', to: 'chores#remove', as: :chore_remove
 
 
-  resources :household_members, only: [:new, :create]
-
-
-  resources :households, only: [:new, :create]
-
+  resources :households do
+    resources :household_members
+  end
   resources :liked_tasks, only: [:create]
 end

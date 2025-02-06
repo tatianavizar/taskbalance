@@ -1,0 +1,4 @@
+
+<p><%= @household.id %></p>
+<p><%= @household.name %></p>
+<%= link_to "Ajouter un membre", new_household_household_member_path(household_id: @household.id) %>
