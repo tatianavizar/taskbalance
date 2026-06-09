@@ -1,4 +1,25 @@
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h1><%= @household.name %></h1>
+  <div>
+    <%= link_to "Modifier", edit_household_path(@household), class: "btn btn-outline-secondary btn-sm" %>
+    <%= link_to "Supprimer", household_path(@household), data: { turbo_method: :delete, turbo_confirm: "Supprimer ce foyer ?" }, class: "btn btn-outline-danger btn-sm" %>
+  </div>
+</div>
 
-<p><%= @household.id %></p>
-<p><%= @household.name %></p>
-<%= link_to "Ajouter un membre", new_household_household_member_path(household_id: @household.id) %>
+<h2 class="h5 mb-3">Membres</h2>
+
+<% if @household.users.empty? %>
+  <p class="text-muted">Aucun membre pour l'instant.</p>
+<% else %>
+  <ul class="list-group mb-3">
+    <% @household.users.each do |user| %>
+      <li class="list-group-item"><%= user.email %></li>
+    <% end %>
+  </ul>
+<% end %>
+
+<%= link_to "Inviter un membre", new_household_household_member_path(@household), class: "btn btn-outline-primary btn-sm" %>
+
+<div class="mt-4">
+  <%= link_to "Retour à mes foyers", households_path %>
+</div>

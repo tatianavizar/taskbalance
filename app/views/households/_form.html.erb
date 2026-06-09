@@ -1,0 +1,9 @@
+<%= simple_form_for @household do |f| %>
+  <%= f.error_notification %>
+
+  <div class="mb-3">
+    <%= f.input :name, label: "Nom du foyer", placeholder: "Ex: Famille Dupont" %>
+  </div>
+
+  <%= f.submit @household.new_record? ? "Créer le foyer" : "Mettre à jour", class: "btn btn-primary" %>
+<% end %>

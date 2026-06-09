@@ -1,7 +1,9 @@
 class HouseholdsController < ApplicationController
+  before_action :authenticate_user!
+  before_action :set_household, only: [:show, :edit, :update, :destroy]
 
   def index
-    @households = Household.all
+    @households = current_user.households
   end
 
   def new
@@ -11,21 +13,39 @@ class HouseholdsController < ApplicationController
   def create
     @household = Household.new(household_params)
     if @household.save
-      redirect_to household_path(@household)
-
+      @household.household_members.create!(user: current_user)
+      redirect_to household_path(@household), notice: "Foyer créé avec succès."
     else
       render :new, status: :unprocessable_entity
     end
   end
 
   def show
-    @household = Household.find(params[:id])
+  end
+
+  def edit
+  end
+
+  def update
+    if @household.update(household_params)
+      redirect_to household_path(@household), notice: "Foyer mis à jour."
+    else
+      render :edit, status: :unprocessable_entity
+    end
+  end
+
+  def destroy
+    @household.destroy
+    redirect_to households_path, notice: "Foyer supprimé."
   end
 
   private
 
-  def household_params
-    params.require(:household).permit(:name, :id)
+  def set_household
+    @household = current_user.households.find(params[:id])
   end
 
+  def household_params
+    params.require(:household).permit(:name)
+  end
 end
