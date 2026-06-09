@@ -7,17 +7,24 @@ class ChoresController < ApplicationController
   end
 
   def new
-    @chore = Chore.new
-    @tasks = Task.all
+    @household = current_user.households.find_by(id: params[:household_id])
+    redirect_to households_path, alert: t("chores.flash.household_required") and return unless @household
+
+    @chore = Chore.new(household: @household)
+    @tasks = Task.order(:category, :name).group_by(&:category)
+    @members = @household.users
   end
 
   def create
     @chore = Chore.new(chore_params)
     @chore.status = :pending
+
     if @chore.save
-      redirect_to household_path(@chore.household)
+      redirect_to household_path(@chore.household), notice: t("chores.flash.created")
     else
-      @tasks = Task.all
+      @household = @chore.household
+      @tasks = Task.order(:category, :name).group_by(&:category)
+      @members = @household&.users || []
       render :new, status: :unprocessable_entity
     end
   end
@@ -36,19 +43,25 @@ class ChoresController < ApplicationController
     end
   end
 
-  def edit; end
+  def edit
+    @household = @chore.household
+    @members = @household.users
+  end
 
   def update
     if @chore.update(chore_params)
-      redirect_to chores_path
+      redirect_to household_path(@chore.household), notice: t("chores.flash.updated")
     else
+      @household = @chore.household
+      @members = @household.users
       render :edit, status: :unprocessable_entity
     end
   end
 
   def destroy
+    household = @chore.household
     @chore.destroy
-    redirect_to chores_path
+    redirect_to household_path(household), notice: t("chores.flash.destroyed")
   end
 
   def mark_as_completed
@@ -59,10 +72,16 @@ class ChoresController < ApplicationController
 private
 
   def set_chore
-    @chore = Chore.find(params[:id])
+    @chore = current_user.chores.find(params[:id])
+  rescue ActiveRecord::RecordNotFound
+    redirect_to chores_path, alert: t("common.not_authorized")
   end
 
   def chore_params
-    params.require(:chore).permit(:household_id, :task_id, :status, :assigned_to_id, :mental_load, :execution_load, :time_required, :due_date)
+    params.require(:chore).permit(
+      :household_id, :task_id, :assigned_to_id,
+      :mental_load, :execution_load,
+      :time_required, :due_date
+    )
   end
 end

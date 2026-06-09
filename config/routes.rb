@@ -15,7 +15,7 @@ Rails.application.routes.draw do
 
   resources :tasks, only: [:index]
 
-  resources :chores, only: [:index, :create, :edit, :update, :destroy] do
+  resources :chores, only: [:index, :new, :create, :edit, :update, :destroy] do
     member do
       patch :mark_as_completed
     end

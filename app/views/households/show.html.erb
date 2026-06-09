@@ -18,11 +18,15 @@
   </ul>
 <% end %>
 
-<%= link_to t("households.show.invite_link"), new_household_household_member_path(@household), class: "btn btn-outline-primary btn-sm" %>
-<%= link_to t("chores.setup.title"), household_chores_setup_path(@household), class: "btn btn-outline-secondary btn-sm" %>
+<div class="d-flex gap-2 mb-3">
+  <%= link_to t("households.show.invite_link"), new_household_household_member_path(@household), class: "btn btn-outline-primary btn-sm" %>
+  <%= link_to t("chores.setup.title"), household_chores_setup_path(@household), class: "btn btn-outline-secondary btn-sm" %>
+  <%= link_to t("chores.new.title"), new_chore_path(household_id: @household.id), class: "btn btn-outline-success btn-sm" %>
+</div>
+
 <% chore_count = @household.chores.count %>
 <% if chore_count > 0 %>
-  <p class="mt-2 text-muted small"><%= t("chores.index.count", count: chore_count) %></p>
+  <p class="text-muted small"><%= t("chores.index.count", count: chore_count) %></p>
 <% end %>
 
 <div class="mt-4">

@@ -17,13 +17,19 @@
             <span class="badge ms-2 <%= chore.completed? ? 'bg-success' : 'bg-secondary' %>">
               <%= t("chores.index.status.#{chore.status}") %>
             </span>
+            <% if chore.due_date %>
+              <small class="text-muted ms-2"><%= chore.due_date.strftime("%b %d") %></small>
+            <% end %>
           </div>
-          <% unless chore.completed? %>
-            <%= button_to t("chores.index.mark_completed"),
-                  mark_as_completed_chore_path(chore),
-                  method: :patch,
-                  class: "btn btn-sm btn-outline-success" %>
-          <% end %>
+          <div class="d-flex gap-2">
+            <%= link_to t("common.edit"), edit_chore_path(chore), class: "btn btn-sm btn-outline-secondary" %>
+            <% unless chore.completed? %>
+              <%= button_to t("chores.index.mark_completed"),
+                    mark_as_completed_chore_path(chore),
+                    method: :patch,
+                    class: "btn btn-sm btn-outline-success" %>
+            <% end %>
+          </div>
         </li>
       <% end %>
     </ul>

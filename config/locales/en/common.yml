@@ -6,6 +6,7 @@ en:
     save: "Save"
     edit: "Edit"
     delete: "Delete"
+    not_authorized: "You are not authorised to perform this action."
     members_count:
       one: "%{count} member"
       other: "%{count} members"

@@ -1,7 +1,8 @@
-<div class="d-flex justify-content-between align-items-center mb-4">
+<div class="d-flex justify-content-between align-items-center mb-2">
   <h1><%= t("chores.setup.title") %></h1>
   <span class="text-muted"><%= @household.name %></span>
 </div>
+<p class="text-muted mb-4"><%= t("chores.setup.note") %></p>
 
 <%= form_with url: household_chores_setup_path(@household), method: :patch, local: true do %>
   <% @tasks_by_category.each do |category, tasks| %>

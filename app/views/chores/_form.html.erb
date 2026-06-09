@@ -1,0 +1,68 @@
+<%= form_with model: @chore, local: true do |f| %>
+  <%= f.hidden_field :household_id %>
+
+  <% if @chore.new_record? %>
+    <div class="mb-3">
+      <%= f.label :task_id, t("chores.form.task_label"), class: "form-label fw-semibold" %>
+      <%= f.grouped_collection_select :task_id, @tasks.keys, :last, :first,
+            :id, :name,
+            { prompt: t("chores.form.task_prompt") },
+            { class: "form-select #{'is-invalid' if @chore.errors[:task_id].any?}" } %>
+      <% if @chore.errors[:task_id].any? %>
+        <div class="invalid-feedback"><%= @chore.errors[:task_id].first %></div>
+      <% end %>
+    </div>
+  <% else %>
+    <div class="mb-3">
+      <%= f.label :task_id, t("chores.form.task_label"), class: "form-label fw-semibold" %>
+      <p class="form-control-plaintext"><%= @chore.task.name %></p>
+    </div>
+  <% end %>
+
+  <div class="mb-3">
+    <%= f.label :time_required, t("chores.form.time_required_label"), class: "form-label fw-semibold" %>
+    <%= f.number_field :time_required, min: 1,
+          placeholder: @chore.new_record? ? "e.g. 30" : @chore.task.time_required,
+          class: "form-control #{'is-invalid' if @chore.errors[:time_required].any?}" %>
+    <div class="form-text">
+      <% if @chore.persisted? %>
+        <%= t("chores.form.time_required_hint", task_default: @chore.task.time_required) %>
+      <% else %>
+        <%= t("chores.form.time_required_hint", default: "—") %>
+      <% end %>
+    </div>
+  </div>
+
+  <div class="mb-3">
+    <p class="form-label fw-semibold mb-1"><%= t("chores.form.assigned_to_label") %></p>
+    <%= f.collection_select :assigned_to_id, @members, :id, :email,
+          { include_blank: t("chores.form.assigned_to_prompt") },
+          { class: "form-select" } %>
+  </div>
+
+  <fieldset class="mb-3">
+    <legend class="form-label fw-semibold">
+      Load type
+      <small class="text-muted fw-normal">— <%= t("chores.form.load_note") %></small>
+    </legend>
+    <% if @chore.errors[:base].any? %>
+      <div class="alert alert-danger py-1 mb-2"><%= @chore.errors[:base].first %></div>
+    <% end %>
+    <div class="form-check">
+      <%= f.check_box :mental_load, class: "form-check-input", id: "chore_mental_load" %>
+      <%= f.label :mental_load, t("chores.form.mental_load_label"), class: "form-check-label" %>
+    </div>
+    <div class="form-check">
+      <%= f.check_box :execution_load, class: "form-check-input", id: "chore_execution_load" %>
+      <%= f.label :execution_load, t("chores.form.execution_load_label"), class: "form-check-label" %>
+    </div>
+  </fieldset>
+
+  <div class="mb-4">
+    <%= f.label :due_date, t("chores.form.due_date_label"), class: "form-label fw-semibold" %>
+    <%= f.date_field :due_date, class: "form-control" %>
+  </div>
+
+  <%= f.submit @chore.new_record? ? t("chores.form.submit_create") : t("chores.form.submit_update"),
+        class: "btn btn-primary" %>
+<% end %>

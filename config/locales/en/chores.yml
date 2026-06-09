@@ -11,11 +11,33 @@ en:
         pending: "Pending"
         in_progress: "In progress"
         completed: "Done"
+    new:
+      title: "Add a chore"
+    edit:
+      title: "Edit chore"
+    form:
+      task_label: "Task"
+      task_prompt: "Select a task..."
+      time_required_label: "Duration (minutes)"
+      time_required_hint: "Leave blank to use task default (%{task_default} min)"
+      mental_load_label: "Mental load — planning, organising, deciding"
+      execution_load_label: "Execution load — physically doing it"
+      load_note: "Required when assigning to a member"
+      assigned_to_label: "Assign to"
+      assigned_to_prompt: "Unassigned"
+      due_date_label: "Due date"
+      submit_create: "Add chore"
+      submit_update: "Save changes"
     setup:
       title: "Set up chores"
       submit: "Save chores"
+      note: "Duration and load type are configurable per chore after setup."
       flash:
         saved: "Household chores updated."
     flash:
+      created: "Chore added."
+      updated: "Chore updated."
+      destroyed: "Chore removed."
       added: "Selected tasks have been added."
       none_selected: "No tasks selected."
+      household_required: "Please select a household first."
