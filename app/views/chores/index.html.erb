@@ -12,7 +12,7 @@
         <li class="list-group-item d-flex justify-content-between align-items-center">
           <div>
             <span class="<%= 'text-decoration-line-through text-muted' if chore.completed? %>">
-              <%= chore.task.name %>
+              <%= chore.effective_name %>
             </span>
             <span class="badge ms-2 <%= chore.completed? ? 'bg-success' : 'bg-secondary' %>">
               <%= t("chores.index.status.#{chore.status}") %>

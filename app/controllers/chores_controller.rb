@@ -3,7 +3,7 @@ class ChoresController < ApplicationController
   before_action :set_chore, only: [:edit, :update, :destroy, :mark_as_completed]
 
   def index
-    @chores = current_user.chores.includes(:task, :household).order("households.name", "tasks.name")
+    @chores = current_user.chores.includes(:task, :household).order("households.name")
   end
 
   def new
@@ -11,7 +11,6 @@ class ChoresController < ApplicationController
     redirect_to households_path, alert: t("chores.flash.household_required") and return unless @household
 
     @chore = Chore.new(household: @household)
-    @tasks = Task.order(:category, :name).group_by(&:category)
     @members = @household.users
   end
 
@@ -23,7 +22,6 @@ class ChoresController < ApplicationController
       redirect_to household_path(@chore.household), notice: t("chores.flash.created")
     else
       @household = @chore.household
-      @tasks = Task.order(:category, :name).group_by(&:category)
       @members = @household&.users || []
       render :new, status: :unprocessable_entity
     end
@@ -59,6 +57,10 @@ class ChoresController < ApplicationController
   end
 
   def destroy
+    unless @chore.custom_chore?
+      redirect_to household_path(@chore.household), alert: t("chores.flash.cannot_delete_catalogue")
+      return
+    end
     household = @chore.household
     @chore.destroy
     redirect_to household_path(household), notice: t("chores.flash.destroyed")
@@ -79,7 +81,7 @@ private
 
   def chore_params
     params.require(:chore).permit(
-      :household_id, :task_id, :assigned_to_id,
+      :household_id, :task_id, :custom_name, :category, :assigned_to_id,
       :mental_load, :execution_load,
       :time_required, :due_date
     )

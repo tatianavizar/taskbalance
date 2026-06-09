@@ -1,0 +1,13 @@
+cook_meal:
+  name: Cook a meal
+  time_required: 45
+  priority: 3
+  category: cooking
+  recurring: false
+
+do_laundry:
+  name: Do laundry
+  time_required: 60
+  priority: 2
+  category: laundry
+  recurring: false

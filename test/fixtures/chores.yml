@@ -1,0 +1,28 @@
+smith_cooking:
+  household: smith_home
+  task: cook_meal
+  status: 0
+  mental_load: false
+  execution_load: false
+
+smith_laundry:
+  household: smith_home
+  task: do_laundry
+  status: 0
+  mental_load: false
+  execution_load: false
+
+smith_custom:
+  household: smith_home
+  custom_name: Fix the boiler
+  category: maintenance
+  status: 0
+  mental_load: false
+  execution_load: false
+
+jones_cooking:
+  household: jones_home
+  task: cook_meal
+  status: 0
+  mental_load: false
+  execution_load: false

@@ -50,4 +50,7 @@ Rails.application.configure do
 
   # Raise error when a before_action's only/except options reference missing actions.
   config.action_controller.raise_on_missing_callback_actions = true
+
+  # Prevent SassC from trying to process Tailwind v4's modern CSS syntax
+  config.assets.css_compressor = nil
 end

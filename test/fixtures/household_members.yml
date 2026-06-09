@@ -1,0 +1,11 @@
+alice_in_smith:
+  user: alice
+  household: smith_home
+
+bob_in_smith:
+  user: bob
+  household: smith_home
+
+alice_in_jones:
+  user: alice
+  household: jones_home

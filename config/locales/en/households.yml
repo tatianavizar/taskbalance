@@ -32,4 +32,5 @@ en:
       submit: "Add to household"
     flash:
       created: "%{email} has been added to the household."
+      invited: "Invitation sent to %{email}."
       not_found: "No account found with this email address."

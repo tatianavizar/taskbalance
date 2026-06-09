@@ -18,6 +18,10 @@ en:
     form:
       task_label: "Task"
       task_prompt: "Select a task..."
+      category_label: "Category"
+      category_prompt: "Select a category..."
+      name_label: "Chore name"
+      name_placeholder: "e.g. Fix leaky tap, Renew insurance..."
       time_required_label: "Duration (minutes)"
       time_required_hint: "Leave blank to use task default (%{task_default} min)"
       mental_load_label: "Mental load — planning, organising, deciding"
@@ -28,6 +32,8 @@ en:
       due_date_label: "Due date"
       submit_create: "Add chore"
       submit_update: "Save changes"
+      delete: "Delete chore"
+      delete_confirm: "Remove this chore permanently?"
     setup:
       title: "Set up chores"
       submit: "Save chores"
@@ -41,3 +47,4 @@ en:
       added: "Selected tasks have been added."
       none_selected: "No tasks selected."
       household_required: "Please select a household first."
+      cannot_delete_catalogue: "Catalogue chores cannot be deleted. Remove it from the household chores setup instead."

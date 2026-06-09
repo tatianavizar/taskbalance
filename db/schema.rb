@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_06_09_172035) do
+ActiveRecord::Schema[8.0].define(version: 2026_06_09_210809) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -29,7 +29,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_06_09_172035) do
   end
 
   create_table "chores", force: :cascade do |t|
-    t.bigint "task_id", null: false
+    t.bigint "task_id"
     t.bigint "household_id", null: false
     t.bigint "assigned_to_id"
     t.integer "status", default: 0
@@ -40,6 +40,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_06_09_172035) do
     t.integer "time_required"
     t.date "due_date"
     t.bigint "recurring_chore_id"
+    t.string "custom_name"
+    t.string "category"
     t.index ["assigned_to_id"], name: "index_chores_on_assigned_to_id"
     t.index ["household_id"], name: "index_chores_on_household_id"
     t.index ["recurring_chore_id"], name: "index_chores_on_recurring_chore_id"
@@ -59,6 +61,15 @@ ActiveRecord::Schema[8.0].define(version: 2026_06_09_172035) do
     t.string "name"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+  end
+
+  create_table "invitations", force: :cascade do |t|
+    t.string "email", null: false
+    t.bigint "household_id", null: false
+    t.string "token", null: false
+    t.datetime "created_at", precision: nil, null: false
+    t.index ["email", "household_id"], name: "index_invitations_on_email_and_household_id", unique: true
+    t.index ["token"], name: "index_invitations_on_token", unique: true
   end
 
   create_table "liked_tasks", force: :cascade do |t|
@@ -115,10 +126,11 @@ ActiveRecord::Schema[8.0].define(version: 2026_06_09_172035) do
   add_foreign_key "chore_logs", "users"
   add_foreign_key "chores", "households"
   add_foreign_key "chores", "recurring_chores"
-  add_foreign_key "chores", "tasks"
+  add_foreign_key "chores", "tasks", on_delete: :restrict, validate: false
   add_foreign_key "chores", "users", column: "assigned_to_id"
   add_foreign_key "household_members", "households"
   add_foreign_key "household_members", "users"
+  add_foreign_key "invitations", "households"
   add_foreign_key "liked_tasks", "tasks"
   add_foreign_key "liked_tasks", "users"
   add_foreign_key "recurring_chores", "households"

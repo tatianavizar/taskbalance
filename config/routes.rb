@@ -3,7 +3,7 @@ Rails.application.routes.draw do
   root "pages#home"
 
   # Devise pour les utilisateurs
-  devise_for :users
+  devise_for :users, controllers: { registrations: "users/registrations" }
 
   # Vérification de santé du serveur
   get "up" => "rails/health#show", as: :rails_health_check

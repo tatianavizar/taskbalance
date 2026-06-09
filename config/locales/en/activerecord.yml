@@ -25,6 +25,7 @@ en:
           attributes:
             base:
               at_least_one_load: "At least one load dimension must be filled in (mental or execution)"
+              task_or_name_required: "Enter a chore name"
         liked_task:
           attributes:
             task_id:
