@@ -8,7 +8,8 @@ class User < ApplicationRecord
   has_many :households, through: :household_members
   has_many :liked_tasks
   has_many :tasks, through: :liked_tasks
-  has_many :chores, through: :households
+  has_many :chores, through: :households       # all chores in the user's household(s)
+  has_many :assigned_chores, class_name: "Chore" # chores directly assigned to this user
 
 
   validates :email, presence: true, uniqueness: true, format: { with: URI::MailTo::EMAIL_REGEXP }

@@ -1,9 +1,9 @@
 class ChoresController < ApplicationController
-  def initializer
+  before_action :authenticate_user!
+  before_action :set_chore, only: [:edit, :update, :destroy, :mark_as_completed]
 
-  end
   def index
-    @chores = Chore.all
+    @chores = current_user.chores
   end
 
   def new
@@ -12,44 +12,63 @@ class ChoresController < ApplicationController
   end
 
   def create
-    add_task_to_chores
-  end
-
-  def add
-    # 1) Récupérer la liste d'IDs des tâches cochées
-    task_ids = params[:task_ids] || []  # tableau ou liste vide par défaut
-    household_id = params[:household_id] || current_user.household.id
-
-    # 2) Pour chaque tâche sélectionnée, on crée un Chore
-    if task_ids.any?
-      task_ids.each do |task_id|
-        Chore.create!(
-          task_id: task_id,
-          household_id: household_id,
-          status: 0  # => 'pending'
-        )
-      end
-      redirect_to chores_path, notice: "Les tâches sélectionnées ont été ajoutées comme chores."
-    else
-      redirect_to tasks_path, alert: "Aucune tâche sélectionnée."
-    end
-  end
-
-private
-
-  def add_task_to_chores
     @chore = Chore.new(chore_params)
-    @chore.status = 0
+    @chore.status = :pending
     if @chore.save
-      redirect_to household_path
+      redirect_to household_path(@chore.household)
     else
       @tasks = Task.all
       render :new, status: :unprocessable_entity
     end
   end
 
-  def chore_params
-    params.require(:chore).permit(:household_id, :task_id, :status)
+  def add
+    task_ids = params[:task_ids] || []
+    household_id = params[:household_id]
+
+    if task_ids.any?
+      task_ids.each do |task_id|
+        Chore.create!(task_id: task_id, household_id: household_id, status: :pending)
+      end
+      redirect_to chores_path, notice: "Les tâches sélectionnées ont été ajoutées."
+    else
+      redirect_to tasks_path, alert: "Aucune tâche sélectionnée."
+    end
   end
 
+  def edit; end
+
+  def update
+    if @chore.update(chore_params)
+      redirect_to chores_path
+    else
+      render :edit, status: :unprocessable_entity
+    end
+  end
+
+  def destroy
+    @chore.destroy
+    redirect_to chores_path
+  end
+
+  def remove
+    @chore = Chore.find(params[:id])
+    @chore.destroy
+    redirect_to chores_path
+  end
+
+  def mark_as_completed
+    @chore.completed!
+    redirect_to chores_path
+  end
+
+private
+
+  def set_chore
+    @chore = Chore.find(params[:id])
+  end
+
+  def chore_params
+    params.require(:chore).permit(:household_id, :task_id, :status, :user_id, :mental_load, :execution_load)
+  end
 end

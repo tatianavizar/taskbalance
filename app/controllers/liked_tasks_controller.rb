@@ -1,18 +1,16 @@
 class LikedTasksController < ApplicationController
-
-  def initializer
-    @user = current_user
-    @tasks = Task.all
-  end
-  def new
-    @liked_task = LikedTask.new
-  end
+  before_action :authenticate_user!
 
   def create
-    @liked_task = Like.new(
-      id_user: current_user.id,
-      id_task: Task.find(params[:id_task]),
+    @liked_task = LikedTask.new(
+      user_id: current_user.id,
+      task_id: params[:task_id],
       liked: params[:liked]
     )
+    if @liked_task.save
+      redirect_to tasks_path, notice: "Préférence enregistrée."
+    else
+      redirect_to tasks_path, alert: "Impossible d'enregistrer la préférence."
+    end
   end
 end

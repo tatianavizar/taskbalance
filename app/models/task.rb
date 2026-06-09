@@ -5,4 +5,5 @@ class Task < ApplicationRecord
   validates :name, presence: true
   validates :time_required, presence: true, numericality: { greater_than: 0 }
   validates :priority, presence: true, inclusion: { in: 1..5 }
+  validates :recurring, inclusion: { in: [true, false] }
 end

@@ -30,7 +30,7 @@ private
     @household = Household.find(params[:household_id])
   end
 
-  def household_members_params
+  def household_member_params
     params.require(:household_member).permit(:user_id)
   end
 end
