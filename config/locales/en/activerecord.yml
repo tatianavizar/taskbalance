@@ -29,3 +29,7 @@ en:
           attributes:
             task_id:
               taken: "You have already rated this task"
+        chore_log:
+          attributes:
+            base:
+              at_least_one_load: "At least one load dimension must be filled in (mental or execution)"

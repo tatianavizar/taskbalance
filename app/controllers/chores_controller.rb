@@ -63,6 +63,6 @@ private
   end
 
   def chore_params
-    params.require(:chore).permit(:household_id, :task_id, :status, :user_id, :mental_load, :execution_load)
+    params.require(:chore).permit(:household_id, :task_id, :status, :assigned_to_id, :mental_load, :execution_load, :time_required, :due_date)
   end
 end
