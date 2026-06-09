@@ -10,22 +10,40 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_06_09_120455) do
+ActiveRecord::Schema[8.0].define(version: 2026_06_09_172035) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+
+  create_table "chore_logs", force: :cascade do |t|
+    t.bigint "chore_id", null: false
+    t.bigint "household_id", null: false
+    t.bigint "user_id", null: false
+    t.boolean "mental_load", null: false
+    t.boolean "execution_load", null: false
+    t.integer "time_spent", null: false
+    t.datetime "completed_at", null: false
+    t.index ["chore_id"], name: "index_chore_logs_on_chore_id"
+    t.index ["household_id", "completed_at"], name: "index_chore_logs_on_household_id_and_completed_at"
+    t.index ["user_id", "completed_at"], name: "index_chore_logs_on_user_id_and_completed_at"
+    t.index ["user_id"], name: "index_chore_logs_on_user_id"
+  end
 
   create_table "chores", force: :cascade do |t|
     t.bigint "task_id", null: false
     t.bigint "household_id", null: false
-    t.bigint "user_id"
+    t.bigint "assigned_to_id"
     t.integer "status", default: 0
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.boolean "mental_load", default: false, null: false
     t.boolean "execution_load", default: false, null: false
+    t.integer "time_required"
+    t.date "due_date"
+    t.bigint "recurring_chore_id"
+    t.index ["assigned_to_id"], name: "index_chores_on_assigned_to_id"
     t.index ["household_id"], name: "index_chores_on_household_id"
+    t.index ["recurring_chore_id"], name: "index_chores_on_recurring_chore_id"
     t.index ["task_id"], name: "index_chores_on_task_id"
-    t.index ["user_id"], name: "index_chores_on_user_id"
   end
 
   create_table "household_members", force: :cascade do |t|
@@ -50,7 +68,24 @@ ActiveRecord::Schema[8.0].define(version: 2026_06_09_120455) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["task_id"], name: "index_liked_tasks_on_task_id"
+    t.index ["user_id", "task_id"], name: "index_liked_tasks_on_user_id_and_task_id", unique: true
     t.index ["user_id"], name: "index_liked_tasks_on_user_id"
+  end
+
+  create_table "recurring_chores", force: :cascade do |t|
+    t.bigint "household_id", null: false
+    t.bigint "task_id", null: false
+    t.bigint "assigned_to_id"
+    t.integer "frequency", null: false
+    t.integer "time_required"
+    t.boolean "mental_load", default: false, null: false
+    t.boolean "execution_load", default: false, null: false
+    t.boolean "active", default: true, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["household_id", "active"], name: "index_recurring_chores_on_household_id_and_active"
+    t.index ["household_id"], name: "index_recurring_chores_on_household_id"
+    t.index ["task_id"], name: "index_recurring_chores_on_task_id"
   end
 
   create_table "tasks", force: :cascade do |t|
@@ -60,6 +95,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_06_09_120455) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.boolean "recurring", default: false, null: false
+    t.string "category", default: "other", null: false
   end
 
   create_table "users", force: :cascade do |t|
@@ -75,11 +111,17 @@ ActiveRecord::Schema[8.0].define(version: 2026_06_09_120455) do
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
   end
 
+  add_foreign_key "chore_logs", "chores"
+  add_foreign_key "chore_logs", "users"
   add_foreign_key "chores", "households"
+  add_foreign_key "chores", "recurring_chores"
   add_foreign_key "chores", "tasks"
-  add_foreign_key "chores", "users"
+  add_foreign_key "chores", "users", column: "assigned_to_id"
   add_foreign_key "household_members", "households"
   add_foreign_key "household_members", "users"
   add_foreign_key "liked_tasks", "tasks"
   add_foreign_key "liked_tasks", "users"
+  add_foreign_key "recurring_chores", "households"
+  add_foreign_key "recurring_chores", "tasks"
+  add_foreign_key "recurring_chores", "users", column: "assigned_to_id"
 end

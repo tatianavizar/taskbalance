@@ -1,6 +1,4 @@
 <div>
-  <h1 class="font-bold text-4xl">Pages#home</h1>
-  <p>Find me in app/views/pages/home.html.erb</p>
-  <%= link_to "Créer un foyer", new_household_path %>
-  <%= link_to "Voir ses foyers", households_path %>
+  <%= link_to t("households.index.new_link"), new_household_path %>
+  <%= link_to t("households.index.title"), households_path %>
 </div>

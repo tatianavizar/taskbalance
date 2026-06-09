@@ -1,15 +1,15 @@
 <div class="d-flex justify-content-between align-items-center mb-4">
   <h1><%= @household.name %></h1>
   <div>
-    <%= link_to "Modifier", edit_household_path(@household), class: "btn btn-outline-secondary btn-sm" %>
-    <%= link_to "Supprimer", household_path(@household), data: { turbo_method: :delete, turbo_confirm: "Supprimer ce foyer ?" }, class: "btn btn-outline-danger btn-sm" %>
+    <%= link_to t("common.edit"), edit_household_path(@household), class: "btn btn-outline-secondary btn-sm" %>
+    <%= link_to t("common.delete"), household_path(@household), data: { turbo_method: :delete, turbo_confirm: t("households.show.delete_confirm") }, class: "btn btn-outline-danger btn-sm" %>
   </div>
 </div>
 
-<h2 class="h5 mb-3">Membres</h2>
+<h2 class="h5 mb-3"><%= t("households.show.members_title") %></h2>
 
 <% if @household.users.empty? %>
-  <p class="text-muted">Aucun membre pour l'instant.</p>
+  <p class="text-muted"><%= t("households.show.no_members") %></p>
 <% else %>
   <ul class="list-group mb-3">
     <% @household.users.each do |user| %>
@@ -18,8 +18,13 @@
   </ul>
 <% end %>
 
-<%= link_to "Inviter un membre", new_household_household_member_path(@household), class: "btn btn-outline-primary btn-sm" %>
+<%= link_to t("households.show.invite_link"), new_household_household_member_path(@household), class: "btn btn-outline-primary btn-sm" %>
+<%= link_to t("chores.setup.title"), household_chores_setup_path(@household), class: "btn btn-outline-secondary btn-sm" %>
+<% chore_count = @household.chores.count %>
+<% if chore_count > 0 %>
+  <p class="mt-2 text-muted small"><%= t("chores.index.count", count: chore_count) %></p>
+<% end %>
 
 <div class="mt-4">
-  <%= link_to "Retour à mes foyers", households_path %>
+  <%= link_to t("households.show.back_link"), households_path %>
 </div>

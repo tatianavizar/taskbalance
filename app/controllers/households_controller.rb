@@ -14,7 +14,7 @@ class HouseholdsController < ApplicationController
     @household = Household.new(household_params)
     if @household.save
       @household.household_members.create!(user: current_user)
-      redirect_to household_path(@household), notice: "Foyer créé avec succès."
+      redirect_to household_path(@household), notice: t("households.flash.created")
     else
       render :new, status: :unprocessable_entity
     end
@@ -28,7 +28,7 @@ class HouseholdsController < ApplicationController
 
   def update
     if @household.update(household_params)
-      redirect_to household_path(@household), notice: "Foyer mis à jour."
+      redirect_to household_path(@household), notice: t("households.flash.updated")
     else
       render :edit, status: :unprocessable_entity
     end
@@ -36,7 +36,7 @@ class HouseholdsController < ApplicationController
 
   def destroy
     @household.destroy
-    redirect_to households_path, notice: "Foyer supprimé."
+    redirect_to households_path, notice: t("households.flash.destroyed")
   end
 
   private

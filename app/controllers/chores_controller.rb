@@ -3,7 +3,7 @@ class ChoresController < ApplicationController
   before_action :set_chore, only: [:edit, :update, :destroy, :mark_as_completed]
 
   def index
-    @chores = current_user.chores
+    @chores = current_user.chores.includes(:task, :household).order("households.name", "tasks.name")
   end
 
   def new
@@ -30,9 +30,9 @@ class ChoresController < ApplicationController
       task_ids.each do |task_id|
         Chore.create!(task_id: task_id, household_id: household_id, status: :pending)
       end
-      redirect_to chores_path, notice: "Les tâches sélectionnées ont été ajoutées."
+      redirect_to chores_path, notice: t("chores.flash.added")
     else
-      redirect_to tasks_path, alert: "Aucune tâche sélectionnée."
+      redirect_to tasks_path, alert: t("chores.flash.none_selected")
     end
   end
 
@@ -63,6 +63,6 @@ private
   end
 
   def chore_params
-    params.require(:chore).permit(:household_id, :task_id, :status, :user_id, :mental_load, :execution_load)
+    params.require(:chore).permit(:household_id, :task_id, :status, :assigned_to_id, :mental_load, :execution_load, :time_required, :due_date)
   end
 end

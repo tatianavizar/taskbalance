@@ -1,0 +1,35 @@
+en:
+  households:
+    index:
+      title: "My households"
+      empty: "You don't belong to any household yet."
+      new_link: "Create a household"
+    show:
+      members_title: "Members"
+      no_members: "No members yet."
+      invite_link: "Invite a member"
+      back_link: "Back to my households"
+      delete_confirm: "Delete this household?"
+    new:
+      title: "New household"
+    edit:
+      title: "Edit household"
+    form:
+      name_label: "Household name"
+      name_placeholder: "e.g. Smith family"
+      submit_create: "Create household"
+      submit_update: "Update"
+    flash:
+      created: "Household created."
+      updated: "Household updated."
+      destroyed: "Household deleted."
+  household_members:
+    new:
+      title: "Invite a member"
+      household_label: "Household"
+      email_label: "Member's email address"
+      email_placeholder: "firstname@example.com"
+      submit: "Add to household"
+    flash:
+      created: "%{email} has been added to the household."
+      not_found: "No account found with this email address."

@@ -16,7 +16,7 @@ class HouseholdMembersController < ApplicationController
 
     @household_member = @household.household_members.new(user: user)
     if @household_member.save
-      redirect_to household_path(@household), notice: "#{user.email} a été ajouté(e) au foyer."
+      redirect_to household_path(@household), notice: t("household_members.flash.created", email: user.email)
     else
       render :new, status: :unprocessable_entity
     end

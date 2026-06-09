@@ -1,4 +1,4 @@
-<h1>Liste des Tâches</h1>
+<h1><%= t("tasks.index.title") %></h1>
 
 <%= form_with url: chores_add_path, method: :post, local: true do %>
   <% @tasks.each do |task| %>
@@ -8,7 +8,5 @@
     </div>
   <% end %>
 
-  <!-- Vous pouvez transmettre l'household_id si nécessaire -->
-
-  <%= submit_tag "Suivant" %>
+  <%= submit_tag t("tasks.index.submit") %>
 <% end %>

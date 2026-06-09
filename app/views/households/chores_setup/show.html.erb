@@ -1,0 +1,32 @@
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h1><%= t("chores.setup.title") %></h1>
+  <span class="text-muted"><%= @household.name %></span>
+</div>
+
+<%= form_with url: household_chores_setup_path(@household), method: :patch, local: true do %>
+  <% @tasks_by_category.each do |category, tasks| %>
+    <div class="card mb-4">
+      <div class="card-header fw-semibold">
+        <%= t("tasks.categories.#{category}") %>
+      </div>
+      <ul class="list-group list-group-flush">
+        <% tasks.each do |task| %>
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            <div class="form-check">
+              <%= check_box_tag "task_ids[]", task.id, @existing_task_ids.include?(task.id),
+                    class: "form-check-input", id: "task_#{task.id}" %>
+              <%= label_tag "task_#{task.id}", task.name, class: "form-check-label" %>
+            </div>
+            <small class="text-muted"><%= task.time_required %> min</small>
+          </li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <%= submit_tag t("chores.setup.submit"), class: "btn btn-primary" %>
+<% end %>
+
+<div class="mt-3">
+  <%= link_to t("common.cancel"), household_path(@household) %>
+</div>

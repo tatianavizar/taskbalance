@@ -1,0 +1,35 @@
+en:
+  activerecord:
+    models:
+      household: "Household"
+      user: "User"
+      chore: "Chore"
+      task: "Task"
+      liked_task: "Task preference"
+    attributes:
+      chore:
+        status: "Status"
+        mental_load: "Mental load"
+        execution_load: "Execution load"
+      task:
+        name: "Task name"
+        category: "Category"
+        priority: "Priority"
+        time_required: "Time required (min)"
+        recurring: "Recurring"
+      liked_task:
+        liked: "Liked"
+    errors:
+      models:
+        chore:
+          attributes:
+            base:
+              at_least_one_load: "At least one load dimension must be filled in (mental or execution)"
+        liked_task:
+          attributes:
+            task_id:
+              taken: "You have already rated this task"
+        chore_log:
+          attributes:
+            base:
+              at_least_one_load: "At least one load dimension must be filled in (mental or execution)"
