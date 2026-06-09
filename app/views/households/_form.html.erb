@@ -2,8 +2,8 @@
   <%= f.error_notification %>
 
   <div class="mb-3">
-    <%= f.input :name, label: "Nom du foyer", placeholder: "Ex: Famille Dupont" %>
+    <%= f.input :name, label: t("households.form.name_label"), placeholder: t("households.form.name_placeholder") %>
   </div>
 
-  <%= f.submit @household.new_record? ? "Créer le foyer" : "Mettre à jour", class: "btn btn-primary" %>
+  <%= f.submit @household.new_record? ? t("households.form.submit_create") : t("households.form.submit_update"), class: "btn btn-primary" %>
 <% end %>

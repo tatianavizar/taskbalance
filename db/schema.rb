@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_06_09_120455) do
+ActiveRecord::Schema[8.0].define(version: 2026_06_09_150834) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -50,6 +50,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_06_09_120455) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["task_id"], name: "index_liked_tasks_on_task_id"
+    t.index ["user_id", "task_id"], name: "index_liked_tasks_on_user_id_and_task_id", unique: true
     t.index ["user_id"], name: "index_liked_tasks_on_user_id"
   end
 
@@ -60,6 +61,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_06_09_120455) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.boolean "recurring", default: false, null: false
+    t.string "category", default: "other", null: false
   end
 
   create_table "users", force: :cascade do |t|

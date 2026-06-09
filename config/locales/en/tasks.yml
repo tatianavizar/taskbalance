@@ -1,0 +1,24 @@
+en:
+  tasks:
+    index:
+      title: "Task catalogue"
+      submit: "Next"
+    categories:
+      cooking: "Cooking"
+      groceries: "Groceries"
+      cleaning: "Cleaning"
+      laundry: "Laundry"
+      childcare: "Childcare"
+      admin: "Admin"
+      maintenance: "Maintenance"
+      other: "Other"
+    liking_session:
+      title: "My preferences"
+      submit: "Save preferences"
+      empty: "No chores set up for this household yet."
+      flash:
+        saved: "Preferences saved."
+  liked_tasks:
+    flash:
+      saved: "Preference saved."
+      error: "Could not save preference."

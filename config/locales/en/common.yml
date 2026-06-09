@@ -1,0 +1,16 @@
+en:
+  common:
+    back: "Back"
+    cancel: "Cancel"
+    next: "Next"
+    save: "Save"
+    edit: "Edit"
+    delete: "Delete"
+    members_count:
+      one: "%{count} member"
+      other: "%{count} members"
+  nav:
+    home: "Home"
+    messages: "Messages"
+    log_out: "Log out"
+    log_in: "Log in"

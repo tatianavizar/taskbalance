@@ -1,0 +1,16 @@
+en:
+  chores:
+    index:
+      title: "Chores"
+      empty: "No chores yet."
+      count:
+        one: "%{count} chore"
+        other: "%{count} chores"
+    setup:
+      title: "Set up chores"
+      submit: "Save chores"
+      flash:
+        saved: "Household chores updated."
+    flash:
+      added: "Selected tasks have been added."
+      none_selected: "No tasks selected."

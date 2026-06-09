@@ -1,17 +1,17 @@
-<h1 class="mb-4">Inviter un membre</h1>
+<h1 class="mb-4"><%= t("household_members.new.title") %></h1>
 
-<p class="text-muted mb-3">Foyer : <strong><%= @household.name %></strong></p>
+<p class="text-muted mb-3"><%= t("household_members.new.household_label") %>: <strong><%= @household.name %></strong></p>
 
 <%= simple_form_for [@household, @household_member] do |f| %>
   <%= f.error_notification %>
 
   <div class="mb-3">
-    <%= f.input :email, label: "Adresse email du membre", placeholder: "prenom@exemple.com" %>
+    <%= f.input :email, label: t("household_members.new.email_label"), placeholder: t("household_members.new.email_placeholder") %>
   </div>
 
-  <%= f.submit "Ajouter au foyer", class: "btn btn-primary" %>
+  <%= f.submit t("household_members.new.submit"), class: "btn btn-primary" %>
 <% end %>
 
 <div class="mt-3">
-  <%= link_to "Annuler", household_path(@household) %>
+  <%= link_to t("common.cancel"), household_path(@household) %>
 </div>

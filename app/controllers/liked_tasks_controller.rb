@@ -8,9 +8,9 @@ class LikedTasksController < ApplicationController
       liked: params[:liked]
     )
     if @liked_task.save
-      redirect_to tasks_path, notice: "Préférence enregistrée."
+      redirect_to tasks_path, notice: t("liked_tasks.flash.saved")
     else
-      redirect_to tasks_path, alert: "Impossible d'enregistrer la préférence."
+      redirect_to tasks_path, alert: t("liked_tasks.flash.error")
     end
   end
 end

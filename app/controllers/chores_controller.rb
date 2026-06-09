@@ -30,9 +30,9 @@ class ChoresController < ApplicationController
       task_ids.each do |task_id|
         Chore.create!(task_id: task_id, household_id: household_id, status: :pending)
       end
-      redirect_to chores_path, notice: "Les tâches sélectionnées ont été ajoutées."
+      redirect_to chores_path, notice: t("chores.flash.added")
     else
-      redirect_to tasks_path, alert: "Aucune tâche sélectionnée."
+      redirect_to tasks_path, alert: t("chores.flash.none_selected")
     end
   end
 

@@ -26,6 +26,8 @@ Rails.application.routes.draw do
 
   resources :households do
     resources :household_members
+    resource :chores_setup, only: [:show, :update], controller: "households/chores_setup"
+    resource :liking_session, only: [:show, :update], controller: "households/liking_sessions"
   end
   resources :liked_tasks, only: [:create]
 end
