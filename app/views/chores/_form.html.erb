@@ -4,8 +4,11 @@
   <% if @chore.new_record? %>
     <div class="mb-3">
       <%= f.label :task_id, t("chores.form.task_label"), class: "form-label fw-semibold" %>
-      <%= f.grouped_collection_select :task_id, @tasks.keys, :last, :first,
-            :id, :name,
+      <%= f.select :task_id,
+            grouped_options_for_select(
+              @tasks.map { |cat, tasks| [t("tasks.categories.#{cat}"), tasks.map { |task| [task.name, task.id] }] },
+              @chore.task_id
+            ),
             { prompt: t("chores.form.task_prompt") },
             { class: "form-select #{'is-invalid' if @chore.errors[:task_id].any?}" } %>
       <% if @chore.errors[:task_id].any? %>
@@ -28,7 +31,7 @@
       <% if @chore.persisted? %>
         <%= t("chores.form.time_required_hint", task_default: @chore.task.time_required) %>
       <% else %>
-        <%= t("chores.form.time_required_hint", default: "—") %>
+        <%= t("chores.form.time_required_hint", task_default: "—") %>
       <% end %>
     </div>
   </div>
