@@ -3,9 +3,14 @@ en:
     index:
       title: "Chores"
       empty: "No chores yet."
+      mark_completed: "Mark as done"
       count:
         one: "%{count} chore"
         other: "%{count} chores"
+      status:
+        pending: "Pending"
+        in_progress: "In progress"
+        completed: "Done"
     setup:
       title: "Set up chores"
       submit: "Save chores"

@@ -3,7 +3,7 @@ class ChoresController < ApplicationController
   before_action :set_chore, only: [:edit, :update, :destroy, :mark_as_completed]
 
   def index
-    @chores = current_user.chores
+    @chores = current_user.chores.includes(:task, :household).order("households.name", "tasks.name")
   end
 
   def new
