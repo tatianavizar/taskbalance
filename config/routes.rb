@@ -22,7 +22,6 @@ Rails.application.routes.draw do
   end
 
   post 'chores/add'
-  delete 'chores/remove', to: 'chores#remove', as: :chore_remove
 
 
   resources :households do

@@ -51,12 +51,6 @@ class ChoresController < ApplicationController
     redirect_to chores_path
   end
 
-  def remove
-    @chore = Chore.find(params[:id])
-    @chore.destroy
-    redirect_to chores_path
-  end
-
   def mark_as_completed
     @chore.completed!
     redirect_to chores_path
