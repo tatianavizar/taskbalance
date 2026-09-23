@@ -11,8 +11,6 @@ Rails.application.routes.draw do
   get "dashboard" => "pages#dashboard", as: :dashboard
 
 
-  resources :users, only: [:show]
-
   resources :tasks, only: [:index]
 
   resources :chores, only: [:index, :new, :create, :edit, :update, :destroy] do
@@ -20,9 +18,6 @@ Rails.application.routes.draw do
       patch :mark_as_completed
     end
   end
-
-  post 'chores/add'
-
 
   resources :households do
     resources :household_members

@@ -27,20 +27,6 @@ class ChoresController < ApplicationController
     end
   end
 
-  def add
-    task_ids = params[:task_ids] || []
-    household_id = params[:household_id]
-
-    if task_ids.any?
-      task_ids.each do |task_id|
-        Chore.create!(task_id: task_id, household_id: household_id, status: :pending)
-      end
-      redirect_to chores_path, notice: t("chores.flash.added")
-    else
-      redirect_to tasks_path, alert: t("chores.flash.none_selected")
-    end
-  end
-
   def edit
     @household = @chore.household
     @members = @household.users

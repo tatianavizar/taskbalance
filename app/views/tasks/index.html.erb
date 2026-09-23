@@ -1,12 +1,24 @@
-<h1><%= t("tasks.index.title") %></h1>
+<h1 class="mb-2"><%= t("tasks.index.title") %></h1>
+<p class="text-muted"><%= t("tasks.index.intro") %></p>
 
-<%= form_with url: chores_add_path, method: :post, local: true do %>
-  <% @tasks.each do |task| %>
-    <div>
-      <%= check_box_tag 'task_ids[]', task.id %>
-      <%= task.name %>
-    </div>
+<% if @tasks_by_category.empty? %>
+  <p class="text-muted"><%= t("tasks.index.empty") %></p>
+<% else %>
+  <% @tasks_by_category.each do |category, tasks| %>
+    <h2 class="h5 mt-4"><%= t("tasks.categories.#{category}", default: category.to_s.humanize) %></h2>
+    <ul class="list-group">
+      <% tasks.each do |task| %>
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          <%= task.name %>
+          <% if task.time_required.present? %>
+            <span class="text-muted small"><%= t("tasks.index.time_required", count: task.time_required) %></span>
+          <% end %>
+        </li>
+      <% end %>
+    </ul>
   <% end %>
-
-  <%= submit_tag t("tasks.index.submit") %>
 <% end %>
+
+<div class="mt-4">
+  <%= link_to t("households.index.title"), households_path %>
+</div>

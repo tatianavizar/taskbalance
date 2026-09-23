@@ -10,6 +10,12 @@ Full product documentation is at `~/Desktop/50-50-app/`. Before making product d
 
 **Tone rule (non-negotiable):** the product is feminist in message, universal in execution. Factual and direct. Never soften stats or protect a failing partner from the discomfort of the numbers. Apply the filter: "would we write this for an engaged masculine brand?" — if not, rephrase.
 
+## Repository location
+
+The app lives at `~/code/taskbalance`. It previously sat directly in `/Users/tatiana`, which meant the git root was the home directory: `git add -A` would have staged `~/.ssh/id_ed25519`, shell history and personal files, and rubocop/brakeman/Tailwind all scanned the whole home tree (the Tailwind build alone took ~60s; it is now ~70ms). Moving it also un-merged `public/` from macOS's `~/Public` share folder, which the case-insensitive filesystem had been treating as the same directory. Do not move it back.
+
+`.gitignore` blocks private keys, `.env*`, `.npmrc`, `.ssh/` and `*.key`/`*.pem`. Two files are tracked deliberately: `config/credentials.yml.enc` (encrypted, useless without the ignored `config/master.key`) and `.kamal/secrets` (stock template, shell references only).
+
 ## Core mechanic
 
 - The **household** is the entity that progresses, not individuals.
@@ -25,12 +31,17 @@ Full product documentation is at `~/Desktop/50-50-app/`. Before making product d
 | `Household` | A home/group. Aggregates calculated from individual logs — never stores raw behavioral data directly. |
 | `HouseholdMember` | Join table — unique per user+household pair. |
 | `Task` | A task from the pre-defined catalogue. `name`, `time_required` (default duration in minutes), `priority` (1–5). |
-| `Chore` | An instance of a Task assigned to a Household. Optional `user_id` = who is assigned. `status` integer (0 = pending). |
+| `Chore` | A chore belonging to a Household. `task_id` optional: set = catalogue chore, `nil` = **custom chore** (uses `custom_name` + `category`). Assignee is `assigned_to_id` (not `user_id`). `status` enum (`pending`/`in_progress`/`completed`). Carries its own `mental_load` / `execution_load` booleans, `time_required`, `due_date`. |
+| `ChoreLog` | One completion of a Chore by a User. Holds the two load dimensions (`mental_load`, `execution_load`), `time_spent`, `completed_at`. This is the raw behavioural record. |
+| `RecurringChore` | Template that spawns Chores. `frequency` enum (`daily`/`weekly`/`monthly`/`annually`), `active` flag. |
+| `Invitation` | Pending household invite by email. Unique per email+household, `token` generated on create. |
 | `LikedTask` | User preference for a Task — `liked` boolean. Used for task assignment suggestions. |
 
 Key relationship: `User → has_many :chores, through: :households` — a user sees all chores for every household they belong to, not just personally assigned ones.
 
-**Missing from schema (to implement):** mental load vs execution load distinction per log; streak/level tracking; recurring task support.
+**`task_id` is nullable — always account for custom chores.** Any code that does `chores.pluck(:task_id)` or `chores.map(&:task)` gets a `nil` for every custom chore. This has already caused a silent data-loss bug and a 500; scope with `where.not(task_id: nil)` when you mean catalogue chores only.
+
+**Still missing from schema:** streak/level tracking; the 4-week imbalance block.
 
 ## Data ownership rule (architectural constraint)
 
@@ -45,7 +56,7 @@ bin/rails test                   # full test suite
 bin/rails test test/models/user_test.rb      # single file
 bin/rails test test/models/user_test.rb:15   # single test by line
 bin/rubocop                      # lint (rubocop-rails-omakase)
-brakeman                         # security static analysis
+bundle exec brakeman             # security static analysis
 bin/rails db:migrate
 bin/rails tailwindcss:build      # compile Tailwind once
 ```
@@ -60,10 +71,10 @@ Two stylesheet pipelines coexist:
 
 Prefer Tailwind utilities for new layout work; Bootstrap components (modals, alerts) are already imported.
 
-## Known bugs to fix
+## Known issues
 
-- `Chore` status is stored as an integer but validated against string values — validation is broken.
-- `LikedTasksController#create` references non-existent class `Like` instead of `LikedTask`.
-- `PagesController#dashboard` has dead code (`current_user = @user`, misuse of `tasks.empty?`) — needs auth guard and correct chore scoping.
-- `ChoresController` has a dead `initializer` stub and duplicated logic between `create` and `add`.
-- `household_members_params` method name typo in `HouseholdMembersController` (missing the `_params` suffix convention — the permit call is unreachable).
+- ~~Gem directory partly root-owned~~ — **fixed.** A past `sudo gem install` had left root-owned files under `/opt/homebrew/lib/ruby/gems/3.4.0`, making `bundle install` fail with `Bundler::PermissionError`. Resolved with `sudo chown -R "$(whoami)":admin /opt/homebrew/lib/ruby/gems/3.4.0`. Gems now install to the Homebrew prefix again; if the error ever returns, that chown is the fix.
+- `HouseholdsController#destroy` lets any member delete a shared household outright, with no confirmation beyond the UI dialog and no transfer of ownership.
+- **`dependent: :destroy` on `Household → chores` cascades to `chore_logs`**, which contradicts the data-ownership rule above (logs belong to the individual). Deleting a household currently destroys its members' logs. Needs a decision: detach logs from chores, or soft-delete households.
+- `Households::LikingSessionsController#update` writes a `LikedTask` for any `task_id` posted, without checking the task belongs to the household.
+- `TasksController#index` is a read-only catalogue. Chores are added to a household via `households/chores_setup`.

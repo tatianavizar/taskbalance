@@ -4,7 +4,9 @@ module Households
     before_action :set_household
 
     def show
-      chores = @household.chores.includes(:task).order("tasks.category", "tasks.name")
+      chores = @household.chores.where.not(task_id: nil)
+                 .includes(:task).references(:task)
+                 .order("tasks.category", "tasks.name")
       @tasks_by_category = chores.map(&:task).group_by(&:category)
       @liked_by_task_id = current_user.liked_tasks
                             .where(task_id: chores.map(&:task_id))
