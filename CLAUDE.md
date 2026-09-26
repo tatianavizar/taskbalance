@@ -32,7 +32,7 @@ The app lives at `~/code/taskbalance`. It previously sat directly in `/Users/tat
 | `HouseholdMember` | Join table — unique per user+household pair. |
 | `Task` | A task from the pre-defined catalogue. `name`, `time_required` (default duration in minutes), `priority` (1–5). |
 | `Chore` | A chore belonging to a Household. `task_id` optional: set = catalogue chore, `nil` = **custom chore** (uses `custom_name` + `category`). Assignee is `assigned_to_id` (not `user_id`). `status` enum (`pending`/`in_progress`/`completed`). Carries its own `mental_load` / `execution_load` booleans, `time_required`, `due_date`. |
-| `ChoreLog` | One completion of a Chore by a User. Holds the two load dimensions (`mental_load`, `execution_load`), `time_spent`, `completed_at`. This is the raw behavioural record. |
+| `ChoreLog` | One completion of a Chore by a User. Holds the two load dimensions (`mental_load`, `execution_load`), `time_spent`, `completed_at`. This is the raw behavioural record. `chore_id` and `household_id` are **nullable** and nullified on delete; `user_id` is not. `chore_name` and `category` are snapshotted at creation so a detached log stays readable. |
 | `RecurringChore` | Template that spawns Chores. `frequency` enum (`daily`/`weekly`/`monthly`/`annually`), `active` flag. |
 | `Invitation` | Pending household invite by email. Unique per email+household, `token` generated on create. |
 | `LikedTask` | User preference for a Task — `liked` boolean. Used for task assignment suggestions. |
@@ -46,6 +46,8 @@ Key relationship: `User → has_many :chores, through: :households` — a user s
 ## Data ownership rule (architectural constraint)
 
 Logs belong to the individual. The household is a calculated aggregate. When a user leaves a household, their logs follow them. This is a security/legal decision, not just a design choice — see `~/Desktop/50-50-app/project/04_tech/securite.md`.
+
+**Enforced in the schema.** `chore_logs.chore_id` and `household_id` are nullable with `on_delete: :nullify`; `user_id` is `NOT NULL`. Destroying a chore or a whole household detaches its logs instead of deleting them, and `ChoreLog` snapshots `chore_name`/`category` on create so a detached log still says what was done. Covered by `test/models/chore_log_test.rb`. Do not reintroduce `dependent: :destroy` on either association.
 
 ## Commands
 
@@ -75,6 +77,5 @@ Prefer Tailwind utilities for new layout work; Bootstrap components (modals, ale
 
 - ~~Gem directory partly root-owned~~ — **fixed.** A past `sudo gem install` had left root-owned files under `/opt/homebrew/lib/ruby/gems/3.4.0`, making `bundle install` fail with `Bundler::PermissionError`. Resolved with `sudo chown -R "$(whoami)":admin /opt/homebrew/lib/ruby/gems/3.4.0`. Gems now install to the Homebrew prefix again; if the error ever returns, that chown is the fix.
 - `HouseholdsController#destroy` lets any member delete a shared household outright, with no confirmation beyond the UI dialog and no transfer of ownership.
-- **`dependent: :destroy` on `Household → chores` cascades to `chore_logs`**, which contradicts the data-ownership rule above (logs belong to the individual). Deleting a household currently destroys its members' logs. Needs a decision: detach logs from chores, or soft-delete households.
 - `Households::LikingSessionsController#update` writes a `LikedTask` for any `task_id` posted, without checking the task belongs to the household.
 - `TasksController#index` is a read-only catalogue. Chores are added to a household via `households/chores_setup`.

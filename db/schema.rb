@@ -10,18 +10,20 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_06_09_210809) do
+ActiveRecord::Schema[8.0].define(version: 2026_09_26_173338) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
   create_table "chore_logs", force: :cascade do |t|
-    t.bigint "chore_id", null: false
-    t.bigint "household_id", null: false
+    t.bigint "chore_id"
+    t.bigint "household_id"
     t.bigint "user_id", null: false
     t.boolean "mental_load", null: false
     t.boolean "execution_load", null: false
     t.integer "time_spent", null: false
     t.datetime "completed_at", null: false
+    t.string "chore_name"
+    t.string "category"
     t.index ["chore_id"], name: "index_chore_logs_on_chore_id"
     t.index ["household_id", "completed_at"], name: "index_chore_logs_on_household_id_and_completed_at"
     t.index ["user_id", "completed_at"], name: "index_chore_logs_on_user_id_and_completed_at"
@@ -122,7 +124,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_06_09_210809) do
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
   end
 
-  add_foreign_key "chore_logs", "chores"
+  add_foreign_key "chore_logs", "chores", on_delete: :nullify
+  add_foreign_key "chore_logs", "households", on_delete: :nullify
   add_foreign_key "chore_logs", "users"
   add_foreign_key "chores", "households"
   add_foreign_key "chores", "recurring_chores"

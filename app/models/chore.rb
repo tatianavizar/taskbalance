@@ -5,7 +5,8 @@ class Chore < ApplicationRecord
   belongs_to :task, optional: true
   belongs_to :assigned_to, class_name: "User", foreign_key: :assigned_to_id, optional: true
   belongs_to :recurring_chore, optional: true
-  has_many :chore_logs, dependent: :destroy
+  # Logs outlive their chore: they belong to the user, not the household.
+  has_many :chore_logs, dependent: :nullify
 
   enum :status, { pending: 0, in_progress: 1, completed: 2 }
 
