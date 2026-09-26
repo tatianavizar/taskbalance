@@ -1,6 +1,6 @@
 class ChoresController < ApplicationController
   before_action :authenticate_user!
-  before_action :set_chore, only: [:edit, :update, :destroy, :mark_as_completed]
+  before_action :set_chore, only: [:edit, :update, :destroy]
 
   def index
     @chores = current_user.chores.includes(:task, :household).order("households.name")
@@ -50,11 +50,6 @@ class ChoresController < ApplicationController
     household = @chore.household
     @chore.destroy
     redirect_to household_path(household), notice: t("chores.flash.destroyed")
-  end
-
-  def mark_as_completed
-    @chore.completed!
-    redirect_to chores_path
   end
 
 private

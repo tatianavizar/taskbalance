@@ -13,6 +13,7 @@ class ChoreLog < ApplicationRecord
   validates :time_spent, presence: true, numericality: { greater_than: 0 }
   validates :completed_at, presence: true
   validate :at_least_one_load_dimension
+  validate :user_must_belong_to_household, on: :create
 
   # True once the originating chore or household has been destroyed.
   def detached?
@@ -27,6 +28,17 @@ private
     self.chore_name ||= chore.effective_name
     self.category ||= chore.effective_category
     self.household_id ||= chore.household_id
+  end
+
+  # The completion form lets you log on another member's behalf, so the posted
+  # user_id has to be checked against the household rather than trusted.
+  # Skipped when household is nil, which is how a detached log looks.
+  def user_must_belong_to_household
+    return if household.nil? || user_id.nil?
+
+    unless household.user_ids.include?(user_id)
+      errors.add(:user_id, I18n.t("activerecord.errors.models.chore_log.attributes.user_id.not_a_member"))
+    end
   end
 
   def at_least_one_load_dimension

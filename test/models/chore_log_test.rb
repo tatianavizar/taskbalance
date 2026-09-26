@@ -86,6 +86,33 @@ class ChoreLogTest < ActiveSupport::TestCase
     assert_equal ["Cook a meal", "Do laundry"], kept.order(:chore_name).pluck(:chore_name)
   end
 
+  # --- attribution ---
+
+  test "accepts any member of the chore's household as the doer" do
+    log = build_log(user: users(:bob))
+    assert log.save, log.errors.full_messages.to_sentence
+  end
+
+  test "rejects a doer who is not in the household" do
+    outsider = User.create!(email: "outsider-model@test.com", password: "password123")
+    log = build_log(user: outsider)
+
+    assert_not log.save
+    assert_includes log.errors[:user_id].join, "not a member"
+  ensure
+    outsider&.destroy
+  end
+
+  test "the membership check does not block updating a detached log" do
+    log = build_log
+    log.save!
+    @household.destroy
+    log.reload
+
+    assert_nil log.household_id
+    assert log.update(time_spent: 99), log.errors.full_messages.to_sentence
+  end
+
   # --- validations still hold ---
 
   test "requires at least one load dimension" do

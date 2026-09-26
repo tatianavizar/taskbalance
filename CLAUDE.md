@@ -69,9 +69,10 @@ Two stylesheet pipelines coexist:
 
 - **Bootstrap** via `application.scss` → partials in `assets/stylesheets/components/` and `pages/`
 - **Tailwind** via `application.tailwind.css` → utility classes
-- Both loaded in `layouts/application.html.erb` alongside `inter-font.css`
 
-Prefer Tailwind utilities for new layout work; Bootstrap components (modals, alerts) are already imported.
+**Only Tailwind is actually loaded.** `layouts/application.html.erb` links `tailwind` and `inter-font` — `application.scss` is never referenced, so every Bootstrap class in the existing views (`btn`, `form-control`, `list-group`, `badge`…) is inert. Write new markup in Tailwind.
+
+**No JavaScript is loaded either** — the layout has no `javascript_importmap_tags`, so Turbo is absent. Use real form submits (`button_to`, `form_with`) and plain links. `link_to ... data: { turbo_method: :delete }` silently issues a GET; several views still do this and their delete links do nothing.
 
 ## Known issues
 

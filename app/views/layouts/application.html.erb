@@ -23,6 +23,16 @@
   </head>
 
   <body>
+    <% if flash.any? %>
+      <div class="container mx-auto mt-6 px-5">
+        <% flash.each do |type, message| %>
+          <div class="mb-3 rounded border px-4 py-3 text-sm <%= type.to_s == "alert" ? "border-red-300 bg-red-50 text-red-800" : "border-green-300 bg-green-50 text-green-800" %>">
+            <%= message %>
+          </div>
+        <% end %>
+      </div>
+    <% end %>
+
     <main class="container mx-auto mt-28 px-5 flex">
       <%= yield %>
     </main>

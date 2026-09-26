@@ -26,3 +26,21 @@ jones_cooking:
   status: 0
   mental_load: false
   execution_load: false
+
+smith_recurring:
+  household: smith_home
+  task: do_laundry
+  recurring_chore: smith_weekly_laundry
+  status: 0
+  mental_load: false
+  execution_load: true
+  due_date: <%= Date.today %>
+
+smith_from_broken_template:
+  household: smith_home
+  task: cook_meal
+  recurring_chore: smith_broken_template
+  status: 0
+  mental_load: false
+  execution_load: false
+  due_date: <%= Date.today %>

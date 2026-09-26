@@ -14,9 +14,7 @@ Rails.application.routes.draw do
   resources :tasks, only: [:index]
 
   resources :chores, only: [:index, :new, :create, :edit, :update, :destroy] do
-    member do
-      patch :mark_as_completed
-    end
+    resource :completion, only: [:new, :create], controller: "chores/completions"
   end
 
   resources :households do

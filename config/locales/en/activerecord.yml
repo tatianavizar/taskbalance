@@ -6,6 +6,7 @@ en:
       chore: "Chore"
       task: "Task"
       liked_task: "Task preference"
+      chore_log: "Chore log"
     attributes:
       chore:
         status: "Status"
@@ -19,6 +20,13 @@ en:
         recurring: "Recurring"
       liked_task:
         liked: "Liked"
+      chore_log:
+        mental_load: "Mental load"
+        execution_load: "Execution load"
+        time_spent: "Time spent"
+        completed_at: "Completed at"
+        chore_name: "Chore"
+        user_id: "Done by"
     errors:
       models:
         chore:
@@ -34,3 +42,5 @@ en:
           attributes:
             base:
               at_least_one_load: "At least one load dimension must be filled in (mental or execution)"
+            user_id:
+              not_a_member: "is not a member of this household"
