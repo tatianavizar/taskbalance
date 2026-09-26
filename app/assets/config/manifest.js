@@ -1,6 +1,5 @@
- //= link tailwind.css
- //= link_tree ../images
+//= link_tree ../images
+//= link_tree ../../javascript .js
 //= link application.css
-//= link application.js
+//= link tailwind.css
 //= link inter-font.css
-
