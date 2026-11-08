@@ -1,2 +1,20 @@
-<h1>Dashboard</h1>
-<p><%= current_user.email %></p>
+<% provide :title, t("nav.home") %>
+<h1 class="screen-title"><%= t("nav.home") %></h1>
+
+<% if current_household %>
+  <div class="list-stack">
+    <%= list_row title: t("nav.tasks"), subtitle: t("chores.index.count", count: @chores.size), href: chores_path %>
+    <%= list_row title: t("nav.household"), subtitle: current_household.name, href: household_path(current_household) %>
+  </div>
+<% else %>
+  <%= callout do %>
+    <p class="m-0"><%= t("households.index.empty") %></p>
+  <% end %>
+  <%= sticky_cta do %>
+    <%= link_to t("households.index.new_link"), new_household_path, class: "btn btn-primary" %>
+  <% end %>
+<% end %>
+
+<% if user_signed_in? %>
+  <%= button_to t("nav.log_out"), destroy_user_session_path, method: :delete, class: "btn btn-secondary" %>
+<% end %>

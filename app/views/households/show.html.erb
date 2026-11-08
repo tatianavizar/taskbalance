@@ -1,34 +1,28 @@
-<div class="d-flex justify-content-between align-items-center mb-4">
-  <h1><%= @household.name %></h1>
-  <div>
-    <%= link_to t("common.edit"), edit_household_path(@household), class: "btn btn-outline-secondary btn-sm" %>
-    <%= link_to t("common.delete"), household_path(@household), data: { turbo_method: :delete, turbo_confirm: t("households.show.delete_confirm") }, class: "btn btn-outline-danger btn-sm" %>
-  </div>
+<% provide :title, @household.name %>
+<div>
+  <h1 class="screen-title"><%= @household.name %></h1>
+  <p class="screen-subtitle"><%= t("common.members_count", count: @household.users.size) %> · <%= t("chores.index.count", count: @household.chores.count) %></p>
 </div>
 
-<h2 class="h5 mb-3"><%= t("households.show.members_title") %></h2>
+<section class="flex flex-col gap-3" aria-labelledby="members-title">
+  <h2 id="members-title" class="text-base font-bold m-0 font-sans"><%= t("households.show.members_title") %></h2>
+  <% if @household.users.empty? %>
+    <p class="text-muted m-0"><%= t("households.show.no_members") %></p>
+  <% else %>
+    <div class="list-stack">
+      <% @household.users.each_with_index do |user, index| %>
+        <%= list_row title: user.email, leading: avatar(initials: member_initials(user), color: member_color(index), size: 36) %>
+      <% end %>
+    </div>
+  <% end %>
+</section>
 
-<% if @household.users.empty? %>
-  <p class="text-muted"><%= t("households.show.no_members") %></p>
-<% else %>
-  <ul class="list-group mb-3">
-    <% @household.users.each do |user| %>
-      <li class="list-group-item"><%= user.email %></li>
-    <% end %>
-  </ul>
-<% end %>
-
-<div class="d-flex gap-2 mb-3">
-  <%= link_to t("households.show.invite_link"), new_household_household_member_path(@household), class: "btn btn-outline-primary btn-sm" %>
-  <%= link_to t("chores.setup.title"), household_chores_setup_path(@household), class: "btn btn-outline-secondary btn-sm" %>
-  <%= link_to t("chores.new.title"), new_chore_path(household_id: @household.id), class: "btn btn-outline-success btn-sm" %>
+<div class="list-stack">
+  <%= list_row title: t("households.show.invite_link"), href: new_household_household_member_path(@household) %>
+  <%= list_row title: t("chores.setup.title"), href: household_chores_setup_path(@household) %>
+  <%= list_row title: t("chores.new.title"), href: new_chore_path(household_id: @household.id) %>
+  <%= list_row title: t("common.edit"), href: edit_household_path(@household) %>
 </div>
 
-<% chore_count = @household.chores.count %>
-<% if chore_count > 0 %>
-  <p class="text-muted small"><%= t("chores.index.count", count: chore_count) %></p>
-<% end %>
-
-<div class="mt-4">
-  <%= link_to t("households.show.back_link"), households_path %>
-</div>
+<%= button_to t("common.delete"), household_path(@household), method: :delete, class: "btn btn-outline",
+      form: { data: { turbo_confirm: t("households.show.delete_confirm") } } %>

@@ -52,5 +52,4 @@ Rails.application.configure do
   config.action_controller.raise_on_missing_callback_actions = true
 
   # Prevent SassC from trying to process Tailwind v4's modern CSS syntax
-  config.assets.css_compressor = nil
 end

@@ -1,43 +1,36 @@
-<div class="d-flex justify-content-between align-items-center mb-4">
-  <h1><%= t("tasks.liking_session.title") %></h1>
-  <span class="text-muted"><%= @household.name %></span>
+<% provide :chrome, "none" %>
+<% provide :title, t("tasks.liking_session.title") %>
+<%= back_button household_path(@household) %>
+<div>
+  <h1 class="screen-title"><%= t("tasks.liking_session.title") %></h1>
+  <p class="screen-subtitle"><%= @household.name %></p>
 </div>
 
 <% if @tasks_by_category.empty? %>
-  <p class="text-muted"><%= t("tasks.liking_session.empty") %></p>
+  <%= callout do %><p class="m-0"><%= t("tasks.liking_session.empty") %></p><% end %>
 <% else %>
-  <%= form_with url: household_liking_session_path(@household), method: :patch, local: true do %>
+  <%= form_with url: household_liking_session_path(@household), method: :patch, html: { class: "flex flex-col gap-5 flex-1" } do %>
     <% @tasks_by_category.each do |category, tasks| %>
-      <div class="card mb-4">
-        <div class="card-header fw-semibold">
-          <%= t("tasks.categories.#{category}") %>
-        </div>
-        <ul class="list-group list-group-flush">
-          <% tasks.each do |task| %>
-            <% liked_task = @liked_by_task_id[task.id] %>
-            <li class="list-group-item d-flex justify-content-between align-items-center">
-              <span><%= task.name %></span>
-              <div class="btn-group btn-group-sm" role="group">
-                <input type="radio" class="btn-check" name="preferences[<%= task.id %>]"
-                       id="like_<%= task.id %>" value="true" autocomplete="off"
-                       <%= "checked" if liked_task&.liked == true %>>
-                <label class="btn btn-outline-success" for="like_<%= task.id %>">&#10003;</label>
-
-                <input type="radio" class="btn-check" name="preferences[<%= task.id %>]"
-                       id="dislike_<%= task.id %>" value="false" autocomplete="off"
-                       <%= "checked" if liked_task&.liked == false %>>
-                <label class="btn btn-outline-danger" for="dislike_<%= task.id %>">&#10007;</label>
-              </div>
-            </li>
-          <% end %>
-        </ul>
-      </div>
+      <section class="flex flex-col gap-2">
+        <h2 class="text-base font-bold m-0 font-sans"><%= t("tasks.categories.#{category}") %></h2>
+        <% tasks.each do |task| %>
+          <% liked_task = @liked_by_task_id[task.id] %>
+          <fieldset class="card flex items-center justify-between gap-3 min-w-0">
+            <legend class="sr-only"><%= task.name %></legend>
+            <span class="font-semibold flex-1"><%= task.name %></span>
+            <div class="segments" style="min-width:128px">
+              <input type="radio" class="segment-input" name="preferences[<%= task.id %>]" id="like_<%= task.id %>" value="true" <%= "checked" if liked_task&.liked == true %>>
+              <label class="segment-label" for="like_<%= task.id %>"><%= t("tasks.liking_session.like") %></label>
+              <input type="radio" class="segment-input" name="preferences[<%= task.id %>]" id="dislike_<%= task.id %>" value="false" <%= "checked" if liked_task&.liked == false %>>
+              <label class="segment-label" for="dislike_<%= task.id %>"><%= t("tasks.liking_session.dislike") %></label>
+            </div>
+          </fieldset>
+        <% end %>
+      </section>
     <% end %>
 
-    <%= submit_tag t("tasks.liking_session.submit"), class: "btn btn-primary" %>
+    <%= sticky_cta do %>
+      <%= submit_tag t("tasks.liking_session.submit"), class: "btn btn-primary" %>
+    <% end %>
   <% end %>
 <% end %>
-
-<div class="mt-3">
-  <%= link_to t("common.back"), household_path(@household) %>
-</div>

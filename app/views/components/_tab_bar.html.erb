@@ -1,0 +1,22 @@
+<nav class="tab-bar" aria-label="<%= t("nav.label") %>">
+  <%= link_to dashboard_path, class: "tab-item", "aria-current": (active == :home ? "page" : nil) do %>
+    <span class="tab-indicator"></span>
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M3 10l9-7 9 7v10a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"></path></svg>
+    <%= t("nav.home") %>
+  <% end %>
+  <%= link_to chores_path, class: "tab-item", "aria-current": (active == :tasks ? "page" : nil) do %>
+    <span class="tab-indicator"></span>
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2"></path></svg>
+    <%= t("nav.tasks") %>
+  <% end %>
+  <%= link_to report_path, class: "tab-item", "aria-current": (active == :report ? "page" : nil) do %>
+    <span class="tab-indicator"></span>
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M5 20V11M12 20V5M19 20v-6M3 20h18"></path></svg>
+    <%= t("nav.report") %>
+  <% end %>
+  <%= link_to household_tab_path, class: "tab-item", "aria-current": (active == :household ? "page" : nil) do %>
+    <span class="tab-indicator"></span>
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="9" cy="7" r="4"></circle><path d="M2 21v-2a4 4 0 0 1 4-4h6a4 4 0 0 1 4 4v2M16 3.1a4 4 0 0 1 0 7.8M22 21v-2a4 4 0 0 0-3-3.9"></path></svg>
+    <%= t("nav.household") %>
+  <% end %>
+</nav>

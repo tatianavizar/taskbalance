@@ -1,95 +1,48 @@
-<%= form_with model: @chore, local: true do |f| %>
+<%= form_with model: @chore, html: { class: "flex flex-col gap-4 flex-1" } do |f| %>
   <%= f.hidden_field :household_id %>
+  <%= f.error_summary %>
+
+  <% category_choices = Chore::CATEGORIES.map { |c| [ t("tasks.categories.#{c}"), c ] } %>
 
   <% if @chore.new_record? %>
-    <%# Custom chore create: category select + free-text name %>
-    <div class="mb-3">
-      <%= f.label :category, t("chores.form.category_label"), class: "form-label fw-semibold" %>
-      <%= f.select :category,
-            Chore::CATEGORIES.map { |c| [t("tasks.categories.#{c}"), c] },
-            { prompt: t("chores.form.category_prompt") },
-            { class: "form-select #{'is-invalid' if @chore.errors[:category].any?}" } %>
-      <% if @chore.errors[:category].any? %>
-        <div class="invalid-feedback"><%= @chore.errors[:category].first %></div>
-      <% end %>
-    </div>
-
-    <div class="mb-3">
-      <%= f.label :custom_name, t("chores.form.name_label"), class: "form-label fw-semibold" %>
-      <%= f.text_field :custom_name, placeholder: t("chores.form.name_placeholder"),
-            class: "form-control #{'is-invalid' if @chore.errors[:base].any?}" %>
-    </div>
+    <%# Tâche perso : catégorie + nom libre %>
+    <%= f.select_field :category, category_choices, label: t("chores.form.category_label"),
+          options: { prompt: t("chores.form.category_prompt") } %>
+    <%= f.field :custom_name, label: t("chores.form.name_label"), placeholder: t("chores.form.name_placeholder") %>
 
   <% elsif @chore.catalogue_chore? %>
-    <%# Catalogue chore edit: name is read-only %>
-    <div class="mb-3">
-      <%= f.label :task_id, t("chores.form.task_label"), class: "form-label fw-semibold" %>
-      <p class="form-control-plaintext"><%= @chore.task.name %></p>
+    <%# Tâche du catalogue : le nom est en lecture seule %>
+    <div>
+      <span class="field-label"><%= t("chores.form.task_label") %></span>
+      <p class="field-input flex items-center bg-soft-2 text-muted m-0"><%= @chore.task.name %></p>
     </div>
 
   <% else %>
-    <%# Custom chore edit: name + category are editable %>
-    <div class="mb-3">
-      <%= f.label :category, t("chores.form.category_label"), class: "form-label fw-semibold" %>
-      <%= f.select :category,
-            Chore::CATEGORIES.map { |c| [t("tasks.categories.#{c}"), c] },
-            { include_blank: false },
-            { class: "form-select" } %>
-    </div>
-
-    <div class="mb-3">
-      <%= f.label :custom_name, t("chores.form.name_label"), class: "form-label fw-semibold" %>
-      <%= f.text_field :custom_name, class: "form-control" %>
-    </div>
+    <%= f.select_field :category, category_choices, label: t("chores.form.category_label"), options: { include_blank: false } %>
+    <%= f.field :custom_name, label: t("chores.form.name_label") %>
   <% end %>
 
-  <% if @chore.errors[:base].any? %>
-    <div class="alert alert-danger py-1 mb-3"><%= @chore.errors[:base].first %></div>
-  <% end %>
+  <%= f.field :time_required, as: :number, label: t("chores.form.time_required_label"), min: 1,
+        placeholder: (@chore.task&.time_required || 30),
+        hint: (t("chores.form.time_required_hint", task_default: @chore.task.time_required) if @chore.persisted? && @chore.catalogue_chore?) %>
 
-  <div class="mb-3">
-    <%= f.label :time_required, t("chores.form.time_required_label"), class: "form-label fw-semibold" %>
-    <%= f.number_field :time_required, min: 1,
-          placeholder: @chore.task&.time_required || "e.g. 30",
-          class: "form-control #{'is-invalid' if @chore.errors[:time_required].any?}" %>
-    <% if @chore.persisted? && @chore.catalogue_chore? %>
-      <div class="form-text"><%= t("chores.form.time_required_hint", task_default: @chore.task.time_required) %></div>
-    <% end %>
-  </div>
+  <%= f.select_field :assigned_to_id, @members.map { |m| [ m.email, m.id ] }, label: t("chores.form.assigned_to_label"),
+        options: { include_blank: t("chores.form.assigned_to_prompt") } %>
 
-  <div class="mb-3">
-    <p class="form-label fw-semibold mb-1"><%= t("chores.form.assigned_to_label") %></p>
-    <%= f.collection_select :assigned_to_id, @members, :id, :email,
-          { include_blank: t("chores.form.assigned_to_prompt") },
-          { class: "form-select" } %>
-  </div>
-
-  <fieldset class="mb-3">
-    <legend class="form-label fw-semibold">
-      Load type
-      <small class="text-muted fw-normal">— <%= t("chores.form.load_note") %></small>
-    </legend>
-    <div class="form-check">
-      <%= f.check_box :mental_load, class: "form-check-input", id: "chore_mental_load" %>
-      <%= f.label :mental_load, t("chores.form.mental_load_label"), class: "form-check-label" %>
-    </div>
-    <div class="form-check">
-      <%= f.check_box :execution_load, class: "form-check-input", id: "chore_execution_load" %>
-      <%= f.label :execution_load, t("chores.form.execution_load_label"), class: "form-check-label" %>
-    </div>
+  <fieldset class="min-w-0">
+    <legend class="field-label"><%= t("chores.form.load_legend") %></legend>
+    <p class="field-hint -mt-1 mb-1"><%= t("chores.form.load_note") %></p>
+    <%= f.checkbox_field :mental_load, label: t("chores.form.mental_load_label") %>
+    <%= f.checkbox_field :execution_load, label: t("chores.form.execution_load_label") %>
   </fieldset>
 
-  <div class="mb-4">
-    <%= f.label :due_date, t("chores.form.due_date_label"), class: "form-label fw-semibold" %>
-    <%= f.date_field :due_date, class: "form-control" %>
-  </div>
+  <%= f.field :due_date, as: :date, label: t("chores.form.due_date_label") %>
 
-  <div class="d-flex gap-2 align-items-center">
-    <%= f.submit @chore.new_record? ? t("chores.form.submit_create") : t("chores.form.submit_update"),
-          class: "btn btn-primary" %>
-
+  <%= sticky_cta do %>
+    <%= f.submit @chore.new_record? ? t("chores.form.submit_create") : t("chores.form.submit_update") %>
     <% if @chore.persisted? && @chore.custom_chore? %>
-      <%= link_to t("chores.form.delete"), chore_path(@chore), data: { turbo_method: :delete, turbo_confirm: t("chores.form.delete_confirm") }, class: "btn btn-outline-danger ms-auto" %>
+      <%= link_to t("chores.form.delete"), chore_path(@chore), class: "btn btn-outline",
+            data: { turbo_method: :delete, turbo_confirm: t("chores.form.delete_confirm") } %>
     <% end %>
-  </div>
+  <% end %>
 <% end %>

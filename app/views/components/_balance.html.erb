@@ -1,0 +1,24 @@
+<section class="card" style="padding:14px 16px">
+  <div class="flex justify-between text-[13px] leading-[18px]">
+    <b class="font-bold"><%= title %></b>
+    <span class="text-muted"><%= count %></span>
+  </div>
+  <div class="flex justify-between items-baseline mt-1.5">
+    <span><b class="text-[22px] leading-7 font-bold" style="color:<%= balanced ? "var(--color-balanced)" : "var(--color-self)" %>"><%= share %> %</b> <span class="text-muted"><%= name %></span></span>
+    <span class="text-right">
+      <% others.each_with_index do |other, i| %>
+        <% if i > 0 %><span class="text-muted"> · </span><% end %>
+        <span class="text-muted"><%= other[:name] %></span> <b class="font-bold"><%= other[:share] %> %</b>
+      <% end %>
+    </span>
+  </div>
+  <div role="img" aria-label="<%= aria %>" class="relative mt-2 flex gap-0.5 rounded-[7px]" style="height:14px;background:var(--color-track)">
+    <div style="width:<%= share.clamp(0, 100) %>%;height:14px;background:<%= balanced ? "var(--color-balanced)" : "var(--color-self)" %>;border-radius:7px 0 0 7px"></div>
+    <% if others.size > 1 %>
+      <% others.each do |other| %>
+        <div style="width:<%= other[:share].clamp(0, 100) %>%;height:14px;background:var(--color-others)"></div>
+      <% end %>
+    <% end %>
+    <div class="absolute" style="left:calc(<%= fair %>% - 1px);top:-4px;width:2px;height:22px;background:var(--color-ink)"></div>
+  </div>
+</section>

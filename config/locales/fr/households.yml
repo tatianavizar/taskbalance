@@ -1,0 +1,36 @@
+fr:
+  households:
+    index:
+      title: "Mon foyer"
+      empty: "Vous n'avez pas encore de foyer."
+      new_link: "Créer le foyer"
+    show:
+      members_title: "Membres"
+      no_members: "Aucun membre pour l'instant."
+      invite_link: "Inviter un membre"
+      back_link: "Retour"
+      delete_confirm: "Supprimer ce foyer ? Les enregistrements de chaque membre sont conservés."
+    new:
+      title: "Créer le foyer"
+    edit:
+      title: "Modifier le foyer"
+    form:
+      name_label: "Nom du foyer"
+      name_placeholder: "Ex. : Chez Virginie et Karim"
+      submit_create: "Créer le foyer"
+      submit_update: "Enregistrer"
+    flash:
+      created: "Foyer créé."
+      updated: "Foyer modifié."
+      destroyed: "Foyer supprimé."
+  household_members:
+    new:
+      title: "Inviter un membre"
+      household_label: "Foyer"
+      email_label: "Email de la personne à inviter"
+      email_placeholder: "prenom@exemple.fr"
+      submit: "Envoyer l'invitation"
+    flash:
+      created: "%{email} a rejoint le foyer."
+      invited: "Invitation envoyée à %{email}."
+      not_found: "Aucun compte avec cet email."

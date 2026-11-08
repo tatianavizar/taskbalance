@@ -1,0 +1,12 @@
+<% tag_name = href ? :a : :div %>
+<%= content_tag tag_name, href: href, class: "card block no-underline" do %>
+  <div class="flex justify-between gap-3 text-[13px]">
+    <b><%= t("components.level_progress.level", level: level) %></b>
+    <span class="text-muted text-right"><%= t("components.level_progress.summary", count: done, total: total, next_level: level + 1) %></span>
+  </div>
+  <div class="grid gap-1 mt-2" style="grid-template-columns:repeat(<%= total %>,minmax(0,1fr))" aria-hidden="true">
+    <% total.times do |i| %>
+      <span style="height:8px;border-radius:4px;background:<%= i < done ? "var(--color-ink)" : "var(--color-line)" %>"></span>
+    <% end %>
+  </div>
+<% end %>

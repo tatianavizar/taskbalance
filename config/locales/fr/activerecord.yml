@@ -1,0 +1,63 @@
+fr:
+  activerecord:
+    models:
+      household: "Foyer"
+      user: "Compte"
+      chore: "Tâche"
+      task: "Tâche du catalogue"
+      liked_task: "Préférence"
+      chore_log: "Enregistrement"
+      invitation: "Invitation"
+    attributes:
+      user:
+        email: "Email"
+        password: "Mot de passe"
+        password_confirmation: "Confirmer le mot de passe"
+        current_password: "Mot de passe actuel"
+        remember_me: "Garder la session ouverte"
+      household:
+        name: "Nom du foyer"
+      household_member:
+        email: "Email"
+      invitation:
+        email: "Email"
+      chore:
+        status: "Statut"
+        mental_load: "Charge mentale"
+        execution_load: "Exécution"
+      task:
+        name: "Nom de la tâche"
+        category: "Catégorie"
+        priority: "Priorité"
+        time_required: "Durée (min)"
+        recurring: "Récurrente"
+      liked_task:
+        liked: "Aimée"
+      chore_log:
+        mental_load: "Charge mentale"
+        execution_load: "Exécution"
+        time_spent: "Temps passé"
+        completed_at: "Fait le"
+        chore_name: "Tâche"
+        user_id: "Fait par"
+    errors:
+      models:
+        chore:
+          attributes:
+            base:
+              at_least_one_load: "Cochez au moins une charge : mentale ou exécution."
+              task_or_name_required: "Donnez un nom à la tâche."
+        liked_task:
+          attributes:
+            task_id:
+              taken: "Vous avez déjà donné votre préférence pour cette tâche."
+        chore_log:
+          attributes:
+            base:
+              at_least_one_load: "Cochez au moins une charge : mentale ou exécution."
+            user_id:
+              not_a_member: "ne fait pas partie de ce foyer"
+        invitation:
+          attributes:
+            email:
+              taken: "a déjà une invitation pour ce foyer"

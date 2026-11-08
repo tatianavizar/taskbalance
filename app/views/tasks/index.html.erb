@@ -1,24 +1,21 @@
-<h1 class="mb-2"><%= t("tasks.index.title") %></h1>
-<p class="text-muted"><%= t("tasks.index.intro") %></p>
+<% provide :title, t("tasks.index.title") %>
+<div>
+  <h1 class="screen-title"><%= t("tasks.index.title") %></h1>
+  <p class="screen-subtitle"><%= t("tasks.index.intro") %></p>
+</div>
 
 <% if @tasks_by_category.empty? %>
-  <p class="text-muted"><%= t("tasks.index.empty") %></p>
+  <%= callout do %><p class="m-0"><%= t("tasks.index.empty") %></p><% end %>
 <% else %>
   <% @tasks_by_category.each do |category, tasks| %>
-    <h2 class="h5 mt-4"><%= t("tasks.categories.#{category}", default: category.to_s.humanize) %></h2>
-    <ul class="list-group">
-      <% tasks.each do |task| %>
-        <li class="list-group-item d-flex justify-content-between align-items-center">
-          <%= task.name %>
-          <% if task.time_required.present? %>
-            <span class="text-muted small"><%= t("tasks.index.time_required", count: task.time_required) %></span>
-          <% end %>
-        </li>
-      <% end %>
-    </ul>
+    <section class="flex flex-col gap-2" aria-labelledby="cat-<%= category %>">
+      <h2 id="cat-<%= category %>" class="text-base font-bold m-0 font-sans"><%= t("tasks.categories.#{category}", default: category.to_s.humanize) %></h2>
+      <div class="list-stack">
+        <% tasks.each do |task| %>
+          <%= list_row title: task.name,
+                trailing: (tag.span(t("tasks.index.time_required", count: task.time_required), class: "text-[13px] text-muted") if task.time_required.present?) %>
+        <% end %>
+      </div>
+    </section>
   <% end %>
 <% end %>
-
-<div class="mt-4">
-  <%= link_to t("households.index.title"), households_path %>
-</div>

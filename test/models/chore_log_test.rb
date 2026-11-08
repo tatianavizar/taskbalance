@@ -98,7 +98,7 @@ class ChoreLogTest < ActiveSupport::TestCase
     log = build_log(user: outsider)
 
     assert_not log.save
-    assert_includes log.errors[:user_id].join, "not a member"
+    assert_includes log.errors[:user_id].join, "ne fait pas partie de ce foyer"
   ensure
     outsider&.destroy
   end

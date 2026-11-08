@@ -1,4 +1,15 @@
-<div>
-  <%= link_to t("households.index.new_link"), new_household_path %>
-  <%= link_to t("households.index.title"), households_path %>
+<% provide :chrome, "none" %>
+<div class="flex flex-col gap-5 flex-1 pt-16">
+  <%= logo(size: 72) %>
+  <h1 class="screen-title"><%= t("app.name") %></h1>
+  <p class="m-0"><%= t("app.home.tagline") %></p>
+
+  <%= sticky_cta do %>
+    <% if user_signed_in? %>
+      <%= link_to t("nav.home"), dashboard_path, class: "btn btn-primary" %>
+    <% else %>
+      <%= link_to t("app.home.sign_up"), new_user_registration_path, class: "btn btn-primary" %>
+      <%= link_to t("app.home.log_in"), new_user_session_path, class: "btn btn-secondary" %>
+    <% end %>
+  <% end %>
 </div>
