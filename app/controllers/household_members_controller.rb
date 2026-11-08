@@ -32,7 +32,11 @@ class HouseholdMembersController < ApplicationController
   def send_invitation(email)
     invitation = Invitation.find_or_initialize_by(email: email, household_id: @household.id)
     if invitation.new_record?
-      invitation.save!
+      unless invitation.save
+        @household_member = HouseholdMember.new(email: email)
+        @household_member.errors.add(:email, invitation.errors[:email].first)
+        return render :new, status: :unprocessable_entity
+      end
       InvitationMailer.invite(invitation).deliver_now
     end
     redirect_to household_path(@household), notice: t("household_members.flash.invited", email: email)

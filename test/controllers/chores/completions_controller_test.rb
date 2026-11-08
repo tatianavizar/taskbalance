@@ -13,8 +13,7 @@ module Chores
       { chore_log: {
         mental_load: "1",
         execution_load: "0",
-        time_spent: "45",
-        user_id: @user.id
+        time_spent: "45"
       }.merge(overrides) }
     end
 
@@ -30,9 +29,10 @@ module Chores
       assert_match(/value="45"/, response.body)
     end
 
-    test "new lists every household member as a possible doer" do
+    test "new offers no choice of doer" do
       get new_chore_completion_path(@chore)
-      assert_match users(:bob).email, response.body
+      assert_no_match users(:bob).email, response.body
+      assert_no_match(/chore_log\[user_id\]/, response.body)
     end
 
     test "new is scoped to the user's own households" do
@@ -49,7 +49,7 @@ module Chores
 
     # --- create ---
 
-    test "create records a log with the submitted loads, minutes and doer" do
+    test "create records a log with the submitted loads and minutes, authored by the current user" do
       assert_difference "ChoreLog.count", 1 do
         post chore_completion_path(@chore), params: valid_params
       end
@@ -81,23 +81,12 @@ module Chores
       assert_match "Logged: Cook a meal.", response.body
     end
 
-    test "create can log on another member's behalf" do
-      post chore_completion_path(@chore), params: valid_params(user_id: users(:bob).id)
-
-      assert_equal users(:bob).id, ChoreLog.last.user_id
-    end
-
-    test "create rejects a doer from outside the household" do
-      outsider = User.create!(email: "outsider@test.com", password: "password123")
-
-      assert_no_difference "ChoreLog.count" do
-        post chore_completion_path(@chore), params: valid_params(user_id: outsider.id)
+    test "create ignores a posted user_id and logs as the current user" do
+      assert_difference "ChoreLog.count", 1 do
+        post chore_completion_path(@chore), params: valid_params(user_id: users(:bob).id)
       end
 
-      assert_response :unprocessable_entity
-      assert_not @chore.reload.completed?
-    ensure
-      outsider&.destroy
+      assert_equal @user.id, ChoreLog.last.user_id
     end
 
     test "create rejects a submission with neither load dimension" do

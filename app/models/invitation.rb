@@ -5,11 +5,11 @@ class Invitation < ApplicationRecord
   validates :token, presence: true
   validates :email, uniqueness: { scope: :household_id, message: "already invited to this household" }
 
-  before_create :generate_token
+  before_validation :generate_token, on: :create
 
 private
 
   def generate_token
-    self.token = SecureRandom.urlsafe_base64(32)
+    self.token ||= SecureRandom.urlsafe_base64(32)
   end
 end

@@ -7,7 +7,6 @@ en:
       mental_load_label: "Mental load — planning, organising, deciding"
       execution_load_label: "Execution load — physically doing it"
       time_spent_label: "Time spent (minutes)"
-      user_label: "Done by"
       submit: "Log it"
     flash:
       created: "Logged: %{chore}."

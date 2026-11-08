@@ -27,15 +27,9 @@
       </label>
     </fieldset>
 
-    <div class="mb-5">
+    <div class="mb-6">
       <%= f.label :time_spent, t("chore_logs.form.time_spent_label"), class: "block text-sm font-semibold mb-1" %>
       <%= f.number_field :time_spent, min: 1,
-            class: "w-full rounded border border-gray-300 px-3 py-2 focus:border-indigo-500 focus:outline-none" %>
-    </div>
-
-    <div class="mb-6">
-      <%= f.label :user_id, t("chore_logs.form.user_label"), class: "block text-sm font-semibold mb-1" %>
-      <%= f.collection_select :user_id, @members, :id, :email, {},
             class: "w-full rounded border border-gray-300 px-3 py-2 focus:border-indigo-500 focus:outline-none" %>
     </div>
 

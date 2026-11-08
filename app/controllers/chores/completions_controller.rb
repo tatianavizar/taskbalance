@@ -8,11 +8,13 @@ module Chores
 
     def new
       @chore_log = build_prefilled_log
-      @members = household_members
     end
 
     def create
+      # A member only logs what they did themselves: the author is always
+      # current_user, whatever the request carries.
       @chore_log = @chore.chore_logs.new(chore_log_params)
+      @chore_log.user = current_user
       @chore_log.completed_at = Time.current
 
       ChoreLog.transaction do
@@ -23,7 +25,6 @@ module Chores
       spawn_next_occurrence
       redirect_to chores_path, notice: t("chore_logs.flash.created", chore: @chore.effective_name)
     rescue ActiveRecord::RecordInvalid
-      @members = household_members
       render :new, status: :unprocessable_entity
     end
 
@@ -53,10 +54,6 @@ module Chores
       Rails.logger.warn("Could not spawn next occurrence of recurring_chore #{recurring.id}: #{e.message}")
     end
 
-    def household_members
-      @chore.household.users
-    end
-
     def set_chore
       @chore = current_user.chores.find(params[:chore_id])
     rescue ActiveRecord::RecordNotFound
@@ -64,7 +61,7 @@ module Chores
     end
 
     def chore_log_params
-      params.require(:chore_log).permit(:mental_load, :execution_load, :time_spent, :user_id)
+      params.require(:chore_log).permit(:mental_load, :execution_load, :time_spent)
     end
   end
 end
