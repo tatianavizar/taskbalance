@@ -1,5 +1,27 @@
 # 50/50 — journal des décisions
 
+## 2026-11-08 · Session glissante d'une semaine
+- **Décidé par :** la porteuse du projet.
+- **Pourquoi :** c'est le standard des apps mobiles. La semaine repart à chaque ouverture de l'app : une personne active ne se reconnecte pas.
+- **Garde-fous :** cookie `HttpOnly`, `Secure` et `SameSite` ; invalidé au changement de mot de passe ; effacé à la déconnexion.
+- **Rejeté :** une semaine fixe depuis la connexion.
+
+## 2026-11-08 · Limites d'envoi des emails de compte
+- **Décidé par :** la porteuse du projet.
+- **Règle :** 3 demandes par heure par adresse email, 9 par heure depuis une même connexion. S'applique à l'inscription, au mot de passe oublié et au renvoi de confirmation.
+
+## 2026-11-08 · Anti-énumération à l'inscription : compromis accepté
+- **Décidé par :** la porteuse du projet.
+- **Pourquoi :** la confirmation ne bloque pas, donc une vraie inscription connecte la personne alors qu'un email déjà connu renvoie vers la connexion. La différence reste visible pour un observateur attentif ; on l'accepte pour garder une inscription sans attente.
+
+## 2026-11-08 · Six membres au plus par foyer
+- **Décidé par :** la porteuse du projet.
+- **Pourquoi :** la palette compte six couleurs de membre, chacune unique dans le foyer.
+
+## 2026-11-08 · Les comptes existants sont considérés comme confirmés
+- **Décidé par :** la porteuse du projet (standard du marché).
+- **Pourquoi :** la confirmation de l'email arrive après leur création ; on ne leur impose pas un bandeau a posteriori. Les nouveaux comptes confirment leur adresse.
+
 ## 2026-11-08 · La session reste ouverte une semaine
 - **Décidé par :** la porteuse du projet.
 - **Pourquoi :** sur un téléphone, se reconnecter chaque jour décourage d'enregistrer. Une semaine couvre un cycle complet de bilan.
