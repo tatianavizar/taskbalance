@@ -20,14 +20,15 @@ The app lives at `~/code/taskbalance`. It previously sat directly in `/Users/tat
 
 - The **household** is the entity that progresses, not individuals.
 - Individual contribution is always visible.
-- Household progression **blocks** after 4 weeks of persistent imbalance.
+- Household progression goes through levels 1–4 then an ultimate level, earned by cumulative **balanced weeks** (1, 3, 6, 10, 15). A week is balanced when every member carries their fair share (100 / members, rounded) ± 10 points of **both** mental load and execution. An unbalanced week only stops progression.
+- The household **regresses one level and is blocked** when a member logs nothing for 2 consecutive weeks, unless the other members answer that they were away (a pause is then declared for them). A member can declare as many pauses as they want, and paused weeks don't count. Full rules: `docs/backend-backlog.md`.
 - Each task log tracks two independent dimensions: **mental load** (plan/organize/decide) and **execution load** (physically doing it).
 
 ## Domain model
 
 | Model | Role |
 |---|---|
-| `User` | Devise-authenticated. `role` integer enum. A user belongs to one or more households. |
+| `User` | Devise-authenticated. `role` integer enum. Currently `has_many :households`, but the V1 rule is **one household per account** (decision 2026-11-08); the schema change is planned in `docs/plan-de-travail.md`, lot 1. |
 | `Household` | A home/group. Aggregates calculated from individual logs — never stores raw behavioral data directly. |
 | `HouseholdMember` | Join table — unique per user+household pair. |
 | `Task` | A task from the pre-defined catalogue. `name`, `time_required` (default duration in minutes), `priority` (1–5). |
@@ -41,7 +42,7 @@ Key relationship: `User → has_many :chores, through: :households` — a user s
 
 **`task_id` is nullable — always account for custom chores.** Any code that does `chores.pluck(:task_id)` or `chores.map(&:task)` gets a `nil` for every custom chore. This has already caused a silent data-loss bug and a 500; scope with `where.not(task_id: nil)` when you mean catalogue chores only.
 
-**Still missing from schema:** streak/level tracking; the 4-week imbalance block.
+**Still missing from schema:** weekly reports, levels, per-member empty-week streaks and the regression/block state (see `docs/backend-backlog.md` §2).
 
 ## Data ownership rule (architectural constraint)
 
@@ -77,6 +78,8 @@ Two stylesheet pipelines coexist:
 **Asset pipeline gotcha:** both `propshaft` and `sprockets` are in the Gemfile, and **Sprockets is the one actually serving** (`Rails.application.assets` is a `Sprockets::Environment`). So every importmap'd file must be declared in `app/assets/config/manifest.js` or the layout raises `Asset ... was not declared to be precompiled`. `//= link_tree ../../javascript .js` covers `app/javascript`. Worth collapsing to one pipeline eventually.
 
 ## Known issues
+
+**Backend work to match the mockups is tracked in `docs/backend-backlog.md`** (prioritised, with the product rules it implements). Mockups, user journey, UX rules and service blueprint live on the Design canvas https://claude.ai/artifact/KmQFCsbQNFrSTRtzDnc1FN.
 
 - ~~Gem directory partly root-owned~~ — **fixed.** A past `sudo gem install` had left root-owned files under `/opt/homebrew/lib/ruby/gems/3.4.0`, making `bundle install` fail with `Bundler::PermissionError`. Resolved with `sudo chown -R "$(whoami)":admin /opt/homebrew/lib/ruby/gems/3.4.0`. Gems now install to the Homebrew prefix again; if the error ever returns, that chown is the fix.
 - `HouseholdsController#destroy` lets any member delete a shared household outright, with no confirmation beyond the UI dialog and no transfer of ownership.
