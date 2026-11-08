@@ -170,7 +170,10 @@ Devise.setup do |config|
   config.expire_all_remember_me_on_sign_out = true
 
   # If true, extends the user's remember period when remembered via cookie.
-  # config.extend_remember_period = false
+  # Rolling week: every time the persistent cookie signs the person in, it is
+  # re-issued for another week. A person who opens the app at least once a week
+  # is never asked for their password; a week of absence ends the session.
+  config.extend_remember_period = true
 
   # Options to be passed to the created cookie. For instance, you can set
   # secure: true in order to force SSL only cookies.
@@ -310,4 +313,12 @@ Devise.setup do |config|
   # When set to false, does not sign a user in automatically after their password is
   # changed. Defaults to true, so a user is signed in automatically after changing a password.
   # config.sign_in_after_change_password = true
+end
+
+# Rails 8 loads routes lazily in development and test, and Devise only knows its
+# mappings once the routes are loaded: without this, creating a User outside a
+# request (console, job, model test) fails in the confirmation mailer with
+# "Could not find a valid mapping".
+Rails.application.config.after_initialize do
+  Rails.application.reload_routes!
 end

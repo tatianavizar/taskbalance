@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_09_26_173338) do
+ActiveRecord::Schema[8.0].define(version: 2026_11_08_100500) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -55,14 +55,20 @@ ActiveRecord::Schema[8.0].define(version: 2026_09_26_173338) do
     t.bigint "household_id", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.integer "role", default: 0, null: false
+    t.string "color"
+    t.string "monogram"
+    t.boolean "monogram_customized", default: false, null: false
+    t.index ["household_id", "color"], name: "index_household_members_on_household_id_and_color", unique: true
     t.index ["household_id"], name: "index_household_members_on_household_id"
-    t.index ["user_id"], name: "index_household_members_on_user_id"
+    t.index ["user_id"], name: "index_household_members_on_user_id", unique: true
   end
 
   create_table "households", force: :cascade do |t|
-    t.string "name"
+    t.string "name", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "time_zone", default: "Europe/Paris", null: false
   end
 
   create_table "invitations", force: :cascade do |t|
@@ -120,6 +126,13 @@ ActiveRecord::Schema[8.0].define(version: 2026_09_26_173338) do
     t.integer "role", default: 0
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "time_zone", default: "Europe/Paris", null: false
+    t.string "first_name", null: false
+    t.string "confirmation_token"
+    t.datetime "confirmed_at"
+    t.datetime "confirmation_sent_at"
+    t.string "unconfirmed_email"
+    t.index ["confirmation_token"], name: "index_users_on_confirmation_token", unique: true
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
   end

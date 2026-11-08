@@ -1,0 +1,55 @@
+fr:
+  devise:
+    confirmations:
+      confirmed: "Votre adresse email est confirmée."
+      send_instructions: "Si cette adresse correspond à un compte, vous allez recevoir un email avec les instructions de confirmation."
+      send_paranoid_instructions: "Si cette adresse correspond à un compte, vous allez recevoir un email avec les instructions de confirmation."
+    failure:
+      already_authenticated: "Vous êtes déjà connecté·e."
+      inactive: "Votre compte n'est pas encore activé."
+      invalid: "Adresse email ou mot de passe incorrect."
+      last_attempt: "Il vous reste une tentative avant le blocage du compte."
+      locked: "Votre compte est bloqué."
+      not_found_in_database: "Adresse email ou mot de passe incorrect."
+      timeout: "Votre session a expiré. Reconnectez-vous pour continuer."
+      unauthenticated: "Connectez-vous ou créez un compte pour continuer."
+      unconfirmed: "Confirmez votre adresse email pour continuer."
+      rate_limited: "Trop de demandes. Réessayez dans une heure."
+    mailer:
+      confirmation_instructions:
+        subject: "Confirmez votre adresse email"
+      reset_password_instructions:
+        subject: "Réinitialisez votre mot de passe"
+      email_changed:
+        subject: "Votre adresse email a changé"
+      password_change:
+        subject: "Votre mot de passe a changé"
+    passwords:
+      no_token: "Cette page n'est accessible que depuis le lien reçu par email."
+      send_instructions: "Si cette adresse correspond à un compte, vous allez recevoir un email pour réinitialiser votre mot de passe."
+      send_paranoid_instructions: "Si cette adresse correspond à un compte, vous allez recevoir un email pour réinitialiser votre mot de passe."
+      updated: "Votre mot de passe a été changé. Vous êtes connecté·e."
+      updated_not_active: "Votre mot de passe a été changé."
+    registrations:
+      destroyed: "Votre compte a été supprimé."
+      signed_up: "Bienvenue sur 50/50."
+      signed_up_but_unconfirmed: "Votre compte est créé. Un email de confirmation vous a été envoyé."
+      signed_up_but_inactive: "Votre compte est créé, mais il n'est pas encore activé."
+      signed_up_but_locked: "Votre compte est créé, mais il est bloqué."
+      update_needs_confirmation: "Votre compte est mis à jour. Confirmez votre nouvelle adresse email grâce au lien reçu."
+      updated: "Votre compte est mis à jour."
+      updated_but_not_signed_in: "Votre compte est mis à jour. Reconnectez-vous avec votre nouveau mot de passe."
+    sessions:
+      signed_in: "Vous êtes connecté·e."
+      signed_out: "Vous êtes déconnecté·e."
+      already_signed_out: "Vous êtes déjà déconnecté·e."
+  errors:
+    messages:
+      already_confirmed: "est déjà confirmée, connectez-vous"
+      confirmation_period_expired: "doit être confirmée dans un délai de %{period}, demandez un nouveau lien"
+      expired: "a expiré, demandez un nouveau lien"
+      not_found: "est introuvable"
+      not_locked: "n'était pas bloqué"
+      not_saved:
+        one: "Une erreur empêche l'enregistrement :"
+        other: "%{count} erreurs empêchent l'enregistrement :"

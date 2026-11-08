@@ -43,7 +43,7 @@ module Households
     end
 
     def set_household
-      @household = current_user.households.find(params[:household_id])
+      @household = find_own_household!(params[:household_id])
     end
   end
 end

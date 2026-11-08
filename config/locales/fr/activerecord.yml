@@ -1,0 +1,42 @@
+fr:
+  activerecord:
+    models:
+      household_member: "Membre du foyer"
+    attributes:
+      household:
+        name: "Nom du foyer"
+        time_zone: "Fuseau horaire"
+      user:
+        first_name: "Prénom"
+        email: "Adresse email"
+        time_zone: "Fuseau horaire"
+      household_member:
+        color: "Couleur"
+        monogram: "Monogramme"
+        role: "Rôle"
+    errors:
+      models:
+        household:
+          attributes:
+            name:
+              blank: "Donnez un nom à votre foyer."
+              too_long: "Le nom du foyer ne peut pas dépasser %{count} caractères."
+            base:
+              user_already_in_household: "Ce compte appartient déjà à un foyer. Quittez-le avant d'en créer un autre."
+        user:
+          attributes:
+            first_name:
+              blank: "Indiquez votre prénom."
+              too_long: "Le prénom ne peut pas dépasser %{count} caractères."
+        household_member:
+          attributes:
+            user_id:
+              already_in_a_household: "Ce compte appartient déjà à un foyer. Il doit le quitter avant d'en rejoindre un autre."
+            color:
+              taken: "Cette couleur est déjà prise dans le foyer."
+            monogram:
+              too_long: "Le monogramme tient en %{count} lettres au maximum."
+            email:
+              cannot_join: "Cette adresse ne peut pas être ajoutée au foyer."
+            base:
+              household_full: "Ce foyer a atteint sa taille maximale (6 personnes)."

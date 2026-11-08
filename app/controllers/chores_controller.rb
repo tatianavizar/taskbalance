@@ -7,7 +7,8 @@ class ChoresController < ApplicationController
   end
 
   def new
-    @household = current_user.households.find_by(id: params[:household_id])
+    @household = current_user.household
+    @household = nil if params[:household_id].present? && @household&.id != params[:household_id].to_i
     redirect_to households_path, alert: t("chores.flash.household_required") and return unless @household
 
     @chore = Chore.new(household: @household)
@@ -15,7 +16,11 @@ class ChoresController < ApplicationController
   end
 
   def create
+    return redirect_to(households_path, alert: t("chores.flash.household_required")) unless current_user.household
+
     @chore = Chore.new(chore_params)
+    # Chores are created in the user's own household, whatever the request says.
+    @chore.household = current_user.household
     @chore.status = :pending
 
     if @chore.save

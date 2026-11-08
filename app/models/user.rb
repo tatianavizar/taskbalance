@@ -1,23 +1,34 @@
 class User < ApplicationRecord
-  # Include default devise modules. Others available are:
-  # :confirmable, :lockable, :timeoutable, :trackable and :omniauthable
-  devise :database_authenticatable, :registerable,
-         :recoverable, :rememberable, :validatable
+  include TimeZoned
 
-  has_many :household_members
-  has_many :households, through: :household_members
+  FIRST_NAME_MAX_LENGTH = 50
+
+  # Include default devise modules. Others available are:
+  # :lockable, :timeoutable, :trackable and :omniauthable
+  #
+  # :confirmable never blocks access (config.allow_unconfirmed_access_for = nil):
+  # the confirmation link lasts 24 h, and an unconfirmed account can sign in and
+  # create its household.
+  devise :database_authenticatable, :registerable,
+         :recoverable, :rememberable, :validatable, :confirmable
+
+  # One household per account (decision of 2026-11-08).
+  has_one :household_membership, class_name: "HouseholdMember"
+  has_one :household, through: :household_membership
   has_many :liked_tasks
   has_many :tasks, through: :liked_tasks
-  has_many :chores, through: :households       # all chores in the user's household(s)
+  has_many :chores, through: :household       # all chores of the user's household
   has_many :assigned_chores, class_name: "Chore", foreign_key: :assigned_to_id
 
+  before_validation { self.first_name = first_name.to_s.strip.presence }
 
+  validates :first_name, presence: true, length: { maximum: FIRST_NAME_MAX_LENGTH }
   validates :email, presence: true, uniqueness: true, format: { with: URI::MailTo::EMAIL_REGEXP }
 
-  private
-
-# def normalize_name
-#   self.name = name.capitalize if name.present?
-# end
-
+  # Sessions last one week whether or not the person ticked a box: the
+  # persistent cookie is always issued at sign-in (see config/initializers/devise.rb
+  # `remember_for`). Devise reads this accessor in its after_set_user hook.
+  def remember_me
+    true
+  end
 end

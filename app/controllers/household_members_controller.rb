@@ -24,7 +24,10 @@ class HouseholdMembersController < ApplicationController
     if member.save
       redirect_to household_path(@household), notice: t("household_members.flash.created", email: user.email)
     else
-      @household_member = HouseholdMember.new
+      # Same answer whatever the reason (already in a household, household full):
+      # the form must not tell whether an account exists for this address.
+      @household_member = HouseholdMember.new(email: user.email)
+      @household_member.errors.add(:email, :cannot_join)
       render :new, status: :unprocessable_entity
     end
   end
@@ -43,7 +46,7 @@ class HouseholdMembersController < ApplicationController
   end
 
   def set_household
-    @household = current_user.households.find(params[:household_id])
+    @household = find_own_household!(params[:household_id])
   end
 
   def household_member_params

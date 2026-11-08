@@ -9,7 +9,13 @@ class ChoresControllerTest < ActionDispatch::IntegrationTest
 
   # --- new ---
 
-  test "new redirects to households when household_id is missing" do
+  test "new uses the user's own household when household_id is missing" do
+    get new_chore_path
+    assert_response :success
+  end
+
+  test "new redirects to households when the user has no household" do
+    sign_in users(:dana)
     get new_chore_path
     assert_redirected_to households_path
   end
@@ -119,5 +125,16 @@ class ChoresControllerTest < ActionDispatch::IntegrationTest
       delete chore_path(chore)
     end
     assert_redirected_to household_path(@household)
+  end
+
+  test "create always uses the user's own household, whatever household_id is sent" do
+    assert_difference -> { @household.chores.count }, 1 do
+      assert_no_difference -> { households(:jones_home).chores.count } do
+        post chores_path, params: { chore: {
+          household_id: households(:jones_home).id, custom_name: "Sneaky", category: "other",
+          assigned_to_id: users(:alice).id, mental_load: "1", execution_load: "0"
+        } }
+      end
+    end
   end
 end

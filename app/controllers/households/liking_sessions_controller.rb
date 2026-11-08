@@ -14,10 +14,19 @@ module Households
     end
 
     def update
-      (params[:preferences] || {}).each do |task_id, liked|
-        record = LikedTask.find_or_initialize_by(user: current_user, task_id: task_id.to_i)
-        record.liked = liked == "true"
-        record.save!
+      submitted = params[:preferences]
+      preferences = submitted.respond_to?(:to_unsafe_h) ? submitted.to_unsafe_h : {}
+      # Only tasks that are chores of this household can be rated: a forged
+      # task_id is refused as a whole, nothing is written.
+      allowed_ids = @household.chores.where.not(task_id: nil).pluck(:task_id)
+      return head :unprocessable_entity unless preferences.keys.all? { |id| allowed_ids.include?(id.to_i) }
+
+      LikedTask.transaction do
+        preferences.each do |task_id, liked|
+          record = LikedTask.find_or_initialize_by(user: current_user, task_id: task_id.to_i)
+          record.liked = liked == "true"
+          record.save!
+        end
       end
 
       redirect_to household_path(@household), notice: t("tasks.liking_session.flash.saved")
@@ -26,7 +35,7 @@ module Households
     private
 
     def set_household
-      @household = current_user.households.find(params[:household_id])
+      @household = find_own_household!(params[:household_id])
     end
   end
 end

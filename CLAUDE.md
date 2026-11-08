@@ -29,8 +29,8 @@ The app lives at `~/code/taskbalance`. It previously sat directly in `/Users/tat
 | Model | Role |
 |---|---|
 | `User` | Devise-authenticated. `role` integer enum. Currently `has_many :households`, but the V1 rule is **one household per account** (decision 2026-11-08); the schema change is planned in `docs/plan-de-travail.md`, lot 1. |
-| `Household` | A home/group. Aggregates calculated from individual logs — never stores raw behavioral data directly. |
-| `HouseholdMember` | Join table — unique per user+household pair. |
+| `Household` | A home/group. `name` required (max 60), `time_zone` (default `Europe/Paris`, the creator's zone at creation). Create with `Household.create_for(user, attrs)` (makes the creator `manager`). Aggregates calculated from individual logs — never stores raw behavioral data directly. |
+| `HouseholdMember` | Join table — **unique per user** (one household per account, unique index). `role` enum `member`/`manager` (the creator is manager; `leave!` hands the role to the oldest remaining member). `color` (mint, blue, stone, sky, sage, sand — unique in the household, auto-assigned in that order, editable), `monogram` (initial of the first name; two letters, initial + last letter, only when two initials coincide; recomputed on each arrival unless `monogram_customized`). Max 6 members. |
 | `Task` | A task from the pre-defined catalogue. `name`, `time_required` (default duration in minutes), `priority` (1–5). |
 | `Chore` | A chore belonging to a Household. `task_id` optional: set = catalogue chore, `nil` = **custom chore** (uses `custom_name` + `category`). Assignee is `assigned_to_id` (not `user_id`). `status` enum (`pending`/`in_progress`/`completed`). Carries its own `mental_load` / `execution_load` booleans, `time_required`, `due_date`. |
 | `ChoreLog` | One completion of a Chore by a User. Holds the two load dimensions (`mental_load`, `execution_load`), `time_spent`, `completed_at`. This is the raw behavioural record. `chore_id` and `household_id` are **nullable** and nullified on delete; `user_id` is not. `chore_name` and `category` are snapshotted at creation so a detached log stays readable. |
@@ -38,7 +38,11 @@ The app lives at `~/code/taskbalance`. It previously sat directly in `/Users/tat
 | `Invitation` | Pending household invite by email. Unique per email+household, `token` generated on create. |
 | `LikedTask` | User preference for a Task — `liked` boolean. Used for task assignment suggestions. |
 
-Key relationship: `User → has_many :chores, through: :households` — a user sees all chores for every household they belong to, not just personally assigned ones.
+Key relationship: `User → has_many :chores, through: :household` — a user sees all chores of their household, not just personally assigned ones.
+
+**`Week`** (`app/models/week.rb`, not persisted): `Week.containing(time_or_date, time_zone)` gives Monday 00:00 → Sunday 23:59:59 in that zone (`start_at`, `end_at`, `range`, `date_range`), the ISO number (`number`, `label` = "Semaine 41"), `previous`/`next`. `household.current_week` / `week_containing`. Every weekly computation must go through it, never through UTC.
+
+**Mail config:** `config/initializers/00_mail.rb` reads SMTP settings (`SMTP_ADDRESS`, `SMTP_PORT`, `SMTP_USER_NAME`, `SMTP_PASSWORD`, `SMTP_DOMAIN`, ...) from the ENV or `credentials.smtp`; sender from `MAIL_FROM` (default `50/50 <bonjour@cinquante.app>`); links use `APP_HOST`.
 
 **`task_id` is nullable — always account for custom chores.** Any code that does `chores.pluck(:task_id)` or `chores.map(&:task)` gets a `nil` for every custom chore. This has already caused a silent data-loss bug and a 500; scope with `where.not(task_id: nil)` when you mean catalogue chores only.
 

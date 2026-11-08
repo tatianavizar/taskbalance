@@ -1,26 +1,91 @@
 class Users::RegistrationsController < Devise::RegistrationsController
+  # Sign-up is an email-sending endpoint: limit it per IP, and per address so
+  # nobody can flood someone's inbox with "you already have an account" mails.
+  rate_limit to: 10, within: 1.hour, only: :create, name: "sign-up-ip",
+             with: -> { rate_limited_redirect }
+  rate_limit to: 3, within: 1.hour, only: :create, name: "sign-up-email",
+             by: -> { params.dig(:user, :email).to_s.strip.downcase },
+             with: -> { rate_limited_redirect }
+
   def new
     session[:invitation_token] = params[:invitation_token] if params[:invitation_token].present?
     super
   end
 
   def create
-    super do |user|
-      if user.persisted? && session[:invitation_token].present?
-        redeem_invitation(user)
+    build_resource(sign_up_params)
+    skip_confirmation_if_invited(resource)
+
+    # Anti-enumeration (A3, A5, A7): an address that already has an account
+    # behaves like a success. The only message that leaves is sent to that
+    # address ("you already have an account"), never shown to the visitor.
+    existing = resource.email.present? && User.find_by(email: resource.email.strip.downcase)
+    return respond_to_known_email(existing) if existing
+
+    resource.save
+    yield resource if block_given?
+    if resource.persisted?
+      redeem_invitation(resource)
+      if resource.active_for_authentication?
+        set_flash_message! :notice, :signed_up
+        sign_up(resource_name, resource)
+        respond_with resource, location: after_sign_up_path_for(resource)
+      else
+        set_flash_message! :notice, :"signed_up_but_#{resource.inactive_message}"
+        expire_data_after_sign_in!
+        respond_with resource, location: after_inactive_sign_up_path_for(resource)
       end
+    else
+      clean_up_passwords resource
+      set_minimum_password_length
+      respond_with resource
     end
   end
 
   private
 
-  def redeem_invitation(user)
-    invitation = Invitation.find_by(token: session[:invitation_token])
-    return unless invitation
-    return unless invitation.email.downcase == user.email.downcase
+  # A valid invitation token proves the address (the email went there), so the
+  # account is confirmed from the start and no confirmation email is sent.
+  def skip_confirmation_if_invited(user)
+    return unless pending_invitation_for(user)
 
-    HouseholdMember.find_or_create_by!(user: user, household_id: invitation.household_id)
+    user.skip_confirmation!
+  end
+
+  def pending_invitation_for(user)
+    return if session[:invitation_token].blank? || user.email.blank?
+
+    invitation = Invitation.find_by(token: session[:invitation_token])
+    invitation if invitation && invitation.email.casecmp?(user.email)
+  end
+
+  def redeem_invitation(user)
+    invitation = pending_invitation_for(user)
+    return unless invitation
+
+    # A new account has no household yet; a failed join must not break sign-up.
+    HouseholdMember.create(user: user, household_id: invitation.household_id)
     invitation.destroy
     session.delete(:invitation_token)
+  end
+
+  def respond_to_known_email(existing)
+    # The other validations (password, first name...) still apply so that the
+    # response does not differ from a sign-up with a new address.
+    resource.valid?
+    resource.errors.delete(:email, :taken)
+    if resource.errors.any?
+      clean_up_passwords resource
+      set_minimum_password_length
+      return respond_with(resource)
+    end
+
+    AccountMailer.already_registered(existing).deliver_later
+    set_flash_message! :notice, :signed_up_but_unconfirmed
+    redirect_to new_user_session_path
+  end
+
+  def rate_limited_redirect
+    redirect_to new_user_registration_path, alert: t("devise.failure.rate_limited")
   end
 end

@@ -1,9 +1,29 @@
+<% hash = "$2a$12$SsyLuOICEuz/qK/kCHKdlO7TvlzDyQuAhedom.lX6M3IYoD3U3b9C" %>
 alice:
   email: alice@test.com
-  encrypted_password: "$2a$12$SsyLuOICEuz/qK/kCHKdlO7TvlzDyQuAhedom.lX6M3IYoD3U3b9C"
+  first_name: Alice
+  encrypted_password: "<%= hash %>"
+  confirmed_at: <%= 1.month.ago.to_fs(:db) %>
   role: 0
 
 bob:
   email: bob@test.com
-  encrypted_password: "$2a$12$SsyLuOICEuz/qK/kCHKdlO7TvlzDyQuAhedom.lX6M3IYoD3U3b9C"
+  first_name: Bob
+  encrypted_password: "<%= hash %>"
+  confirmed_at: <%= 1.month.ago.to_fs(:db) %>
+  role: 0
+
+# Belongs to jones_home: lets tests check that someone cannot reach another household.
+carol:
+  email: carol@test.com
+  first_name: Carol
+  encrypted_password: "<%= hash %>"
+  confirmed_at: <%= 1.month.ago.to_fs(:db) %>
+  role: 0
+
+# Has no household and has never confirmed the address.
+dana:
+  email: dana@test.com
+  first_name: Dana
+  encrypted_password: "<%= hash %>"
   role: 0

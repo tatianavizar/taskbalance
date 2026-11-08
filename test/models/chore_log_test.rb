@@ -94,7 +94,7 @@ class ChoreLogTest < ActiveSupport::TestCase
   end
 
   test "rejects a doer who is not in the household" do
-    outsider = User.create!(email: "outsider-model@test.com", password: "password123")
+    outsider = User.create!(email: "outsider-model@test.com", first_name: "Outsider", password: "password123")
     log = build_log(user: outsider)
 
     assert_not log.save
