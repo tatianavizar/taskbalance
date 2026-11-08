@@ -1,36 +1,31 @@
-<div class="d-flex justify-content-between align-items-center mb-4">
-  <h1><%= t("chores.index.title") %></h1>
-</div>
+<% provide :title, t("chores.index.title") %>
+<h1 class="screen-title"><%= t("chores.index.title") %></h1>
 
 <% if @chores.empty? %>
-  <p class="text-muted"><%= t("chores.index.empty") %></p>
+  <%= callout do %><p class="m-0"><%= t("chores.index.empty") %></p><% end %>
 <% else %>
   <% @chores.group_by(&:household).each do |household, chores| %>
-    <h2 class="h5 mb-2"><%= household.name %></h2>
-    <ul class="list-group mb-4">
-      <% chores.each do |chore| %>
-        <li class="list-group-item d-flex justify-content-between align-items-center">
-          <div>
-            <span class="<%= 'text-decoration-line-through text-muted' if chore.completed? %>">
-              <%= chore.effective_name %>
-            </span>
-            <span class="badge ms-2 <%= chore.completed? ? 'bg-success' : 'bg-secondary' %>">
-              <%= t("chores.index.status.#{chore.status}") %>
-            </span>
+    <section class="flex flex-col gap-2" aria-labelledby="household-<%= household.id %>">
+      <h2 id="household-<%= household.id %>" class="text-base font-bold m-0 font-sans"><%= household.name %></h2>
+      <div class="list-stack">
+        <% chores.each do |chore| %>
+          <%= card do %>
+            <div class="flex items-center justify-between gap-2">
+              <span class="font-semibold <%= "line-through text-muted" if chore.completed? %>"><%= chore.effective_name %></span>
+              <%= status_pill t("chores.index.status.#{chore.status}"), tone: (chore.completed? ? :soft : :outline) %>
+            </div>
             <% if chore.due_date %>
-              <small class="text-muted ms-2"><%= chore.due_date.strftime("%b %d") %></small>
+              <p class="text-[13px] text-muted m-0"><%= l(chore.due_date, format: :short) %></p>
             <% end %>
-          </div>
-          <div class="d-flex gap-2">
-            <%= link_to t("common.edit"), edit_chore_path(chore), class: "btn btn-sm btn-outline-secondary" %>
-            <% unless chore.completed? %>
-              <%= link_to t("chores.index.mark_completed"),
-                    new_chore_completion_path(chore),
-                    class: "btn btn-sm btn-outline-success" %>
-            <% end %>
-          </div>
-        </li>
-      <% end %>
-    </ul>
+            <div class="flex gap-2 mt-3">
+              <%= link_to t("common.edit"), edit_chore_path(chore), class: "btn btn-secondary btn-sm flex-1" %>
+              <% unless chore.completed? %>
+                <%= link_to t("chores.index.mark_completed"), new_chore_completion_path(chore), class: "btn btn-primary btn-sm flex-1" %>
+              <% end %>
+            </div>
+          <% end %>
+        <% end %>
+      </div>
+    </section>
   <% end %>
 <% end %>

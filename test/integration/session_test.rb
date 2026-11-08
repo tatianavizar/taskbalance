@@ -15,7 +15,7 @@ class SessionTest < ActionDispatch::IntegrationTest
   test "signing in always sets a persistent cookie valid for one week" do
     sign_in_without_remember_box
 
-    assert_redirected_to root_path
+    assert_redirected_to dashboard_path
     assert cookies["remember_user_token"].present?
     assert_equal 1.week, Devise.remember_for
     assert_in_delta 1.week.from_now, @alice.reload.remember_created_at + 1.week, 5.seconds
@@ -60,7 +60,7 @@ class SessionTest < ActionDispatch::IntegrationTest
     dana.update!(password: "password123")
     post user_session_path, params: { user: { email: dana.email, password: "password123" } }
 
-    assert_redirected_to root_path
+    assert_redirected_to dashboard_path
   end
 
   test "resending the confirmation is generic and rate limited" do

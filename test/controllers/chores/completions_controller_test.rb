@@ -69,7 +69,7 @@ module Chores
       post chore_completion_path(@chore), params: valid_params
 
       assert_redirected_to chores_path
-      assert_equal "Logged: Cook a meal.", flash[:notice]
+      assert_equal "Enregistré : Cook a meal.", flash[:notice]
       assert @chore.reload.completed?
     end
 
@@ -78,7 +78,7 @@ module Chores
       follow_redirect!
 
       assert_response :success
-      assert_match "Logged: Cook a meal.", response.body
+      assert_match "Enregistré : Cook a meal.", response.body
     end
 
     test "create ignores a posted user_id and logs as the current user" do

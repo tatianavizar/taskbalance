@@ -1,7 +1,6 @@
-<h1 class="mb-4"><%= t("households.edit.title") %></h1>
+<% provide :chrome, "none" %>
+<% provide :title, t("households.edit.title") %>
+<%= back_button household_path(@household) %>
+<h1 class="screen-title"><%= t("households.edit.title") %></h1>
 
 <%= render "form" %>
-
-<div class="mt-3">
-  <%= link_to t("common.cancel"), household_path(@household) %>
-</div>

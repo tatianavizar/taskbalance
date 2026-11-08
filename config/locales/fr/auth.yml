@@ -1,0 +1,19 @@
+fr:
+  auth:
+    sign_in: "Se connecter"
+    no_account: "Pas encore de compte ?"
+    have_account: "Déjà un compte ?"
+    password_hint:
+      one: "%{count} caractère minimum."
+      other: "%{count} caractères minimum."
+    sign_up:
+      title: "Créer un compte"
+      subtitle: "Pour mesurer qui porte quoi chez vous."
+      submit: "Créer mon compte"
+    forgot:
+      subtitle: "Nous envoyons un lien pour choisir un nouveau mot de passe."
+      submit: "Envoyer le lien"
+    account:
+      title: "Mon compte"
+      cancel_hint: "La suppression est définitive. Vos enregistrements vous suivent et restent attachés à votre compte."
+      cancel_confirm: "Supprimer votre compte ?"

@@ -1,0 +1,49 @@
+fr:
+  chores:
+    index:
+      title: "Tâches"
+      empty: "Aucune tâche pour l'instant."
+      mark_completed: "Fait"
+      count:
+        one: "%{count} tâche"
+        other: "%{count} tâches"
+      status:
+        pending: "À faire"
+        in_progress: "En cours"
+        completed: "Faite"
+    new:
+      title: "Ajouter une tâche"
+    edit:
+      title: "Modifier la tâche"
+    form:
+      task_label: "Tâche"
+      task_prompt: "Choisir une tâche…"
+      category_label: "Catégorie"
+      category_prompt: "Choisir une catégorie…"
+      name_label: "Nom de la tâche"
+      name_placeholder: "Ex. : réparer le robinet, renouveler l'assurance…"
+      time_required_label: "Durée (minutes)"
+      time_required_hint: "Vide : durée par défaut de la tâche (%{task_default} min)"
+      mental_load_label: "Charge mentale : planifier, organiser, décider"
+      execution_load_label: "Exécution : le faire physiquement"
+      load_legend: "Type de charge"
+      load_note: "Obligatoire quand la tâche est assignée"
+      assigned_to_label: "Assignée à"
+      assigned_to_prompt: "Personne"
+      due_date_label: "Échéance"
+      submit_create: "Ajouter la tâche"
+      submit_update: "Enregistrer les changements"
+      delete: "Supprimer la tâche"
+      delete_confirm: "Supprimer cette tâche ? Ses enregistrements sont conservés."
+    setup:
+      title: "Choisir les tâches"
+      submit: "Enregistrer les tâches"
+      note: "La durée et le type de charge se règlent ensuite, tâche par tâche."
+      flash:
+        saved: "Tâches du foyer mises à jour."
+    flash:
+      created: "Tâche ajoutée."
+      updated: "Tâche modifiée."
+      destroyed: "Tâche supprimée."
+      household_required: "Créez ou rejoignez d'abord un foyer."
+      cannot_delete_catalogue: "Une tâche du catalogue se retire depuis le choix des tâches du foyer."

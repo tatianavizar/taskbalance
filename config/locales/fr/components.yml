@@ -1,0 +1,12 @@
+fr:
+  components:
+    balance:
+      aria: "%{title} : %{you} %{share} %, %{others}. Repère de la part juste : %{fair} %."
+    level_progress:
+      level: "Niveau %{level}"
+      summary:
+        zero: "0 semaine équilibrée sur %{total} pour le niveau %{next_level}"
+        one: "%{count} semaine équilibrée sur %{total} pour le niveau %{next_level}"
+        other: "%{count} semaines équilibrées sur %{total} pour le niveau %{next_level}"
+  styleguide:
+    title: "Composants"

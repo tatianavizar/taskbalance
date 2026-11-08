@@ -68,18 +68,15 @@ bin/rails db:migrate
 bin/rails tailwindcss:build      # compile Tailwind once
 ```
 
-## CSS — dual setup
+## Front — assets, composants, mobile
 
-Two stylesheet pipelines coexist:
-
-- **Bootstrap** via `application.scss` → partials in `assets/stylesheets/components/` and `pages/`
-- **Tailwind** via `application.tailwind.css` → utility classes
-
-**Only Tailwind is actually loaded.** `layouts/application.html.erb` links `tailwind` and `inter-font` — `application.scss` is never referenced, so every Bootstrap class in the existing views (`btn`, `form-control`, `list-group`, `badge`…) is inert. Write new markup in Tailwind.
-
-**JavaScript loads via importmap.** The layout renders `javascript_importmap_tags`, so Turbo and Stimulus are available and `link_to ... data: { turbo_method: :delete }` works. This was broken until the tag was added — the delete links across the app silently issued GETs and did nothing.
-
-**Asset pipeline gotcha:** both `propshaft` and `sprockets` are in the Gemfile, and **Sprockets is the one actually serving** (`Rails.application.assets` is a `Sprockets::Environment`). So every importmap'd file must be declared in `app/assets/config/manifest.js` or the layout raises `Asset ... was not declared to be precompiled`. `//= link_tree ../../javascript .js` covers `app/javascript`. Worth collapsing to one pipeline eventually.
+- **Un seul pipeline : Propshaft.** Bootstrap, Sass, font-awesome, simple_form et Sprockets sont retirés. Le CSS est du Tailwind v4 (`app/assets/tailwind/application.css`) : tokens du design system dans `@theme`, classes de composants (`.btn`, `.field-*`, `.card`, `.callout`, `.alert-box`, `.tab-bar`…).
+- **JavaScript par importmap** (Turbo + Stimulus). `app/javascript/confirm_dialog.js` remplace la boîte `confirm()` de Turbo par une feuille `<dialog>`.
+- **Formulaires :** `FiftyFormBuilder` (`app/form_builders/`) est le builder par défaut (`field`, `select_field`, `checkbox_field`, `switch_field`, `segmented`, `error_summary`, `submit`).
+- **Composants :** helpers dans `app/helpers/components_helper.rb`, partials dans `app/views/components/`. Ils prennent des valeurs simples, sans logique métier. Catalogue visuel sur `/styleguide` (développement et test seulement).
+- **Layout mobile :** en-tête et barre d'onglets masqués pour les coquilles Hotwire Native (`hotwire_native_app?`) et quand la vue fait `provide :chrome, "none"`. Le foyer courant passe par `current_household` (`ApplicationHelper`).
+- **Hotwire Native côté serveur :** `/configurations/ios_v1.json` et `android_v1.json` (`ConfigurationsController`). `allow_browser` n'est pas appliqué aux requêtes natives.
+- **Erreurs :** `config.exceptions_app = routes`, `ErrorsController` (404, 403, 422, 500) en français.
 
 ## Known issues
 

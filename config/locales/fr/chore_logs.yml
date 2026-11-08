@@ -1,0 +1,12 @@
+fr:
+  chore_logs:
+    new:
+      title: "Enregistrer une tâche"
+    form:
+      load_legend: "Qu'est-ce que ça vous a demandé ?"
+      mental_load_label: "Charge mentale : planifier, organiser, décider"
+      execution_load_label: "Exécution : le faire physiquement"
+      time_spent_label: "Temps passé (minutes)"
+      submit: "Enregistrer"
+    flash:
+      created: "Enregistré : %{chore}."

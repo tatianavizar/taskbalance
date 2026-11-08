@@ -24,7 +24,12 @@ module TaskBalance
     config.autoload_lib(ignore: %w[assets tasks])
 
     config.i18n.load_path += Dir[Rails.root.join("config/locales/**/*.{rb,yml}")]
-    config.i18n.default_locale = :en
+    config.i18n.default_locale = :fr
+    config.i18n.available_locales = [:fr, :en]
+    config.i18n.fallbacks = [:en]
+
+    # Pages d'erreur en français (ErrorsController) au lieu des fichiers de public/.
+    config.exceptions_app = routes
 
     # Configuration for the application, engines, and railties goes here.
     #

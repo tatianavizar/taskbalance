@@ -1,41 +1,50 @@
 <!DOCTYPE html>
-<html>
+<html lang="<%= I18n.locale %>">
   <head>
-    <title><%= content_for(:title) || "Task Balance" %></title>
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title><%= page_title %></title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#f6fbf8">
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
 
     <%= yield :head %>
 
-    <%# Enable PWA manifest for installable apps (make sure to enable in config/routes.rb too!) %>
-    <%#= tag.link rel: "manifest", href: pwa_manifest_path(format: :json) %>
-
+    <%= tag.link rel: "manifest", href: pwa_manifest_path(format: :json) %>
     <link rel="icon" href="/icon.png" type="image/png">
     <link rel="icon" href="/icon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="/icon.png">
 
-    <%# Includes all stylesheet files in app/assets/stylesheets %>
-    <%= stylesheet_link_tag "tailwind", "inter-font", "data-turbo-track": "reload" %>
+    <% unless Rails.env.test? %>
+      <link rel="preconnect" href="https://fonts.googleapis.com">
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;700;800&family=Figtree:wght@400;500;600;700&display=swap">
+    <% end %>
+    <%= stylesheet_link_tag "tailwind", "data-turbo-track": "reload" %>
     <%= javascript_importmap_tags %>
-
   </head>
 
   <body>
-    <% if flash.any? %>
-      <div class="container mx-auto mt-6 px-5">
-        <% flash.each do |type, message| %>
-          <div class="mb-3 rounded border px-4 py-3 text-sm <%= type.to_s == "alert" ? "border-red-300 bg-red-50 text-red-800" : "border-green-300 bg-green-50 text-green-800" %>">
-            <%= message %>
-          </div>
-        <% end %>
-      </div>
-    <% end %>
+    <% with_chrome = chrome? %>
+    <% with_header = with_chrome && current_household.present? %>
+    <div class="app-shell <%= "with-tabs" if with_chrome %> <%= "no-header" unless with_header %>">
+      <%= app_header(current_household.name) if with_header %>
 
-    <main class="container mx-auto mt-28 px-5 flex">
-      <%= yield %>
-    </main>
+      <main class="app-main <%= "app-main-padded-tabs" if with_chrome %>">
+        <% flash.each do |type, message| %>
+          <% if type.to_s == "alert" %>
+            <div class="alert-box" role="alert"><%= message %></div>
+          <% else %>
+            <div class="callout text-sm" role="status"><%= message %></div>
+          <% end %>
+        <% end %>
+
+        <%= yield %>
+      </main>
+
+      <%= tab_bar if with_chrome %>
+    </div>
+    <%= confirm_dialog %>
   </body>
 </html>

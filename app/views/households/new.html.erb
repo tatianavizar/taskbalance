@@ -1,7 +1,6 @@
-<h1 class="mb-4"><%= t("households.new.title") %></h1>
+<% provide :chrome, "none" %>
+<% provide :title, t("households.new.title") %>
+<%= back_button(current_household ? household_path(current_household) : dashboard_path) %>
+<h1 class="screen-title"><%= t("households.new.title") %></h1>
 
 <%= render "form" %>
-
-<div class="mt-3">
-  <%= link_to t("common.back"), households_path %>
-</div>

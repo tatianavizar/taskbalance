@@ -64,7 +64,7 @@ class ChoreTest < ActiveSupport::TestCase
   test "is invalid without task_id or custom_name" do
     chore = Chore.new(household: households(:smith_home))
     assert_not chore.valid?
-    assert_includes chore.errors[:base].join, "Enter a chore name"
+    assert_includes chore.errors[:base].join, "Donnez un nom à la tâche"
   end
 
   test "is valid with task_id and no custom_name" do
@@ -88,7 +88,7 @@ class ChoreTest < ActiveSupport::TestCase
       execution_load: false
     )
     assert_not chore.valid?
-    assert_includes chore.errors[:base].join, "At least one load dimension"
+    assert_includes chore.errors[:base].join, "Cochez au moins une charge"
   end
 
   test "is valid when assigned with mental_load set" do

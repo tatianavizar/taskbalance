@@ -1,17 +1,17 @@
-<h1 class="mb-4"><%= t("household_members.new.title") %></h1>
-
-<p class="text-muted mb-3"><%= t("household_members.new.household_label") %>: <strong><%= @household.name %></strong></p>
-
-<%= simple_form_for [@household, @household_member] do |f| %>
-  <%= f.error_notification %>
-
-  <div class="mb-3">
-    <%= f.input :email, label: t("household_members.new.email_label"), placeholder: t("household_members.new.email_placeholder") %>
-  </div>
-
-  <%= f.submit t("household_members.new.submit"), class: "btn btn-primary" %>
-<% end %>
-
-<div class="mt-3">
-  <%= link_to t("common.cancel"), household_path(@household) %>
+<% provide :chrome, "none" %>
+<% provide :title, t("household_members.new.title") %>
+<%= back_button household_path(@household) %>
+<div>
+  <h1 class="screen-title"><%= t("household_members.new.title") %></h1>
+  <p class="screen-subtitle"><%= t("household_members.new.household_label") %> : <b><%= @household.name %></b></p>
 </div>
+
+<%= form_with model: [ @household, @household_member ], html: { class: "flex flex-col gap-4 flex-1" } do |f| %>
+  <%= f.error_summary %>
+  <%= f.field :email, as: :email, label: t("household_members.new.email_label"),
+        placeholder: t("household_members.new.email_placeholder"), autofocus: true, autocomplete: "off" %>
+
+  <%= sticky_cta do %>
+    <%= f.submit t("household_members.new.submit") %>
+  <% end %>
+<% end %>

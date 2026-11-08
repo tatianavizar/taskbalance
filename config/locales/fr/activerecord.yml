@@ -1,42 +1,95 @@
+---
 fr:
   activerecord:
     models:
-      household_member: "Membre du foyer"
+      household_member: Membre du foyer
+      household: Foyer
+      user: Compte
+      chore: Tâche
+      task: Tâche du catalogue
+      liked_task: Préférence
+      chore_log: Enregistrement
+      invitation: Invitation
     attributes:
       household:
-        name: "Nom du foyer"
-        time_zone: "Fuseau horaire"
+        name: Nom du foyer
+        time_zone: Fuseau horaire
       user:
-        first_name: "Prénom"
-        email: "Adresse email"
-        time_zone: "Fuseau horaire"
+        first_name: Prénom
+        email: Email
+        time_zone: Fuseau horaire
+        password: Mot de passe
+        password_confirmation: Confirmer le mot de passe
+        current_password: Mot de passe actuel
+        remember_me: Garder la session ouverte
       household_member:
-        color: "Couleur"
-        monogram: "Monogramme"
-        role: "Rôle"
+        color: Couleur
+        monogram: Monogramme
+        role: Rôle
+        email: Email
+      invitation:
+        email: Email
+      chore:
+        status: Statut
+        mental_load: Charge mentale
+        execution_load: Exécution
+      task:
+        name: Nom de la tâche
+        category: Catégorie
+        priority: Priorité
+        time_required: Durée (min)
+        recurring: Récurrente
+      liked_task:
+        liked: Aimée
+      chore_log:
+        mental_load: Charge mentale
+        execution_load: Exécution
+        time_spent: Temps passé
+        completed_at: Fait le
+        chore_name: Tâche
+        user_id: Fait par
     errors:
       models:
         household:
           attributes:
             name:
-              blank: "Donnez un nom à votre foyer."
-              too_long: "Le nom du foyer ne peut pas dépasser %{count} caractères."
+              blank: Donnez un nom à votre foyer.
+              too_long: Le nom du foyer ne peut pas dépasser %{count} caractères.
             base:
-              user_already_in_household: "Ce compte appartient déjà à un foyer. Quittez-le avant d'en créer un autre."
+              user_already_in_household: Ce compte appartient déjà à un foyer. Quittez-le avant d'en créer un autre.
         user:
           attributes:
             first_name:
-              blank: "Indiquez votre prénom."
-              too_long: "Le prénom ne peut pas dépasser %{count} caractères."
+              blank: Indiquez votre prénom.
+              too_long: Le prénom ne peut pas dépasser %{count} caractères.
         household_member:
           attributes:
             user_id:
-              already_in_a_household: "Ce compte appartient déjà à un foyer. Il doit le quitter avant d'en rejoindre un autre."
+              already_in_a_household: Ce compte appartient déjà à un foyer. Il doit le quitter avant d'en rejoindre un autre.
             color:
-              taken: "Cette couleur est déjà prise dans le foyer."
+              taken: Cette couleur est déjà prise dans le foyer.
             monogram:
-              too_long: "Le monogramme tient en %{count} lettres au maximum."
+              too_long: Le monogramme tient en %{count} lettres au maximum.
             email:
-              cannot_join: "Cette adresse ne peut pas être ajoutée au foyer."
+              cannot_join: Cette adresse ne peut pas être ajoutée au foyer.
             base:
-              household_full: "Ce foyer a atteint sa taille maximale (6 personnes)."
+              household_full: Ce foyer a atteint sa taille maximale (6 personnes).
+        chore:
+          attributes:
+            base:
+              at_least_one_load: 'Cochez au moins une charge : mentale ou exécution.'
+              task_or_name_required: Donnez un nom à la tâche.
+        liked_task:
+          attributes:
+            task_id:
+              taken: Vous avez déjà donné votre préférence pour cette tâche.
+        chore_log:
+          attributes:
+            base:
+              at_least_one_load: 'Cochez au moins une charge : mentale ou exécution.'
+            user_id:
+              not_a_member: ne fait pas partie de ce foyer
+        invitation:
+          attributes:
+            email:
+              taken: a déjà une invitation pour ce foyer

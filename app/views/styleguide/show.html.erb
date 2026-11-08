@@ -1,0 +1,77 @@
+<% provide :chrome, "none" %>
+<% provide :title, t("styleguide.title") %>
+<h1 class="screen-title">Styleguide</h1>
+
+<section class="flex flex-col gap-3" id="sg-logo">
+  <h2 class="text-base font-bold m-0 font-sans">Logo, retour, en-tête</h2>
+  <div class="flex items-center gap-4"><%= logo(size: 28) %><%= logo(size: 72) %></div>
+  <%= back_button dashboard_path %>
+  <div class="card"><%= app_header("Chez Virginie et Karim") %></div>
+</section>
+
+<section class="flex flex-col gap-3" id="sg-buttons">
+  <h2 class="text-base font-bold m-0 font-sans">Boutons</h2>
+  <a href="#" class="btn btn-primary">Bouton principal</a>
+  <a href="#" class="btn btn-secondary">Bouton secondaire</a>
+  <a href="#" class="btn btn-outline">Bouton contour</a>
+</section>
+
+<section class="flex flex-col gap-3" id="sg-forms">
+  <h2 class="text-base font-bold m-0 font-sans">Formulaire</h2>
+  <% demo = Household.new(name: "") ; demo.valid? %>
+  <%= form_with model: demo, url: "#", method: :get, html: { class: "pb-24" } do |f| %>
+    <div class="flex flex-col gap-4">
+      <%= f.error_summary %>
+      <%= f.field :name, label: "Nom du foyer", hint: "Indication sous le champ." %>
+      <%= fields_for :demo, Struct.new(:email, :remember, :notify, :freq).new("virginie@exemple.fr", true, false, "weekly") do |d| %>
+        <%= d.field :email, as: :email, label: "Email" %>
+        <%= d.checkbox_field :remember, label: "Garder la session ouverte" %>
+        <%= d.switch_field :notify, label: "Recevoir le bilan du lundi" %>
+        <%= d.segmented :freq, [ [ "Jour", "daily" ], [ "Semaine", "weekly" ], [ "Mois", "monthly" ] ], label: "Fréquence" %>
+      <% end %>
+      <%= f.submit "Créer le foyer" %>
+    </div>
+  <% end %>
+</section>
+
+<section class="flex flex-col gap-3" id="sg-cards">
+  <h2 class="text-base font-bold m-0 font-sans">Carte, ligne de liste, encadré, pastilles</h2>
+  <%= card do %><b>Carte</b><br><span class="text-[13px] text-muted">Contenu libre</span><% end %>
+  <div class="list-stack">
+    <%= list_row title: "Payer les factures", subtitle: "Mentale · 20 min", href: "#" %>
+    <%= list_row title: "Karim", subtitle: "Invitation en attente", leading: avatar(initials: "K", color: "blue", pending: true, size: 36) %>
+  </div>
+  <%= callout do %><b>Encadré menthe</b><p class="m-0 text-sm">Pour mettre un chiffre en avant.</p><% end %>
+  <div class="alert-box" role="note">Alerte : toujours en encre.</div>
+  <div class="flex flex-wrap gap-2 items-center">
+    <%= avatar(initials: "V", color: "mint") %>
+    <%= avatar(initials: "Km", color: "stone") %>
+    <%= avatar(initials: "K", color: "sky", pending: true) %>
+    <%= status_pill "À faire", tone: :soft %>
+    <%= status_pill "En retard", tone: :ink %>
+    <%= status_pill "En attente", tone: :outline %>
+  </div>
+</section>
+
+<section class="flex flex-col gap-3" id="sg-balance">
+  <h2 class="text-base font-bold m-0 font-sans">Balance</h2>
+  <%= balance title: "Charge mentale", count: "17 tâches sur 24", name: "Virginie", share: 71,
+        others: [ { name: "Karim", share: 29 } ] %>
+  <%= balance title: "Exécution", count: "18 tâches sur 31", name: "Virginie", share: 50,
+        others: [ { name: "Karim", share: 50 } ], balanced: true %>
+  <%= balance title: "Charge mentale", count: "12 tâches sur 30", name: "Virginie", share: 50,
+        others: [ { name: "Karim", share: 30 }, { name: "Karine", share: 20 } ] %>
+  <%= level_progress level: 1, done: 1, total: 3, href: "#" %>
+</section>
+
+<section class="flex flex-col gap-3" id="sg-cta">
+  <h2 class="text-base font-bold m-0 font-sans">CTA collé en bas, confirmation</h2>
+  <%= button_to "Ouvrir la confirmation", "#", method: :get, class: "btn btn-secondary", id: "open-confirm",
+        form: { data: { turbo_confirm: "Supprimer cette tâche ? Ses enregistrements sont conservés." } } %>
+  <%= sticky_cta do %>
+    <a href="#" class="btn btn-primary">Enregistrer une tâche</a>
+  <% end %>
+</section>
+
+<%# La barre d'onglets est fixe : elle apparaît au bas de l'écran. %>
+<div id="sg-tabs"><%= tab_bar(active: :report) %></div>
