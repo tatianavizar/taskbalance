@@ -80,3 +80,6 @@ id_ed25519
 
 # macOS
 .DS_Store
+
+# Agent worktrees
+/.worktrees/
