@@ -1,0 +1,12 @@
+<% provide :chrome, "none" %>
+<% provide :title, t("auth.account.edit_first_name.title") %>
+<%= back_button account_path %>
+<h1 class="screen-title"><%= t("auth.account.edit_first_name.title") %></h1>
+
+<%= form_with model: current_user, scope: :user, url: edit_first_name_path, method: :patch, html: { class: "flex flex-col gap-4 flex-1" } do |f| %>
+  <%= f.error_summary %>
+  <%= f.field :first_name, autofocus: true, autocomplete: "given-name", hint: t("auth.account.edit_first_name.hint") %>
+  <%= sticky_cta do %>
+    <%= f.submit t("auth.account.edit_first_name.submit") %>
+  <% end %>
+<% end %>

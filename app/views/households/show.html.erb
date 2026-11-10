@@ -22,6 +22,7 @@
   <%= list_row title: t("chores.setup.title"), href: household_chores_setup_path(@household) %>
   <%= list_row title: t("chores.new.title"), href: new_chore_path(household_id: @household.id) %>
   <%= list_row title: t("common.edit"), href: edit_household_path(@household) %>
+  <%= list_row title: t("auth.account.title"), href: account_path %>
 </div>
 
 <%= button_to t("common.delete"), household_path(@household), method: :delete, class: "btn btn-outline",

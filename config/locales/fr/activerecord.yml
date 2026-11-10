@@ -53,7 +53,7 @@ fr:
         household:
           attributes:
             name:
-              blank: Donnez un nom à votre foyer.
+              blank: "Donnez un nom au foyer pour continuer. Par exemple : Chez Virginie et Karim."
               too_long: Le nom du foyer ne peut pas dépasser %{count} caractères.
             base:
               user_already_in_household: Ce compte appartient déjà à un foyer. Quittez-le avant d'en créer un autre.
@@ -62,6 +62,19 @@ fr:
             first_name:
               blank: Indiquez votre prénom.
               too_long: Le prénom ne peut pas dépasser %{count} caractères.
+            email:
+              blank: Indiquez votre email.
+              invalid: Cet email n'est pas valide.
+              taken: Cet email est déjà utilisé.
+            password:
+              blank: Choisissez un mot de passe.
+              too_short: "Trop court : %{count} caractères minimum."
+              too_long: "Trop long : %{count} caractères au maximum."
+            password_confirmation:
+              confirmation: Les deux mots de passe sont différents.
+            current_password:
+              blank: Indiquez votre mot de passe actuel.
+              invalid: Ce n'est pas votre mot de passe actuel.
         household_member:
           attributes:
             user_id:

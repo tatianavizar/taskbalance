@@ -5,12 +5,12 @@ fr:
       send_instructions: "Si cette adresse correspond à un compte, vous allez recevoir un email avec les instructions de confirmation."
       send_paranoid_instructions: "Si cette adresse correspond à un compte, vous allez recevoir un email avec les instructions de confirmation."
     failure:
-      already_authenticated: "Vous êtes déjà connecté·e."
+      already_authenticated: "Une session est déjà ouverte."
       inactive: "Votre compte n'est pas encore activé."
-      invalid: "Adresse email ou mot de passe incorrect."
+      invalid: "Email ou mot de passe incorrect."
       last_attempt: "Il vous reste une tentative avant le blocage du compte."
       locked: "Votre compte est bloqué."
-      not_found_in_database: "Adresse email ou mot de passe incorrect."
+      not_found_in_database: "Email ou mot de passe incorrect."
       timeout: "Votre session a expiré. Reconnectez-vous pour continuer."
       unauthenticated: "Connectez-vous ou créez un compte pour continuer."
       unconfirmed: "Confirmez votre adresse email pour continuer."
@@ -28,8 +28,8 @@ fr:
       no_token: "Cette page n'est accessible que depuis le lien reçu par email."
       send_instructions: "Si cette adresse correspond à un compte, vous allez recevoir un email pour réinitialiser votre mot de passe."
       send_paranoid_instructions: "Si cette adresse correspond à un compte, vous allez recevoir un email pour réinitialiser votre mot de passe."
-      updated: "Votre mot de passe a été changé. Vous êtes connecté·e."
-      updated_not_active: "Votre mot de passe a été changé."
+      updated: "Votre mot de passe est modifié. La session est ouverte."
+      updated_not_active: "Votre mot de passe est modifié."
     registrations:
       destroyed: "Votre compte a été supprimé."
       signed_up: "Bienvenue sur 50/50."
@@ -40,9 +40,9 @@ fr:
       updated: "Votre compte est mis à jour."
       updated_but_not_signed_in: "Votre compte est mis à jour. Reconnectez-vous avec votre nouveau mot de passe."
     sessions:
-      signed_in: "Vous êtes connecté·e."
-      signed_out: "Vous êtes déconnecté·e."
-      already_signed_out: "Vous êtes déjà déconnecté·e."
+      signed_in: "Session ouverte."
+      signed_out: "Session fermée."
+      already_signed_out: "La session est déjà fermée."
   errors:
     messages:
       already_confirmed: "est déjà confirmée, connectez-vous"

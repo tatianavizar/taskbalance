@@ -1,0 +1,24 @@
+<% provide :chrome, "none" %>
+<% provide :title, t("auth.account.title") %>
+<%= back_button(current_household ? household_path(current_household) : dashboard_path) %>
+<h1 class="screen-title"><%= t("auth.account.title") %></h1>
+
+<div class="list-stack">
+  <%= list_row title: t("auth.account.first_name"), subtitle: current_user.first_name, href: edit_first_name_path %>
+  <%= list_row title: t("auth.account.email"), subtitle: current_user.email, href: edit_email_path,
+        trailing: ((status_pill(t("auth.account.email_unconfirmed"), tone: :ink) unless current_user.confirmed? && !current_user.pending_reconfirmation?)) %>
+  <% if current_user.pending_reconfirmation? %>
+    <%= list_row title: t("auth.confirm_pending.title"), subtitle: current_user.unconfirmed_email, href: pending_user_confirmation_path %>
+  <% elsif !current_user.confirmed? %>
+    <%= list_row title: t("auth.confirm_pending.title"), href: pending_user_confirmation_path %>
+  <% end %>
+  <%= list_row title: t("auth.account.password"), subtitle: t("auth.account.password_value"), href: edit_password_path %>
+</div>
+
+<div class="list-stack">
+  <%= list_row title: t("auth.account.intro"), href: intro_path(1) %>
+</div>
+
+<%= sticky_cta do %>
+  <%= button_to t("auth.account.log_out"), destroy_user_session_path, method: :delete, class: "btn btn-secondary", form: { class: "m-0" } %>
+<% end %>

@@ -1,4 +1,7 @@
 class Users::PasswordsController < Devise::PasswordsController
+  # Seconds before the "resend" button comes back (the server limits sends too).
+  RESEND_DELAY = 60
+
   # Reset mails: 5 per IP per hour, and 3 per address per hour (nobody can bury
   # an inbox). The answer stays generic (config.paranoid).
   rate_limit to: 5, within: 1.hour, only: :create, name: "password-reset-ip",
@@ -18,9 +21,36 @@ class Users::PasswordsController < Devise::PasswordsController
 
   def update
     super do |user|
-      # Sent with an expired token: show the "expired link" state again.
-      inspect_reset_token(params.dig(:user, :reset_password_token)) if user.errors.include?(:reset_password_token)
+      # Re-rendered with errors: an expired token shows the "expired link" state
+      # again, a valid one keeps the form (and the account email) on screen.
+      inspect_reset_token(params.dig(:user, :reset_password_token)) if user.errors.any?
     end
+  end
+
+  # A7: "check your emails". The same screen for a known and an unknown
+  # address (config.paranoid); the address comes from the session, set when the
+  # request was made.
+  def sent
+    pending = session[:password_reset]
+    return redirect_to(new_user_password_path) unless pending
+
+    @email = pending["email"]
+    sent_at = Time.zone.at(pending["sent_at"])
+    # The expiry hour is read in the account's zone when there is one. An
+    # unknown address gets the default zone, so the screen reveals nothing but
+    # this hour.
+    zone = ActiveSupport::TimeZone[User.find_by(email: @email.downcase)&.time_zone.to_s] ||
+           ActiveSupport::TimeZone["Europe/Paris"]
+    @expires_at = (sent_at + Devise.reset_password_within).in_time_zone(zone)
+    @resend_in = [ (sent_at + RESEND_DELAY.seconds - Time.current).ceil, 0 ].max
+  end
+
+  protected
+
+  def after_sending_reset_password_instructions_path_for(_resource_name)
+    session[:password_reset] = { "email" => params.dig(:user, :email).to_s.strip, "sent_at" => Time.current.to_i }
+    flash.delete(:notice) # the screen says it itself
+    sent_user_password_path
   end
 
   private
@@ -34,6 +64,7 @@ class Users::PasswordsController < Devise::PasswordsController
     else
       @reset_link_expired = true
       @reset_link_sent_at = user&.reset_password_sent_at
+      @reset_link_zone = user&.zone
     end
   end
 

@@ -8,15 +8,23 @@ class SmokeTest < ApplicationSystemTestCase
 
   teardown { Rails.application.env_config["action_dispatch.show_detailed_exceptions"] = @detailed }
 
-  test "sign up, log in, create the household, invite someone and log a task" do
+  test "sign up, create the household, log in again, invite someone and log a task" do
     visit root_url
-    click_on "Créer un compte"
+    click_on "Découvrir 50/50"
+    click_on "Passer"
 
     fill_in "Prénom", with: "Virginie"
     fill_in "Email", with: "virginie@exemple.fr"
     fill_in "Mot de passe", with: "motdepasse"
     click_on "Créer mon compte"
-    assert_text "Bienvenue"
+    assert_selector "h1", text: "Confirmez votre email"
+
+    # La confirmation ne bloque pas : on crée le foyer sans attendre
+    click_on "J'ai confirmé, continuer"
+    fill_in "Nom du foyer", with: "Chez Virginie et Karim"
+    click_on "Continuer", class: "btn"
+    assert_text "Foyer créé."
+    assert_selector "h1", text: "Chez Virginie et Karim"
 
     # Déconnexion (session supprimée), puis connexion
     page.driver.browser.manage.delete_all_cookies
@@ -26,13 +34,7 @@ class SmokeTest < ApplicationSystemTestCase
     fill_in "Mot de passe", with: "motdepasse"
     click_on "Se connecter", class: "btn"
     assert_selector "h1", text: "Accueil"
-
-    # Création du foyer
-    click_on "Créer le foyer"
-    fill_in "Nom du foyer", with: "Chez Virginie et Karim"
-    click_on "Créer le foyer", class: "btn"
-    assert_text "Foyer créé."
-    assert_selector "h1", text: "Chez Virginie et Karim"
+    visit household_url(Household.find_by!(name: "Chez Virginie et Karim"))
 
     # Invitation
     click_on "Inviter un membre"

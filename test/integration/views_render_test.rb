@@ -16,6 +16,15 @@ class ViewsRenderTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "the styleguide shows the progress components of the intro and the set-up" do
+    get styleguide_path
+
+    assert_response :success
+    assert_select "#sg-progress [role=img][aria-label=?]", "Écran 1 sur 3"
+    assert_select "#sg-progress [role=group][aria-label=?]", "Étape 3 sur 4"
+    assert_select "#sg-countdown [data-controller=countdown]"
+  end
+
   test "signed-in screens render" do
     sign_in users(:alice)
     chore = chores(:smith_cooking)
@@ -24,7 +33,8 @@ class ViewsRenderTest < ActionDispatch::IntegrationTest
       edit_household_path(@household), new_household_household_member_path(@household),
       new_chore_path(household_id: @household.id), edit_chore_path(chore), edit_chore_path(chores(:smith_custom)),
       new_chore_completion_path(chore), household_chores_setup_path(@household),
-      household_liking_session_path(@household), edit_user_registration_path ].each do |path|
+      household_liking_session_path(@household), account_path, edit_first_name_path,
+      edit_email_path, edit_password_path, pending_user_confirmation_path ].each do |path|
       get path
       assert_response :success, path
       assert_select "h1", 1, path

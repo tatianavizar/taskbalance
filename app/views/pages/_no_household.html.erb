@@ -1,0 +1,27 @@
+<%# F7: an account that is in no household. Nothing is shared; the journal stays theirs. %>
+<% provide :chrome, "none" %>
+<% provide :title, t("auth.no_household.title") %>
+<div class="flex items-center gap-2.5 min-h-[44px]">
+  <%= logo %>
+  <span class="flex-1"></span>
+  <%= link_to account_path, "aria-label": t("auth.account.title"), class: "no-underline" do %>
+    <%= avatar(initials: current_user.first_name.to_s.first.to_s.upcase, color: "blue", size: 44) %>
+  <% end %>
+</div>
+
+<div>
+  <h1 class="screen-title"><%= t("auth.no_household.title") %></h1>
+  <p class="screen-subtitle"><%= t("auth.no_household.subtitle") %></p>
+</div>
+
+<%= card do %>
+  <b><%= t("auth.no_household.journal_title") %></b>
+  <p class="mt-1 mb-0 text-sm leading-5"><%= t("auth.no_household.journal_body") %></p>
+<% end %>
+
+<p class="m-0 text-[13px] leading-[18px] text-muted"><%= t("auth.no_household.invitation") %></p>
+
+<%= sticky_cta do %>
+  <%= link_to t("auth.no_household.create"), new_household_path, class: "btn btn-primary" %>
+  <%= link_to t("auth.no_household.account"), account_path, class: "btn btn-secondary" %>
+<% end %>
