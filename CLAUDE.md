@@ -46,7 +46,12 @@ Key relationship: `User → has_many :chores, through: :household` — a user se
 
 **`task_id` is nullable — always account for custom chores.** Any code that does `chores.pluck(:task_id)` or `chores.map(&:task)` gets a `nil` for every custom chore. This has already caused a silent data-loss bug and a 500; scope with `where.not(task_id: nil)` when you mean catalogue chores only.
 
-**Still missing from schema:** weekly reports, levels, per-member empty-week streaks and the regression/block state (see `docs/backend-backlog.md` §2).
+**Weekly engine (lot 5a).** Interfaces and rules are documented at the top of each file:
+- `WeeklyStats.new(household, week)` (`app/models/weekly_stats.rb`, not persisted): per-member counts and integer % shares of mental and execution logs, `fair_share`, `zone`, `outcome` (`:balanced`/`:unbalanced`/`:neutral`) and `neutral_reason`. The single source of every figure: home screens read it live for the current week, past weeks come from `HouseholdWeek`.
+- `HouseholdWeek` (`household_weeks`): snapshot of `WeeklyStats` per household and week (first names and pauses included), `provisional` from Sunday 20:00, `final` from Monday 03:00 local. A final row is `readonly?`: never rewrite it.
+- `WeeklyEngine` (`app/services/`), run every 15 min by `WeeklyEngineJob` (`config/recurring.yml`): finals with catch-up, provisional, empty-week streaks (`household_members.empty_weeks_streak`), `AbsenceInquiry` and its Wednesday 20:00 deadline, regression and block, levels (`households.level` 0–5, `balanced_weeks_count`, `state`, `LevelChange` history). Thresholds in `Progression`.
+- `MemberPause` (`member_pauses`, `declared_by_id`): retroactive limits; creating one resolves a pending absence inquiry.
+- Open seams: `TODO(D3)` in `WeeklyEngine#retroactive_pause_on_final_weeks` (does nothing), `TODO(D5)` in `Progression.ultimate_ratio`. Not built yet: absence answers and the question itself (lot 5b), notifications (lot 8).
 
 ## Data ownership rule (architectural constraint)
 
