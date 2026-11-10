@@ -6,6 +6,8 @@ class HouseholdMember < ApplicationRecord
 
   belongs_to :user
   belongs_to :household
+  has_many :member_pauses, dependent: :delete_all
+  has_many :absence_inquiries, dependent: :delete_all
 
   enum :role, { member: 0, manager: 1 }, default: :member
 
@@ -24,6 +26,8 @@ class HouseholdMember < ApplicationRecord
   before_validation :assign_monogram, on: :create
   before_validation :normalise_monogram
   after_create :refresh_household_monograms
+  after_create :refresh_household_state
+  after_destroy :refresh_household_state
 
   # Colours still free in this household, in palette order.
   def available_colors
@@ -110,6 +114,10 @@ class HouseholdMember < ApplicationRecord
     return unless household && household.household_members.count >= COLORS.size
 
     errors.add(:base, :household_full)
+  end
+
+  def refresh_household_state
+    Household.find_by(id: household_id)&.refresh_membership_state!
   end
 
   def refresh_household_monograms

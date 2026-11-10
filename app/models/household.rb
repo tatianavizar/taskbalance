@@ -10,6 +10,20 @@ class Household < ApplicationRecord
   # Logs are the members' own data and survive the household being deleted.
   has_many :chore_logs, dependent: :nullify
   has_many :invitations, dependent: :destroy
+  # Weekly engine (lot 5a). Final reports are read-only records, so they go
+  # with SQL deletes (the foreign keys also cascade).
+  has_many :household_weeks, dependent: :delete_all
+  has_many :level_changes, dependent: :delete_all
+  has_many :absence_inquiries, dependent: :delete_all
+  has_many :member_pauses, through: :household_members
+
+  # setting_up is set by the setup flow (lot 2); solo/active follow the member
+  # count; warned, blocked and dormant are set by WeeklyEngine at the final
+  # report (docs/backend-backlog.md 2.2).
+  enum :state, {
+    setting_up: "setting_up", solo: "solo", active: "active",
+    warned: "warned", blocked: "blocked", dormant: "dormant"
+  }, default: "solo", validate: true
 
   before_validation { self.name = name.to_s.strip.presence }
 
@@ -37,6 +51,23 @@ class Household < ApplicationRecord
   rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotUnique
     household.errors.add(:base, :user_already_in_household)
     household
+  end
+
+  def ultimate_level?
+    level == Progression::ULTIMATE
+  end
+
+  # Called when a member arrives or leaves: the only state transitions that do
+  # not wait for a final report. Blocked and setting_up are left alone.
+  def refresh_membership_state!
+    return if blocked? || setting_up?
+
+    count = household_members.count
+    if count < 2 && !solo?
+      update!(state: "solo")
+    elsif count >= 2 && solo?
+      update!(state: "active")
+    end
   end
 
   def manager

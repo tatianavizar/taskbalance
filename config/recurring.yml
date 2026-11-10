@@ -1,10 +1,14 @@
-# production:
-#   periodic_cleanup:
-#     class: CleanSoftDeletedRecordsJob
-#     queue: background
-#     args: [ 1000, { batch_size: 500 } ]
-#     schedule: every hour
-#   periodic_command:
-#     command: "SoftDeletedRecord.due.delete_all"
-#     priority: 2
-#     schedule: at 5am every day
+# The weekly engine runs every 15 minutes and acts, for each household, on the
+# moments that have passed in that household's time zone: provisional report
+# from Sunday 20:00, final report from Monday 03:00, absence deadline on
+# Wednesday 20:00. Every step is idempotent and missed weeks are caught up in
+# order, so a stopped worker loses nothing. 15 minutes covers zones offset by
+# :30 or :45 (Asia/Kolkata, Asia/Kathmandu).
+#
+# Development uses the async adapter (no Solid Queue tables): run the engine by
+# hand with `bin/rails runner WeeklyEngineJob.perform_now`.
+production:
+  weekly_engine:
+    class: WeeklyEngineJob
+    queue: default
+    schedule: every 15 minutes
