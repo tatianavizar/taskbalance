@@ -189,3 +189,45 @@
   .confirm-dialog::backdrop { background: rgb(15 26 20 / 0.55); }
   .confirm-sheet { background: var(--color-surface); border-radius: 24px 24px 0 0; padding: 24px 20px calc(20px + env(safe-area-inset-bottom)); display: flex; flex-direction: column; gap: 16px; }
 }
+
+@layer components {
+  /* Screens on a coloured ground (intro I1 to I3): `provide :body_class, "theme-mint"`. */
+  .theme-mint { background: var(--color-mint); }
+  .theme-ink { background: var(--color-ink); color: #fff; }
+  .theme-ink a:not(.btn) { color: var(--color-mint); }
+  .btn-on-ink { background: var(--color-mint); color: var(--color-ink); }
+
+  /* Progress dots (intro): the current step is the long one. */
+  .dots { display: flex; gap: 6px; }
+  .dot { width: 24px; height: 6px; border-radius: 3px; background: var(--color-line); }
+  .dot-current, .dot-done { background: var(--color-ink); }
+  .dot-current { width: 40px; }
+  .theme-mint .dot { background: rgb(15 26 20 / 0.18); }
+  .theme-ink .dot { background: rgb(255 255 255 / 0.25); }
+  .theme-ink .dot-current, .theme-ink .dot-done { background: var(--color-mint); }
+  .theme-mint .dot-current, .theme-mint .dot-done { background: var(--color-ink); }
+
+  .intro-card { display: flex; gap: 14px; align-items: flex-start; border-radius: 22px; padding: 18px; }
+  .intro-icon { flex: none; width: 52px; height: 52px; border-radius: 16px; display: flex; align-items: center; justify-content: center; }
+  .intro-title { font-family: var(--font-display); font-weight: 800; font-size: 31px; line-height: 35px; letter-spacing: -0.03em; margin: 0; }
+
+  /* Zone bar of I2 and the "zero tasks" tile of I3. */
+  .zone-track { position: relative; height: 22px; border-radius: 11px; background: #2a3b33; }
+  .zone-band { position: absolute; top: -6px; bottom: -6px; border-radius: 8px; background: rgb(185 242 212 / 0.28); border: 1.5px dashed var(--color-mint); }
+  .zone-fill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 11px; background: var(--color-self); }
+  .level-dot { width: 52px; height: 52px; margin: 0 auto; border-radius: 50%; display: flex; align-items: center; justify-content: center; font: 800 18px var(--font-display); background: var(--color-mint); color: var(--color-ink); }
+  .zero-tile { flex: none; width: 56px; height: 56px; border-radius: 16px; background: var(--color-soft); display: flex; flex-direction: column; align-items: center; justify-content: center; font: 800 20px/1 var(--font-display); }
+  .zero-tile small { font: 600 10px var(--font-sans); margin-top: 3px; }
+
+  /* Steps of the household set-up (B1): « Foyer · Partenaire · Tâches · Répartition ». */
+  .steps { display: flex; justify-content: space-between; gap: 4px; margin-top: 8px; font-size: 12px; line-height: 16px; color: var(--color-muted); }
+  .steps [aria-current="step"] { color: var(--color-ink); font-weight: 700; }
+
+  @keyframes rise { from { opacity: 0; transform: translateY(28px); } to { opacity: 1; transform: none; } }
+  @keyframes slice-in { 0% { opacity: 0; transform: rotate(-120deg) scale(.4); } 70% { transform: rotate(8deg) scale(1.05); } 100% { opacity: 1; transform: none; } }
+  @keyframes sway { 0% { width: 78%; } 30% { width: 30%; } 55% { width: 62%; } 75% { width: 46%; } 100% { width: 52%; } }
+  .rise { animation: rise .7s cubic-bezier(.2,.8,.2,1) both; }
+  .delay-1 { animation-delay: .15s; } .delay-2 { animation-delay: .35s; } .delay-3 { animation-delay: .55s; }
+  .slice-in { transform-origin: 20px 20px; animation: slice-in .9s cubic-bezier(.2,.8,.2,1) both; }
+  .sway { animation: sway 2.2s .5s cubic-bezier(.4,0,.2,1) both; }
+}

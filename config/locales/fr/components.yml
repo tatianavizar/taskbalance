@@ -8,5 +8,9 @@ fr:
         zero: "0 semaine équilibrée sur %{total} pour le niveau %{next_level}"
         one: "%{count} semaine équilibrée sur %{total} pour le niveau %{next_level}"
         other: "%{count} semaines équilibrées sur %{total} pour le niveau %{next_level}"
+    progress_dots:
+      aria: "Écran %{current} sur %{total}"
+    step_progress:
+      aria: "Étape %{current} sur %{total}"
   styleguide:
     title: "Composants"

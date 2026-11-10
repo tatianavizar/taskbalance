@@ -1,0 +1,12 @@
+<div role="group" aria-label="<%= t("components.step_progress.aria", current: current, total: steps.size) %>">
+  <div class="dots" aria-hidden="true">
+    <% steps.each_index do |i| %>
+      <span class="dot <%= "dot-done" if i < current %>" style="flex: 1; width: auto"></span>
+    <% end %>
+  </div>
+  <div class="steps">
+    <% steps.each_with_index do |label, i| %>
+      <span <%= tag.attributes("aria-current": ("step" if i + 1 == current)) %>><%= label %></span>
+    <% end %>
+  </div>
+</div>

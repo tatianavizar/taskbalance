@@ -25,7 +25,7 @@
     <%= javascript_importmap_tags %>
   </head>
 
-  <body>
+  <body class="<%= content_for(:body_class) %>">
     <% with_chrome = chrome? %>
     <% with_header = with_chrome && current_household.present? %>
     <div class="app-shell <%= "with-tabs" if with_chrome %> <%= "no-header" unless with_header %>">

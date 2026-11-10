@@ -72,6 +72,17 @@ module ComponentsHelper
     render "components/level_progress", level: level, done: done, total: total, href: href
   end
 
+  # Points de progression de l'intro. `current` va de 1 à `total`.
+  def progress_dots(current:, total:)
+    render "components/progress_dots", current: current, total: total
+  end
+
+  # Avancement de la mise en place (B1) : une barre segmentée et les noms des
+  # étapes. `steps` : tableau de libellés, `current` : numéro de l'étape (de 1).
+  def step_progress(steps:, current:)
+    render "components/step_progress", steps: steps, current: current
+  end
+
   def confirm_dialog
     render "components/confirm_dialog"
   end
