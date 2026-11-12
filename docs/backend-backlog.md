@@ -219,7 +219,7 @@ Solid Queue is installed but `config/recurring.yml` is empty and no job exists.
 
 ## Priority 3: trust and consent
 
-### 3.1 Consent for existing accounts — critical, M
+### 3.1 Consent for existing accounts — critical, M (done, lot 3)
 `add_existing_member` adds an existing user to a household immediately, without asking.
 
 **Fix:**
@@ -228,7 +228,7 @@ Solid Queue is installed but `config/recurring.yml` is empty and no job exists.
 - Signing up from the link joins the household.
 - Wrong account: B8 variant.
 
-### 3.2 Complete invitation lifecycle — high, M
+### 3.2 Complete invitation lifecycle — high, M (done, lot 3; the B10 to B14 screens are lot 2)
 **Fix:**
 - **Expiry:** add `expires_at` (14 days).
 - **States:** pending, accepted, cancelled, expired.

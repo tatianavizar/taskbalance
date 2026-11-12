@@ -1,0 +1,31 @@
+<%# B8: the invitation cannot be used, and the screen says why. Locals: invitation (nil when the token is unknown), reason. %>
+<%# reason: unknown, expired, cancelled, declined, accepted (used), other_account, already_member %>
+<% provide :chrome, "none" %>
+<% provide :title, t("invitations.invalid.title.#{reason}") %>
+<div class="flex items-center gap-2.5 min-h-[44px]"><%= logo %><span class="font-bold"><%= t("app.name") %></span></div>
+
+<h1 class="screen-title"><%= t("invitations.invalid.title.#{reason}") %></h1>
+
+<div class="alert-box">
+  <%= t("invitations.invalid.body.#{reason}",
+        inviter: (invitation && invitation_inviter_name(invitation)),
+        household: invitation&.household&.name,
+        date: (invitation && (reason == :cancelled ? l(invitation.cancelled_at.to_date, format: :short) : invitation_expiry(invitation))),
+        current: (current_user.email if user_signed_in? && reason == :other_account),
+        invited: (masked_email(invitation.email) if reason == :other_account)) %>
+</div>
+
+<%= sticky_cta do %>
+  <% if reason == :already_member %>
+    <%= link_to t("invitations.invalid.open_household"), household_path(current_user.household), class: "btn btn-primary" %>
+  <% elsif reason == :other_account %>
+    <%= button_to t("invitations.invalid.switch_account"), destroy_user_session_path, method: :delete,
+          class: "btn btn-primary w-full", form_class: "contents" %>
+    <%= link_to t("invitations.invalid.home"), dashboard_path, class: "btn btn-secondary" %>
+  <% elsif user_signed_in? %>
+    <%= link_to t("invitations.invalid.home"), dashboard_path, class: "btn btn-primary" %>
+  <% else %>
+    <%= link_to t("invitations.invalid.sign_up"), new_user_registration_path, class: "btn btn-primary" %>
+    <%= link_to t("invitations.invalid.sign_in"), new_user_session_path, class: "btn btn-secondary" %>
+  <% end %>
+<% end %>

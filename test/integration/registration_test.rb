@@ -91,7 +91,7 @@ class RegistrationTest < ActionDispatch::IntegrationTest
     assert_response :unprocessable_entity # same error a new address would get
   end
 
-  test "sign-up through a valid invitation confirms the account and joins the household" do
+  test "sign-up through a valid invitation confirms the account but does not join the household" do
     household = households(:smith_home)
     invitation = Invitation.create!(email: "guest@test.com", household: household)
 
@@ -102,9 +102,9 @@ class RegistrationTest < ActionDispatch::IntegrationTest
 
     user = User.find_by!(email: "guest@test.com")
     assert user.confirmed?
-    assert_equal household, user.household
-    assert user.household_membership.member?
-    assert_not Invitation.exists?(invitation.id)
+    assert_nil user.household, "joining waits for the last step"
+    assert_equal user, invitation.reload.invitee
+    assert_predicate invitation, :pending?
   end
 
   test "an invitation token for another address does not confirm the account" do

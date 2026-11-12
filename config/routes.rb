@@ -58,8 +58,24 @@ Rails.application.routes.draw do
     resource :completion, only: [:new, :create], controller: "chores/completions"
   end
 
+  # Invitation, côté personne invitée (B7 à B9, B12). Le jeton fait office d'identifiant.
+  resources :invitations, only: [ :show ], param: :token do
+    member do
+      post :claim
+      post :accept
+      post :decline
+      get :waiting
+    end
+  end
+
   resources :households do
-    resources :household_members
+    # Invitation, côté foyer (B3, B5, B13, B15)
+    resources :invitations, only: [ :new, :create, :show, :destroy ], controller: "households/invitations" do
+      member do
+        post :resend
+        get :cancel
+      end
+    end
     resource :chores_setup, only: [:show, :update], controller: "households/chores_setup"
     resource :liking_session, only: [:show, :update], controller: "households/liking_sessions"
   end

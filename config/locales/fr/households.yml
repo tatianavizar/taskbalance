@@ -8,6 +8,7 @@ fr:
       members_title: "Membres"
       no_members: "Aucun membre pour l'instant."
       invite_link: "Inviter un membre"
+      invitations_title: "Invitations"
       back_link: "Retour"
       delete_confirm: "Supprimer ce foyer ? Les enregistrements de chaque membre sont conservés."
     new:

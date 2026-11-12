@@ -153,7 +153,19 @@ ActiveRecord::Schema[8.0].define(version: 2026_11_12_120000) do
     t.bigint "household_id", null: false
     t.string "token", null: false
     t.datetime "created_at", precision: nil, null: false
-    t.index ["email", "household_id"], name: "index_invitations_on_email_and_household_id", unique: true
+    t.string "state", default: "pending", null: false
+    t.datetime "expires_at", null: false
+    t.datetime "last_sent_at", null: false
+    t.integer "resend_count", default: 0, null: false
+    t.datetime "accepted_at"
+    t.datetime "declined_at"
+    t.datetime "cancelled_at"
+    t.bigint "invitee_id"
+    t.bigint "inviter_id"
+    t.index ["email", "household_id"], name: "index_invitations_pending_on_email_and_household_id", unique: true, where: "((state)::text = 'pending'::text)"
+    t.index ["household_id", "email"], name: "index_invitations_on_household_id_and_email"
+    t.index ["invitee_id"], name: "index_invitations_on_invitee_id"
+    t.index ["inviter_id"], name: "index_invitations_on_inviter_id"
     t.index ["token"], name: "index_invitations_on_token", unique: true
   end
 
@@ -280,6 +292,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_11_12_120000) do
   add_foreign_key "household_members", "users"
   add_foreign_key "household_weeks", "households", on_delete: :cascade
   add_foreign_key "invitations", "households"
+  add_foreign_key "invitations", "users", column: "invitee_id", on_delete: :nullify
+  add_foreign_key "invitations", "users", column: "inviter_id", on_delete: :nullify
   add_foreign_key "level_changes", "absence_inquiries", on_delete: :nullify
   add_foreign_key "level_changes", "household_weeks", on_delete: :nullify
   add_foreign_key "level_changes", "households", on_delete: :cascade
