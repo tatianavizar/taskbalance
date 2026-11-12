@@ -1,33 +1,8 @@
 @import "tailwindcss";
 
-/* 50/50 design system — values from docs/design-system.md, used as-is. */
-@theme static {
-  --font-display: "Unbounded", ui-sans-serif, system-ui, sans-serif;
-  --font-sans: "Figtree", ui-sans-serif, system-ui, sans-serif;
-
-  --color-bg: #f6fbf8;
-  --color-surface: #ffffff;
-  --color-mint: #b9f2d4;
-  --color-ink: #0f1a14;
-  --color-muted: #55625b;
-  --color-line: #dcebe3;
-  --color-field: #c9dcd1;
-  --color-divider: #eaf3ee;
-  --color-soft: #e3efe8;
-  --color-soft-2: #eef5f1;
-  --color-self: #c8553d;
-  --color-track: #cfe2d7;
-  --color-others: #55625b;
-  --color-balanced: #1d5c3f;
-
-  /* Member colours (P2): each member picks one, unique in the household. */
-  --color-member-mint: #b9f2d4;
-  --color-member-blue: #dfe7f3;
-  --color-member-stone: #ece6dc;
-  --color-member-sky: #d6ecf3;
-  --color-member-sage: #d3e4c8;
-  --color-member-sand: #efe3cf;
-}
+/* The 50/50 tokens live in tokens.css, shared with the back-office build
+   (lib/tasks/active_admin_assets.rake). */
+@import "./tokens.css";
 
 @layer base {
   html {
