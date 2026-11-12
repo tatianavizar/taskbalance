@@ -10,9 +10,25 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_11_08_100500) do
+ActiveRecord::Schema[8.0].define(version: 2026_11_12_100000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+
+  create_table "absence_inquiries", force: :cascade do |t|
+    t.bigint "household_id", null: false
+    t.bigint "household_member_id", null: false
+    t.date "first_week_start", null: false
+    t.date "last_week_start", null: false
+    t.datetime "deadline_at", null: false
+    t.string "status", default: "pending", null: false
+    t.datetime "resolved_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["household_id"], name: "index_absence_inquiries_on_household_id"
+    t.index ["household_member_id", "last_week_start"], name: "idx_on_household_member_id_last_week_start_004aa25e77", unique: true
+    t.index ["household_member_id"], name: "index_absence_inquiries_on_household_member_id"
+    t.index ["status", "deadline_at"], name: "index_absence_inquiries_on_status_and_deadline_at"
+  end
 
   create_table "chore_logs", force: :cascade do |t|
     t.bigint "chore_id"
@@ -59,9 +75,32 @@ ActiveRecord::Schema[8.0].define(version: 2026_11_08_100500) do
     t.string "color"
     t.string "monogram"
     t.boolean "monogram_customized", default: false, null: false
+    t.integer "empty_weeks_streak", default: 0, null: false
     t.index ["household_id", "color"], name: "index_household_members_on_household_id_and_color", unique: true
     t.index ["household_id"], name: "index_household_members_on_household_id"
     t.index ["user_id"], name: "index_household_members_on_user_id", unique: true
+  end
+
+  create_table "household_weeks", force: :cascade do |t|
+    t.bigint "household_id", null: false
+    t.date "week_start", null: false
+    t.string "time_zone", null: false
+    t.string "status", default: "provisional", null: false
+    t.string "outcome", null: false
+    t.string "neutral_reason"
+    t.integer "fair_share"
+    t.integer "mental_total", default: 0, null: false
+    t.integer "execution_total", default: 0, null: false
+    t.integer "minutes_total", default: 0, null: false
+    t.jsonb "members", default: [], null: false
+    t.jsonb "pauses", default: [], null: false
+    t.datetime "computed_at", null: false
+    t.datetime "finalized_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["household_id", "status", "week_start"], name: "idx_on_household_id_status_week_start_25d1d7005e"
+    t.index ["household_id", "week_start"], name: "index_household_weeks_on_household_id_and_week_start", unique: true
+    t.index ["household_id"], name: "index_household_weeks_on_household_id"
   end
 
   create_table "households", force: :cascade do |t|
@@ -69,6 +108,12 @@ ActiveRecord::Schema[8.0].define(version: 2026_11_08_100500) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.string "time_zone", default: "Europe/Paris", null: false
+    t.integer "level", default: 0, null: false
+    t.integer "balanced_weeks_count", default: 0, null: false
+    t.string "state", default: "solo", null: false
+    t.integer "silent_weeks_count", default: 0, null: false
+    t.datetime "blocked_at"
+    t.date "ultimate_reached_on"
   end
 
   create_table "invitations", force: :cascade do |t|
@@ -80,6 +125,22 @@ ActiveRecord::Schema[8.0].define(version: 2026_11_08_100500) do
     t.index ["token"], name: "index_invitations_on_token", unique: true
   end
 
+  create_table "level_changes", force: :cascade do |t|
+    t.bigint "household_id", null: false
+    t.bigint "household_week_id"
+    t.bigint "absence_inquiry_id"
+    t.integer "from_level", null: false
+    t.integer "to_level", null: false
+    t.integer "balanced_weeks_count_before", null: false
+    t.integer "balanced_weeks_count_after", null: false
+    t.string "reason", null: false
+    t.date "week_start"
+    t.datetime "created_at", null: false
+    t.index ["absence_inquiry_id"], name: "index_level_changes_on_absence_inquiry_id"
+    t.index ["household_id"], name: "index_level_changes_on_household_id"
+    t.index ["household_week_id"], name: "index_level_changes_on_household_week_id"
+  end
+
   create_table "liked_tasks", force: :cascade do |t|
     t.bigint "user_id", null: false
     t.bigint "task_id", null: false
@@ -89,6 +150,20 @@ ActiveRecord::Schema[8.0].define(version: 2026_11_08_100500) do
     t.index ["task_id"], name: "index_liked_tasks_on_task_id"
     t.index ["user_id", "task_id"], name: "index_liked_tasks_on_user_id_and_task_id", unique: true
     t.index ["user_id"], name: "index_liked_tasks_on_user_id"
+  end
+
+  create_table "member_pauses", force: :cascade do |t|
+    t.bigint "household_member_id", null: false
+    t.bigint "declared_by_id"
+    t.date "starts_on", null: false
+    t.date "ends_on"
+    t.string "reason"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["declared_by_id"], name: "index_member_pauses_on_declared_by_id"
+    t.index ["household_member_id", "starts_on"], name: "index_member_pauses_on_household_member_id_and_starts_on"
+    t.index ["household_member_id"], name: "index_member_pauses_on_household_member_id"
+    t.check_constraint "ends_on IS NULL OR ends_on >= starts_on", name: "member_pauses_dates_ordered"
   end
 
   create_table "recurring_chores", force: :cascade do |t|
@@ -137,6 +212,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_11_08_100500) do
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
   end
 
+  add_foreign_key "absence_inquiries", "household_members", on_delete: :cascade
+  add_foreign_key "absence_inquiries", "households", on_delete: :cascade
   add_foreign_key "chore_logs", "chores", on_delete: :nullify
   add_foreign_key "chore_logs", "households", on_delete: :nullify
   add_foreign_key "chore_logs", "users"
@@ -146,9 +223,15 @@ ActiveRecord::Schema[8.0].define(version: 2026_11_08_100500) do
   add_foreign_key "chores", "users", column: "assigned_to_id"
   add_foreign_key "household_members", "households"
   add_foreign_key "household_members", "users"
+  add_foreign_key "household_weeks", "households", on_delete: :cascade
   add_foreign_key "invitations", "households"
+  add_foreign_key "level_changes", "absence_inquiries", on_delete: :nullify
+  add_foreign_key "level_changes", "household_weeks", on_delete: :nullify
+  add_foreign_key "level_changes", "households", on_delete: :cascade
   add_foreign_key "liked_tasks", "tasks"
   add_foreign_key "liked_tasks", "users"
+  add_foreign_key "member_pauses", "household_members", on_delete: :cascade
+  add_foreign_key "member_pauses", "users", column: "declared_by_id", on_delete: :nullify
   add_foreign_key "recurring_chores", "households"
   add_foreign_key "recurring_chores", "tasks"
   add_foreign_key "recurring_chores", "users", column: "assigned_to_id"

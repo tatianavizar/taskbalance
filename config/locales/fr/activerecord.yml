@@ -106,3 +106,14 @@ fr:
           attributes:
             email:
               taken: a déjà une invitation pour ce foyer
+        member_pause:
+          attributes:
+            starts_on:
+              too_far_back: Une pause peut commencer au plus %{days} jours en arrière.
+              member_logged_that_week: "%{week} contient des enregistrements de cette personne : la pause ne peut pas la couvrir."
+            ends_on:
+              before_start: La fin de la pause doit venir après son début.
+        household_week:
+          attributes:
+            week_start:
+              not_a_monday: doit être un lundi
