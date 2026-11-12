@@ -83,7 +83,7 @@ class NotificationMailerPreview < ActionMailer::Preview
   def report_facts(outcome:, carrier: :default, mental: [ 72, 28 ], neutral_reason: nil)
     carrier = { "user_id" => VIRGINIE, "first_name" => "Virginie", "dimension" => "mental", "share" => 72 } if carrier == :default
     {
-      "week_number" => 45, "provisional" => true, "outcome" => outcome, "neutral_reason" => neutral_reason,
+      "week_number" => 45, "provisional" => false, "outcome" => outcome, "neutral_reason" => neutral_reason,
       "fair_share" => 50, "zone_min" => 40, "zone_max" => 60,
       "members" => [
         person(VIRGINIE, "Virginie").merge("mental_share" => mental[0], "execution_share" => 58, "mental_count" => 18, "execution_count" => 18, "minutes" => 600, "logs_count" => 18, "paused" => false),
