@@ -166,6 +166,10 @@ fr:
             ends_on:
               before_start: La fin de la pause doit venir après son début.
               in_the_past: La fin de la pause ne peut pas être dans le passé.
+              required_for_someone_else: "Une pause déclarée pour quelqu'un d'autre a une date de fin."
+              closed_weeks_need_declaration: "Les semaines déjà closes ne se modifient pas : déclarez une nouvelle pause."
+            base:
+              outside_inquiry_weeks: "Une pause déclarée pour quelqu'un d'autre doit rester dans les semaines de la question d'absence ou de la régression en cours."
         household_week:
           attributes:
             week_start:

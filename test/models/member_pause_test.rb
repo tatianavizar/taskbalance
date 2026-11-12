@@ -8,7 +8,7 @@ class MemberPauseTest < ActiveSupport::TestCase
     @bob_membership = membership(@household, @bob)
   end
 
-  def declare(starts_on, ends_on = nil, by: @alice)
+  def declare(starts_on, ends_on = nil, by: @bob)
     MemberPause.new(household_member: @bob_membership, declared_by: by, starts_on: starts_on, ends_on: ends_on)
   end
 
@@ -98,5 +98,78 @@ class MemberPauseTest < ActiveSupport::TestCase
     travel_to(paris(2026, 10, 20, 9)) { declare(Date.new(2026, 10, 21)).save! }
     @bob_membership.leave!
     assert_equal 0, MemberPause.count
+  end
+
+  # ---- F8: a pause for someone else is bounded -------------------------------------
+
+  def open_inquiry
+    @household.absence_inquiries.create!(household_member: @bob_membership, first_week_start: Date.new(2026, 10, 5),
+                                         last_week_start: Date.new(2026, 10, 12), deadline_at: paris(2026, 10, 21, 20))
+  end
+
+  test "a pause declared for someone else needs an end date" do
+    open_inquiry
+    travel_to(paris(2026, 10, 20, 9)) do
+      pause = declare(Date.new(2026, 10, 5), nil, by: @alice)
+      assert_not pause.valid?
+      assert pause.errors.added?(:ends_on, :required_for_someone_else)
+    end
+  end
+
+  test "a pause declared for someone else stays in the weeks of the open inquiry, Monday to Sunday" do
+    open_inquiry
+    travel_to(paris(2026, 10, 20, 9)) do
+      assert declare(Date.new(2026, 10, 5), Date.new(2026, 10, 18), by: @alice).valid?
+      assert_not declare(Date.new(2026, 10, 4), Date.new(2026, 10, 18), by: @alice).valid?
+      assert_not declare(Date.new(2026, 10, 5), Date.new(2026, 10, 19), by: @alice).valid?
+      assert_not declare(Date.new(2026, 10, 20), Date.new(2026, 10, 25), by: @alice).valid?
+    end
+  end
+
+  test "without an open inquiry or regression, nothing can be declared for someone else" do
+    travel_to(paris(2026, 10, 20, 9)) do
+      pause = declare(Date.new(2026, 10, 19), Date.new(2026, 10, 20), by: @alice)
+      assert_not pause.valid?
+      assert pause.errors.added?(:base, :outside_inquiry_weeks)
+    end
+  end
+
+  # ---- extending a pause -----------------------------------------------------------
+
+  test "a finished pause cannot be edited" do
+    travel_to(paris(2026, 10, 14, 9)) { @pause = declare(Date.new(2026, 10, 12), Date.new(2026, 10, 13)).tap(&:save!) }
+    travel_to(paris(2026, 10, 20, 9)) { assert_not @pause.editable? }
+    travel_to(paris(2026, 10, 13, 9)) { assert @pause.editable? }
+  end
+
+  test "extending a pause over a closed week is refused" do
+    travel_to(paris(2026, 10, 14, 9)) { @pause = declare(Date.new(2026, 10, 12), Date.new(2026, 10, 13)).tap(&:save!) }
+    travel_to(paris(2026, 10, 27, 9)) do
+      @pause.ends_on = Date.new(2026, 10, 25)
+      assert_not @pause.valid?
+      assert @pause.errors.added?(:ends_on, :closed_weeks_need_declaration)
+    end
+  end
+
+  test "extending a pause over a closed week where the member logged is refused with the same message as a creation" do
+    log!(@household, @bob, at: paris(2026, 10, 14, 9))
+    travel_to(paris(2026, 10, 10, 9)) { @pause = declare(Date.new(2026, 10, 9), Date.new(2026, 10, 11)).tap(&:save!) }
+    travel_to(paris(2026, 10, 20, 9)) do
+      @pause.ends_on = Date.new(2026, 10, 18)
+      assert_not @pause.valid?
+      assert_includes @pause.errors[:starts_on].first, "Semaine 42"
+    end
+  end
+
+  test "extending a current pause into the future is allowed and announces the new dates" do
+    travel_to(paris(2026, 10, 20, 9)) do
+      pause = declare(Date.new(2026, 10, 19), Date.new(2026, 10, 21)).tap(&:save!)
+      pause.update!(ends_on: Date.new(2026, 10, 30))
+
+      assert_equal 1, @household.engine_events.where(name: "member_pause.updated").count
+      assert_equal "2026-10-30", @household.engine_events.find_by(name: "member_pause.updated").payload["ends_on"]
+      Notifications::Dispatcher.deliver_pending(@household)
+      assert_equal 2, Notification.where(kind: "pause_declared").distinct.count(:dedup_key)
+    end
   end
 end
