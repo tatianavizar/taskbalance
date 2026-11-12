@@ -48,7 +48,10 @@ class Households::InvitationsController < ApplicationController
     end
   end
 
+  # Only the sender can resend: anyone else gets a 404, as if it did not exist.
   def resend
+    raise ActiveRecord::RecordNotFound unless @invitation.resendable_by?(current_user)
+
     verdict, seconds = @invitation.resend!
     path = household_invitation_path(@household, @invitation)
     case verdict
