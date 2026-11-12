@@ -1,21 +1,29 @@
-# The weekly engine runs every 15 minutes and acts, for each household, on the
-# moments that have passed in that household's time zone: provisional report
-# from Sunday 20:00, final report from Monday 03:00, absence deadline on
-# Wednesday 20:00. Every step is idempotent and missed weeks are caught up in
-# order, so a stopped worker loses nothing. 15 minutes covers zones offset by
-# :30 or :45 (Asia/Kolkata, Asia/Kathmandu).
+# The weekly engine acts, for each household, on the moments that have passed
+# in that household's time zone: provisional report from Sunday 20:00, final
+# report from Monday 03:00, absence deadline on Wednesday 20:00. Every step is
+# idempotent and missed weeks are caught up in order, so a stopped worker loses
+# nothing.
 #
-# Development uses the async adapter (no Solid Queue tables): run the engine by
-# hand with `bin/rails runner WeeklyEngineJob.perform_now`.
+# Fan-out: these two recurring jobs are only dispatchers. Every 15 minutes
+# (which covers zones offset by :30 or :45, Asia/Kolkata, Asia/Kathmandu) they
+# select the households that have something due (households.engine_due_at,
+# households.chores_scheduled_week: see EngineCycle and
+# RecurringChoreScheduler) and enqueue one job each on the `engine` queue,
+# processed by the workers of config/queue.yml. When nothing is due, nothing
+# is enqueued.
+#
+# Development uses the async adapter (no Solid Queue tables): run everything
+# inline and by hand with `bin/rails runner WeeklyEngineJob.perform_now` and
+# `bin/rails runner RecurringChoreSchedulerJob.perform_now`.
 production:
   weekly_engine:
-    class: WeeklyEngineJob
+    class: EngineDispatchJob
     queue: default
     schedule: every 15 minutes
   # Writes each household's occurrences for the week that has begun in its own
   # time zone (lot 4). Idempotent; a chore also schedules itself when saved.
   recurring_chore_scheduler:
-    class: RecurringChoreSchedulerJob
+    class: ChoreSchedulerDispatchJob
     queue: default
     schedule: every 15 minutes
   # Rails 8 default: finished jobs are kept for SolidQueue's

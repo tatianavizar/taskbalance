@@ -42,6 +42,17 @@ class Household < ApplicationRecord
 
   self.ransackable_attribute_names = %w[name state time_zone level blocked_at created_at]
 
+  # Fan-out of the weekly engine (EngineCycle): a new household is due at once.
+  # Set in Ruby rather than left to the column default so it follows the
+  # application clock.
+  attribute :engine_due_at, default: -> { Time.current }
+
+  # What the engine reads to decide its moments (zone) or the proposal
+  # (WeeklySplit): a change makes the household due now.
+  ENGINE_WAKING_ATTRIBUTES = %w[time_zone setup_step weekly_proposal_enabled gap_carry_over_enabled
+                                auto_validate_splits].freeze
+  after_update_commit :wake_engine, if: -> { (saved_changes.keys & ENGINE_WAKING_ATTRIBUTES).any? }
+
   before_validation { self.name = name.to_s.strip.presence }
 
   validates :name, presence: true, length: { maximum: NAME_MAX_LENGTH }
@@ -70,6 +81,13 @@ class Household < ApplicationRecord
   rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotUnique
     household.errors.add(:base, :user_already_in_household)
     household
+  end
+
+  # Makes the household due now for the engine dispatcher, whatever
+  # engine_due_at said (a member arrived or left, a setting or the time zone
+  # changed, the set-up ended). One cheap UPDATE, no callbacks.
+  def wake_engine
+    self.class.where(id: id).update_all(engine_due_at: Time.current)
   end
 
   def ultimate_level?
