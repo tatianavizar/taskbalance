@@ -21,8 +21,19 @@ class NotificationsIntegrationTest < ActionDispatch::IntegrationTest
 
   # ---- unsubscribe ------------------------------------------------------------
 
-  test "the link in the email switches the type off, without signing in" do
+  test "opening the link in the email changes nothing: it asks first" do
     get unsubscribe_path(token)
+
+    assert_response :success
+    assert_select "h1", "Ne plus recevoir ce message ?"
+    assert_select "form[action=?][method=post] button", unsubscribe_path(token), text: "Me désinscrire"
+    assert_select "p", /Alerte : semaine sans saisie/
+    assert NotificationPreference.enabled?(@alice, "alert")
+    assert_equal 0, NotificationPreference.count
+  end
+
+  test "the button of that page switches the type off, without signing in" do
+    post unsubscribe_path(token)
 
     assert_response :success
     assert_select "h1", "C'est fait."
@@ -40,7 +51,7 @@ class NotificationsIntegrationTest < ActionDispatch::IntegrationTest
   end
 
   test "undo switches it back on" do
-    get unsubscribe_path(token)
+    post unsubscribe_path(token)
     assert_select "form[action=?] button", resubscribe_path(token), text: "Réactiver"
 
     post resubscribe_path(token)
@@ -63,6 +74,9 @@ class NotificationsIntegrationTest < ActionDispatch::IntegrationTest
       post unsubscribe_path(bad)
       assert_response :not_found
 
+      post unsubscribe_path(bad), params: { "List-Unsubscribe" => "One-Click" }
+      assert_response :not_found
+
       post resubscribe_path(bad)
       assert_response :not_found
     end
@@ -79,6 +93,10 @@ class NotificationsIntegrationTest < ActionDispatch::IntegrationTest
     url = mail.header["List-Unsubscribe"].to_s[/<(.+)>/, 1]
 
     get URI(url).path
+    assert_response :success
+    assert NotificationPreference.enabled?(users(:bob), "weekly_report"), "a GET changes nothing"
+
+    post URI(url).path
 
     assert_response :success
     assert_not NotificationPreference.enabled?(users(:bob), "weekly_report")

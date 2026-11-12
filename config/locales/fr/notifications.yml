@@ -51,6 +51,9 @@ fr:
       not_sent_no_channel: "Non envoyée : aucune adresse confirmée."
 
     unsubscribe:
+      confirm_title: "Ne plus recevoir ce message ?"
+      confirm_body: "Vous ne recevrez plus « %{type} », par email comme sur ce téléphone. Les autres messages ne changent pas."
+      confirm: "Me désinscrire"
       done_title: "C'est fait."
       done_body: "Vous ne recevrez plus « %{type} », par email comme sur ce téléphone. Les autres messages ne changent pas."
       undo: "Réactiver"
