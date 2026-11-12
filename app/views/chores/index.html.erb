@@ -53,8 +53,14 @@
     <% next if entries.empty? %>
     <h2 class="section-label font-sans" id="section-<%= key %>"><%= t("chores.index.sections.#{key}") %></h2>
     <div class="card px-3.5 py-0" aria-labelledby="section-<%= key %>">
-      <% entries.each do |entry| %>
-        <%= render "chores/task_row", entry: entry, board: board, late: key == :late %>
+      <% if key == :late %>
+        <% board.late_groups.each do |group| %>
+          <%= render "chores/task_row", entry: group.entry, board: board, late: true, count: group.count, since: group.since %>
+        <% end %>
+      <% else %>
+        <% entries.each do |entry| %>
+          <%= render "chores/task_row", entry: entry, board: board, late: false %>
+        <% end %>
       <% end %>
     </div>
   <% end %>

@@ -42,11 +42,73 @@ class ChoresWeekTest < ActionDispatch::IntegrationTest
     assert_select "form[action=?] button", complete_chore_occurrence_path(occurrence(@laundry, Date.new(2026, 11, 6)))
   end
 
-  test "a daily task lapses with its day, it is not late" do
+  test "a missed daily task stays late and is folded into one line with its count" do
     get chores_path
 
-    assert_select "form[action=?]", complete_chore_occurrence_path(occurrence(@cooking, Date.new(2026, 11, 3))), 0
-    assert_not response.body.include?("depuis le 3 nov")
+    assert_select "#section-late"
+    assert_text "Cook a meal · 2 en retard"
+    assert_text "la plus ancienne depuis le 2 nov"
+    assert_equal 1, response.body.scan("Cook a meal · ").size, "one line, not one per missed day"
+    # Today's and the following days' occurrences are not late.
+    board = TaskBoard.new(user: @alice)
+    assert_equal [ Date.new(2026, 11, 2), Date.new(2026, 11, 3) ], board.late.select { |e| e.chore == @cooking }.map(&:due_on)
+    assert_equal [ @cooking.id, @bills.id ].sort, board.late_groups.map { |g| g.chore.id }.sort
+  end
+
+  test "a missed daily occurrence stays late across days and weeks" do
+    travel_to(paris(2026, 11, 11, 10)) # Wednesday of the next week
+    RecurringChoreScheduler.sync_household(@household)
+
+    board = TaskBoard.new(user: @alice)
+    cooking = board.late.select { |e| e.chore == @cooking }.map(&:due_on)
+    assert_includes cooking, Date.new(2026, 11, 2), "last week's still late"
+    assert_equal (Date.new(2026, 11, 2)..Date.new(2026, 11, 10)).to_a, cooking
+    group = board.late_groups.find { |g| g.chore == @cooking }
+    assert_equal 9, group.count
+    assert_equal Date.new(2026, 11, 2), group.since
+  end
+
+  test "a weekly task nobody did stays late in the following weeks" do
+    travel_to(paris(2026, 11, 11, 10))
+    RecurringChoreScheduler.sync_household(@household)
+
+    laundry = TaskBoard.new(user: @alice).late.select { |e| e.chore == @laundry }.map(&:due_on)
+    assert_includes laundry, Date.new(2026, 11, 6)
+  end
+
+  test "logging a late occurrence fulfils it, with the day it was really done, in that week" do
+    travel_to(paris(2026, 11, 11, 10))
+    RecurringChoreScheduler.sync_household(@household)
+    occ = occurrence(@bills, Date.new(2026, 11, 2)) # due in week 45, done in week 46
+
+    post complete_chore_occurrence_path(occ), params: { idempotency_key: "late-1" }
+
+    log = ChoreLog.find_by!(occurrence_id: occ.id)
+    assert_equal Time.current, log.completed_at
+    assert_equal Week.containing(Time.current, "Europe/Paris").monday, log.week.monday, "counts in the week it was done"
+    assert_not_equal occ.week_start, log.week.monday
+    assert_equal 1, WeeklyStats.new(@household, @household.current_week).member_for(@alice).logs_count
+    assert_equal 0, WeeklyStats.new(@household, Week.containing(Date.new(2026, 11, 2), "Europe/Paris")).member_for(@alice).logs_count
+    assert TaskBoard.new(user: @alice).late.none? { |e| e.chore == @bills }, "fulfilled, no longer late"
+  end
+
+  test "« Fait » on a folded line fulfils the oldest occurrence, one at a time" do
+    sign_in @bob
+    get chores_path
+    oldest = occurrence(@cooking, Date.new(2026, 11, 2))
+    assert_select "form[action=?] button", complete_chore_occurrence_path(oldest)
+
+    post complete_chore_occurrence_path(oldest), params: { idempotency_key: "x" }
+    get chores_path
+    assert_text "Cook a meal"
+    assert_not response.body.include?("2 en retard"), "one left, shown as a plain late line"
+    assert_text "depuis le 3 nov"
+    assert_select "form[action=?] button", complete_chore_occurrence_path(occurrence(@cooking, Date.new(2026, 11, 3)))
+  end
+
+  test "the detail's button logs the oldest open occurrence" do
+    get chore_path(@cooking.tap { |c| c.update!(assignee_user_ids: [ @alice.id ]) })
+    assert_select "a[href=?]", new_chore_log_path(chore_id: @cooking.id, occurrence_id: occurrence(@cooking, Date.new(2026, 11, 2)).id)
   end
 
   test "a monthly task of an earlier week stays late until it is done" do

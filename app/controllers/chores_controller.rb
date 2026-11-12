@@ -97,7 +97,8 @@ private
   def open_occurrence_for_user
     return unless @chore.active? && @chore.assigned_to?(current_user)
 
-    ChoreOccurrence.in_week(@household.current_week).where(chore_id: @chore.id).includes(:chore_logs)
+    # The oldest one still open: a late occurrence is fulfilled first.
+    ChoreOccurrence.where(chore_id: @chore.id, week_start: ..@household.current_week.monday).includes(:chore_logs)
       .order(:due_on, :slot).find { |occurrence| !occurrence.done_by?(current_user.id) }
   end
 

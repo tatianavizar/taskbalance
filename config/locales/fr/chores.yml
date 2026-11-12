@@ -23,6 +23,8 @@ fr:
         other: "Voir les %{count} tâches du foyer"
       off_split_hint: "Vous avez fait quelque chose qui n'était pas prévu ? Enregistrez-le quand même : c'est ce qui rend la balance juste."
       since: "depuis le %{date}"
+      late_n: "%{count} en retard"
+      late_count: "la plus ancienne depuis le %{date}"
       mark_completed: "Fait"
       mark_completed_aria: "Fait : %{name}"
       done: "Fait"
