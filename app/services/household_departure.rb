@@ -88,9 +88,6 @@ class HouseholdDeparture
     end
     ChoreAssignee.insert_all!(rows) if rows.any?
     Chore.where(id: orphaned).touch_all if orphaned.any?
-
-    # Legacy templates (RecurringChore): the first remaining member.
-    household.recurring_chores.where(assigned_to_id: user_id).update_all(assigned_to_id: remaining_user_ids.first)
   end
 
   def update_week_plans!(remaining_keys)
