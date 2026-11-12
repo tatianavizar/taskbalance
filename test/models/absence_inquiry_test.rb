@@ -307,9 +307,10 @@ class AbsenceInquiryTest < ActiveSupport::TestCase
     household, alice, bob = household_with_inquiry("Alice", "Bob")
     answer(inquiry_about(household, bob), alice, "yes")
 
-    names = household.engine_events.undelivered.map(&:name)
-    assert_equal %w[absence_inquiry.opened absence_answer.given absence_inquiry.resolved], names
+    names = household.engine_events.undelivered.map(&:name).grep(/\Aabsence|member_pause/)
+    assert_equal %w[absence_inquiry.opened absence_answer.given member_pause.declared absence_inquiry.resolved], names
+    total = household.engine_events.undelivered.count
     household.engine_events.first.mark_delivered!
-    assert_equal 2, household.engine_events.undelivered.count
+    assert_equal total - 1, household.engine_events.undelivered.count
   end
 end

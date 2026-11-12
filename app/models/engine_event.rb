@@ -12,7 +12,9 @@
 #                             original_answer, answer, corrected_by_user_id
 #   absence_inquiry.resolved  inquiry_id, household_member_id, user_id, outcome
 #                             (paused | regressed | cancelled | reopened)
-#   household_week.provisional / household_week.final   week_start, outcome
+#   household_week.provisional  week_start, outcome
+#   household_week.final      week_start, outcome, and the progression right
+#                             after that report: level, balanced_weeks_count, blocked
 #   member.first_empty_week   household_member_id, user_id, first_name, week_start (E3)
 #   household.unblocked       week_start (subject: the final week that lifted it)
 #   level.changed             level_change_id, reason, from_level, to_level,

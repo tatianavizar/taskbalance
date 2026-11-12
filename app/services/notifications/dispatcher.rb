@@ -13,7 +13,8 @@ module Notifications
   # stays undelivered; the others go on.
   #
   # Outbox event               -> notification
-  #   household_week.provisional  H3 weekly report
+  #   household_week.final       H3 weekly report, from the final report and
+  #                               the level right after it (Monday 08:00)
   #   member.first_empty_week     E3 alert, about that member
   #   household.unblocked         E5
   #   absence_inquiry.opened      the absence question (E11, P5)
@@ -21,8 +22,9 @@ module Notifications
   #   level.changed regression_cancelled   absence outcome "cancelled"
   #   absence_inquiry.resolved paused      absence outcome "paused"
   #   member_pause.declared       the dates, to everyone (every pause path)
-  # Anything else (final week, answers, other level moves) has no message
-  # yet and is simply marked delivered.
+  # Anything else (provisional week, answers, other level moves) has no
+  # message yet and is simply marked delivered. A caught-up week is reported
+  # too; the Notifier keeps a week that came due long ago out of inboxes.
   #
   # Called by WeeklyEngineJob after each household's run, and by
   # NotificationsDispatchJob right after a pause is declared.
@@ -55,7 +57,7 @@ module Notifications
       return if subject.nil? # e.g. a pause withdrawn before it was announced
 
       case event.name
-      when "household_week.provisional" then send_event Events::WeeklyReport.new(subject)
+      when "household_week.final" then weekly_report(subject, event.payload)
       when "member.first_empty_week" then no_logs_alert(subject, event.payload["user_id"])
       when "household.unblocked" then send_event Events::UnblockedAlert.new(subject)
       when "absence_inquiry.opened" then send_event Events::AbsenceQuestion.new(subject)
@@ -67,6 +69,11 @@ module Notifications
 
     def send_event(event)
       Notifier.call(event, now: @now)
+    end
+
+    def weekly_report(household_week, payload)
+      progression = payload.slice("level", "balanced_weeks_count", "blocked").presence
+      send_event Events::WeeklyReport.new(household_week, progression: progression)
     end
 
     def no_logs_alert(household_week, user_id)

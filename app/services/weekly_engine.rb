@@ -263,12 +263,16 @@ class WeeklyEngine
 
     record.update!(stats.to_snapshot.merge(status: "final", computed_at: now, finalized_at: now))
     result.final_weeks << record
-    record_week_event("household_week.final", record, now)
 
     update_streaks(stats, record, now, result)
     unblock_if_everyone_logged(stats, record, now, result)
     progress(stats, record, week, result)
     refresh_state!
+    # Recorded last, with the progression as this report left it: the weekly
+    # report (H3) is built from it, even when several weeks close in one run.
+    EngineEvent.record!(household: household, name: "household_week.final", subject: record, at: now,
+                        week_start: record.week_start, outcome: record.outcome, level: household.level,
+                        balanced_weeks_count: household.balanced_weeks_count, blocked: household.blocked?)
   end
 
   def update_streaks(stats, record, now, result)

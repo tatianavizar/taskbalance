@@ -1,17 +1,25 @@
 module Notifications
   module Events
-    # H3: the Sunday 20:00 report, provisional, to every member. The figures
-    # are read from the stored HouseholdWeek, so every member gets the same.
+    # H3: the weekly report, to every member, on Monday 08:00 after the close.
+    # Built from the FINAL HouseholdWeek (late Sunday logs included) and the
+    # progression right after that report (`progression`: level,
+    # balanced_weeks_count, blocked, from the household_week.final outbox
+    # event; the household's current values when not given). Every member
+    # gets the same facts.
     class WeeklyReport < Event
       KIND = "weekly_report".freeze
       HISTORY_WEEKS = 4
 
-      def initialize(household_week)
+      def initialize(household_week, progression: nil)
         super(household_week.household)
         @week = household_week
+        @progression = progression || {
+          "level" => household.level, "balanced_weeks_count" => household.balanced_weeks_count,
+          "blocked" => household.blocked?
+        }
       end
 
-      def deliver_at = HouseholdWeek.provisional_at(@week.week)
+      def deliver_at = monday_morning_after(@week.week)
 
       def facts
         members = @week.members.map { |m| member_facts(m) }
@@ -27,9 +35,9 @@ module Notifications
           "zone_max" => zone&.max,
           "members" => members,
           "carrier" => carrier(members),
-          "level" => household.level,
-          "ultimate" => household.ultimate_level?,
-          "blocked" => household.blocked?,
+          "level" => level,
+          "ultimate" => level == Progression::ULTIMATE,
+          "blocked" => @progression["blocked"],
           "weeks_to_next_level" => weeks_to_next_level,
           "previous_unbalanced" => previous_unbalanced,
           "history" => history(members)
@@ -39,6 +47,8 @@ module Notifications
       private
 
       def key_parts = [ "household-#{household.id}", @week.week_start.iso8601 ]
+
+      def level = @progression["level"]
 
       def zone
         HouseholdRules.zone(@week.members.count { |m| !m["paused"] }) if @week.fair_share
@@ -68,9 +78,9 @@ module Notifications
       end
 
       def weeks_to_next_level
-        return nil if household.ultimate_level?
+        return nil if level == Progression::ULTIMATE
 
-        [ Progression.threshold(household.level + 1) - household.balanced_weeks_count, 0 ].max
+        [ Progression.threshold(level + 1) - @progression["balanced_weeks_count"], 0 ].max
       end
 
       def previous_unbalanced
