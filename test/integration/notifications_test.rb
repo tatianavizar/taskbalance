@@ -115,7 +115,7 @@ class NotificationsIntegrationTest < ActionDispatch::IntegrationTest
     NotificationPreference::EVENT_TYPES.each do |type|
       assert_select "input[type=checkbox][role=switch][name=?][checked]", "preferences[#{type}]"
     end
-    assert_select "span", "Bilan du dimanche soir"
+    assert_select "span", "Bilan de la semaine"
     assert_select "span", "Alerte : semaine sans saisie"
     assert_select "a[href=?]", notifications_path
   end

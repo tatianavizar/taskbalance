@@ -16,7 +16,7 @@ fr:
       manage: "Réglages des notifications"
       why: "Vous recevez cet email parce que vous êtes membre d'un foyer sur 50/50."
     event_types:
-      weekly_report: "Bilan du dimanche soir"
+      weekly_report: "Bilan de la semaine"
       task_assigned: "Une tâche m'est assignée"
       alert: "Alerte : semaine sans saisie"
       monday_split: "Répartition du lundi"
