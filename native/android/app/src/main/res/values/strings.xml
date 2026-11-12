@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">50/50</string>
+    <string name="tab_home">Accueil</string>
+    <string name="tab_tasks">Tâches</string>
+    <string name="tab_report">Bilan</string>
+    <string name="tab_household">Foyer</string>
+    <!-- Same id as Push::Fcm::ANDROID_CHANNEL on the server. -->
+    <string name="notification_channel_id" translatable="false">general</string>
+    <string name="notification_channel_name">Notifications</string>
+</resources>

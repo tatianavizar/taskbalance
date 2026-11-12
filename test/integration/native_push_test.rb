@@ -167,6 +167,19 @@ class NativePushTest < ActionDispatch::IntegrationTest
 
     assert_equal %w[/dashboard /chores /bilan /foyer], response.parsed_body.dig("settings", "tabs").map { |tab| tab["path"] }
     assert_includes response.parsed_body["rules"].map { |r| r["patterns"] }.flatten, "/delete$"
+    assert(response.parsed_body["rules"].none? { |r| r["properties"].key?("uri") })
+
+    get "/configurations/android_v1.json"
+    uris = response.parsed_body["rules"].map { |r| r.dig("properties", "uri") }
+    assert_equal [ "hotwire://fragment/web", "hotwire://fragment/web/modal/sheet", nil ], uris
+  end
+
+  test "the configurations bundled in the apps match the server's" do
+    ios = JSON.parse(Rails.root.join("native/ios/FiftyFifty/Resources/path-configuration.json").read)
+    android = JSON.parse(Rails.root.join("native/android/app/src/main/assets/json/configuration.json").read)
+
+    assert_equal JSON.parse(ConfigurationsController.path_configuration("ios").to_json)["rules"], ios["rules"]
+    assert_equal JSON.parse(ConfigurationsController.path_configuration("android").to_json)["rules"], android["rules"]
   end
 
   # ---- universal links, App Links -------------------------------------------------------

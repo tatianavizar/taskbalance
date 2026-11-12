@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- PLACEHOLDER logo (split circle, mint and ink). Replace with the final artwork
+     (Android Studio > New > Image Asset), native/README.md. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path android:fillColor="@color/mint" android:pathData="M54,30a24,24 0,0 0,0 48z" />
+    <path android:fillColor="@color/ink" android:pathData="M54,30a24,24 0,0 1,0 48z" />
+</vector>

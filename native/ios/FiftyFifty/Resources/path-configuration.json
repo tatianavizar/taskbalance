@@ -1,0 +1,56 @@
+{
+  "settings": {
+    "tabs": [
+      {
+        "title": "Accueil",
+        "path": "/dashboard"
+      },
+      {
+        "title": "Tâches",
+        "path": "/chores"
+      },
+      {
+        "title": "Bilan",
+        "path": "/bilan"
+      },
+      {
+        "title": "Foyer",
+        "path": "/foyer"
+      }
+    ]
+  },
+  "rules": [
+    {
+      "patterns": [
+        ".*"
+      ],
+      "properties": {
+        "context": "default",
+        "pull_to_refresh_enabled": true
+      }
+    },
+    {
+      "patterns": [
+        "/new$",
+        "/edit$",
+        "/completion/new$",
+        "/delete$",
+        "/cancel$"
+      ],
+      "properties": {
+        "context": "modal",
+        "pull_to_refresh_enabled": false
+      }
+    },
+    {
+      "patterns": [
+        "/recede_historical_location$",
+        "/resume_historical_location$",
+        "/refresh_historical_location$"
+      ],
+      "properties": {
+        "presentation": "none"
+      }
+    }
+  ]
+}
