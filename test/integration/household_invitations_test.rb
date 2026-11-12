@@ -40,7 +40,7 @@ class HouseholdInvitationsTest < ActionDispatch::IntegrationTest
     assert_select "h1", "Invitation envoyée"
     assert_select ".pill", "En attente"
     assert_select "a[href=?]", cancel_household_invitation_path(@household, invitation)
-    assert_match "0 renvoi sur 3 utilisé", response.body
+    assert_match "0 renvoi sur 2 utilisé", response.body
   end
 
   test "an address that already has an account goes through an invitation too, never straight in" do
@@ -167,10 +167,10 @@ class HouseholdInvitationsTest < ActionDispatch::IntegrationTest
     end
   end
 
-  test "resend: after three, the button shows the limit" do
+  test "resend: after two resends, the button shows the limit" do
     invite "newcomer@test.com"
     invitation = Invitation.last
-    3.times do |i|
+    2.times do |i|
       travel_to(Time.current + ((i + 1) * 20).minutes) { post resend_household_invitation_path(@household, invitation) }
     end
 
@@ -181,7 +181,26 @@ class HouseholdInvitationsTest < ActionDispatch::IntegrationTest
       assert_no_enqueued_emails do
         post resend_household_invitation_path(@household, invitation)
       end
-      assert_match "limite de 3 renvois", flash[:alert]
+      assert_match "limite de 2 renvois", flash[:alert]
+    end
+  end
+
+  test "resend: only the sender sees the button and can use it; everyone else gets a 404" do
+    invite "newcomer@test.com"
+    invitation = Invitation.last
+
+    travel 16.minutes do
+      sign_in users(:bob)
+      get household_invitation_path(@household, invitation)
+      assert_select "form[action=?]", resend_household_invitation_path(@household, invitation), 0
+      assert_select "[aria-disabled=true]", text: /Renvoyer/, count: 0
+      assert_match "Seule la personne qui a envoyé", response.body
+
+      assert_no_enqueued_emails do
+        post resend_household_invitation_path(@household, invitation)
+      end
+      assert_response :not_found
+      assert_equal 0, invitation.reload.resend_count
     end
   end
 
@@ -196,7 +215,7 @@ class HouseholdInvitationsTest < ActionDispatch::IntegrationTest
       second = Invitation.last
       assert_not_equal first, second
       get household_invitation_path(@household, second)
-      assert_match "2 renvois sur 3 utilisés", response.body
+      assert_match "2 renvois sur 2 utilisés", response.body
     end
   end
 

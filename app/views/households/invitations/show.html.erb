@@ -36,7 +36,9 @@
   <% if state == "pending" %>
     <% verdict, seconds = @allowance %>
     <div class="flex items-center gap-5 mt-1.5 pl-[42px]">
-      <% if verdict == :ok %>
+      <% if !@invitation.resendable_by?(current_user) %>
+        <%# Only the sender sees the resend control. %>
+      <% elsif verdict == :ok %>
         <%= button_to t("invitations.show.resend"), resend_household_invitation_path(@household, @invitation),
               class: "font-semibold text-sm min-h-[44px] bg-transparent border-0 p-0 cursor-pointer underline" %>
       <% elsif verdict == :wait %>
@@ -52,6 +54,9 @@
             class: "font-semibold text-sm min-h-[44px] inline-flex items-center" %>
     </div>
     <div class="pl-[42px] text-[13px] leading-[18px] text-muted">
+      <% unless @invitation.resendable_by?(current_user) %>
+        <%= t("invitations.show.sender_only") %>
+      <% end %>
       <%= t("invitations.show.resends_used", count: [ @invitation.resends_used, Invitation::MAX_RESENDS ].min, max: Invitation::MAX_RESENDS, minutes: Invitation::MIN_RESEND_GAP.in_minutes.to_i) %>
     </div>
   <% end %>
