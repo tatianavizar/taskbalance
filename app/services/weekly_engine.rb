@@ -42,7 +42,10 @@ class WeeklyEngine
 
   SILENT_WEEKS_FOR_DORMANT = 3 # default, not yet validated (backlog 2.2)
 
-  # Runs every household. With a block, yields (household, result) after each
+  # Runs every household serially, engine only. Production does not use it:
+  # EngineDispatchJob fans out one HouseholdEngineJob per due household
+  # (EngineCycle). It stays for tests and one-off `bin/rails runner` use.
+  # With a block, yields (household, result) after each
   # successful run; a failing run is reported and skipped. The block's own
   # errors are the caller's to handle. Returns [[household, result], ...].
   def self.run_all(now: Time.current)
@@ -80,6 +83,22 @@ class WeeklyEngine
       write_provisional(now, result)
     end
     result
+  end
+
+  # The next moment, after `now`, at which `run` has something to do, or
+  # nil when none is known: the provisional and the final report of the
+  # oldest open week, and the deadline of the earliest pending absence
+  # inquiry. EngineCycle stores it in households.engine_due_at so the
+  # dispatcher only picks households that are due. Call it after `run`:
+  # every moment up to `now` has been acted on then. Being a little early
+  # costs one harmless run; being late would skip a report, so every moment
+  # `run` reacts to is listed here. When `run` gets a new time-based step,
+  # add its moment here.
+  def next_due_at(now)
+    week = first_open_week
+    moments = [ HouseholdWeek.provisional_at(week), HouseholdWeek.final_at(week),
+                household.absence_inquiries.pending.minimum(:deadline_at) ]
+    moments.compact.select { |moment| moment > now }.min
   end
 
   # What a retroactive pause changed on final weeks (D3).
@@ -231,9 +250,14 @@ class WeeklyEngine
     household.zone
   end
 
-  def weeks_to_finalize(now)
+  # The oldest week that is not final yet.
+  def first_open_week
     last_final = household.household_weeks.final.maximum(:week_start)
-    week = last_final ? Week.new(last_final + 7, zone) : household.week_containing(household.created_at)
+    last_final ? Week.new(last_final + 7, zone) : household.week_containing(household.created_at)
+  end
+
+  def weeks_to_finalize(now)
+    week = first_open_week
     weeks = []
     while HouseholdWeek.final_at(week) <= now
       weeks << week

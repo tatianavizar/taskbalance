@@ -1,12 +1,43 @@
+# Solid Queue. Two groups of workers:
+#
+# - `engine`: the fan-out of the weekly engine (EngineDispatchJob enqueues one
+#   HouseholdEngineJob per household that has something due, and
+#   ChoreSchedulerDispatchJob one HouseholdChoreSchedulerJob). Monday 03:00
+#   and Sunday 20:00 local make bursts, one per time zone with households in
+#   it (Paris alone is most of them), so this is the queue to scale.
+# - everything else (`default`: the dispatchers themselves, mailers, the
+#   notification mails scheduled for 08:00...), kept apart so a burst of
+#   engine jobs never delays an e-mail.
+#
+# How to scale (a household run is a few dozen queries, ~50-100 ms; each
+# thread does ~10-20 households/s):
+#   1. ENGINE_THREADS per process (default 5). Keep RAILS_MAX_THREADS
+#      (config/database.yml pool) >= ENGINE_THREADS + 2.
+#   2. ENGINE_PROCESSES per host (default 1): roughly one per CPU core.
+#   3. More hosts: uncomment the `job` role in config/deploy.yml (cmd:
+#      bin/jobs), add hosts, and stop running Solid Queue inside Puma
+#      (SOLID_QUEUE_IN_PUMA). Each host adds ENGINE_THREADS x ENGINE_PROCESSES
+#      workers; they share the queue database, and two workers never take the
+#      same job. `ENGINE_ONLY=1` makes a host process the engine queue only,
+#      and `ENGINE_ONLY=0` (default) both groups.
+# Order of magnitude: 400k households closing a week within one hour needs
+# ~110 households/s, i.e. about 6-10 threads in total. Watch the age of the
+# oldest ready job on the `engine` queue (SolidQueue::ReadyExecution).
 default: &default
   dispatchers:
     - polling_interval: 1
       batch_size: 500
   workers:
-    - queues: "*"
+    - queues: engine
+      threads: <%= ENV.fetch("ENGINE_THREADS", 5) %>
+      processes: <%= ENV.fetch("ENGINE_PROCESSES", 1) %>
+      polling_interval: 0.1
+<% unless ENV["ENGINE_ONLY"] == "1" %>
+    - queues: [ default, mailers ]
       threads: 3
       processes: <%= ENV.fetch("JOB_CONCURRENCY", 1) %>
       polling_interval: 0.1
+<% end %>
 
 development:
   <<: *default

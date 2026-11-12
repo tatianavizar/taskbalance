@@ -146,6 +146,6 @@ class RecurringChoreSchedulerTest < ActiveSupport::TestCase
 
   test "the job is a recurring task" do
     config = YAML.safe_load_file(Rails.root.join("config/recurring.yml"), aliases: true)
-    assert_equal "RecurringChoreSchedulerJob", config.dig("production", "recurring_chore_scheduler", "class")
+    assert_equal "ChoreSchedulerDispatchJob", config.dig("production", "recurring_chore_scheduler", "class")
   end
 end

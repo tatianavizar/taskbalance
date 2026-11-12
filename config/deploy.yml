@@ -8,10 +8,19 @@ image: your-user/task_balance
 servers:
   web:
     - 192.168.0.1
+  # Dedicated job hosts (see config/queue.yml for how the workers are sized).
+  # Uncomment, add one host per ~8 engine threads needed, and remove
+  # SOLID_QUEUE_IN_PUMA below so the web hosts stop processing jobs. Per-role
+  # ENV: ENGINE_THREADS, ENGINE_PROCESSES, RAILS_MAX_THREADS (>= threads + 2).
   # job:
   #   hosts:
   #     - 192.168.0.1
   #   cmd: bin/jobs
+  #   env:
+  #     clear:
+  #       ENGINE_THREADS: 8
+  #       ENGINE_PROCESSES: 2
+  #       RAILS_MAX_THREADS: 10
 
 # Enable SSL auto certification via Let's Encrypt and allow for multiple apps on a single web server.
 # Remove this section when using multiple web servers and ensure you terminate SSL at your load balancer.

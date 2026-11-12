@@ -548,7 +548,11 @@ CREATE TABLE public.households (
     weekly_proposal_enabled boolean DEFAULT true NOT NULL,
     gap_carry_over_enabled boolean DEFAULT true NOT NULL,
     auto_validate_splits boolean DEFAULT false NOT NULL,
-    gap_folded_through date
+    gap_folded_through date,
+    engine_due_at timestamp(6) without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    engine_claimed_at timestamp(6) without time zone,
+    chores_scheduled_week date,
+    chores_claimed_at timestamp(6) without time zone
 );
 
 
@@ -1754,6 +1758,13 @@ CREATE INDEX index_engine_events_undelivered ON public.engine_events USING btree
 
 
 --
+-- Name: index_engine_events_undelivered_by_household; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_engine_events_undelivered_by_household ON public.engine_events USING btree (household_id) WHERE (delivered_at IS NULL);
+
+
+--
 -- Name: index_household_members_on_household_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -1786,6 +1797,20 @@ CREATE INDEX index_household_weeks_on_household_id ON public.household_weeks USI
 --
 
 CREATE UNIQUE INDEX index_household_weeks_on_household_id_and_week_start ON public.household_weeks USING btree (household_id, week_start);
+
+
+--
+-- Name: index_households_on_engine_due_at; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_households_on_engine_due_at ON public.households USING btree (engine_due_at);
+
+
+--
+-- Name: index_households_on_time_zone_and_chores_scheduled_week; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_households_on_time_zone_and_chores_scheduled_week ON public.households USING btree (time_zone, chores_scheduled_week);
 
 
 --
@@ -2557,6 +2582,7 @@ ALTER TABLE ONLY public.week_plans
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20261113130000'),
 ('20261113092400'),
 ('20261113092300'),
 ('20261113092200'),
