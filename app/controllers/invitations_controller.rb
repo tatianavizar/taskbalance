@@ -70,7 +70,9 @@ class InvitationsController < ApplicationController
 
   def set_invitation
     @invitation = Invitation.includes(:household, :inviter).find_by(token: params[:token].to_s)
-    @invitation&.expire_if_due!
+    return render_invalid(:unknown, status: :not_found) unless @invitation
+
+    @invitation.expire_if_due!
   end
 
   def require_sign_in

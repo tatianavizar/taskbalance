@@ -145,23 +145,17 @@ class Invitation < ApplicationRecord
   # with errors when they cannot (household full, already in a household,
   # invitation closed or for someone else).
   def accept!(user)
-    # The invitee must have claimed the invitation first: nobody joins without
-    # having gone through the setup screens.
-    unless grants_setup_access_to?(user) && for?(user)
-      errors.add(:base, :not_acceptable)
-      return false
+    user.association(:household_membership).reset
+    membership = nil
+    # Locked: a cancel or another accept committing meanwhile is seen here.
+    with_lock do
+      if grants_setup_access_to?(user) && for?(user)
+        membership = join_household(user)
+      else
+        errors.add(:base, :not_acceptable)
+      end
     end
-
-    membership = household.household_members.new(user: user)
-    transaction do
-      raise ActiveRecord::Rollback unless membership.save
-
-      update!(state: "accepted", accepted_at: Time.current, invitee: user)
-    end
-    return membership if membership.persisted?
-
-    membership.errors.full_messages.each { |message| errors.add(:base, message) }
-    false
+    membership || false
   end
 
   # Refusing: allowed to the addressee until the last step.
@@ -172,9 +166,11 @@ class Invitation < ApplicationRecord
   end
 
   def cancel!
-    return false unless usable?
+    with_lock do
+      return false unless usable?
 
-    update!(state: "cancelled", cancelled_at: Time.current)
+      update!(state: "cancelled", cancelled_at: Time.current)
+    end
   end
 
   # ---- Resend --------------------------------------------------------------
@@ -190,18 +186,43 @@ class Invitation < ApplicationRecord
   # Same token, expiry reset, new email. Returns [:ok], the refusal
   # ([:wait, seconds] or [:limit]), or [:closed] when no longer pending.
   def resend!
-    return [ :closed ] unless usable?
+    verdict = with_lock do
+      next [ :closed ] unless usable?
 
-    verdict = resend_allowance
-    return verdict unless verdict.first == :ok
+      allowance = resend_allowance
+      next allowance unless allowance.first == :ok
 
-    now = Time.current
-    update!(resend_count: resend_count + 1, last_sent_at: now, expires_at: now + VALIDITY)
-    InvitationMailer.invite(self).deliver_later
-    [ :ok ]
+      now = Time.current
+      update!(resend_count: resend_count + 1, last_sent_at: now, expires_at: now + VALIDITY)
+      allowance
+    end
+    InvitationMailer.invite(self).deliver_later if verdict == [ :ok ]
+    verdict
   end
 
   private
+
+  # Runs inside the row lock. A unique-index collision (last colour taken by
+  # someone else, or the account joined another household meanwhile) becomes an
+  # error on the invitation, not a 500.
+  def join_household(user)
+    membership = household.household_members.new(user: user)
+    saved = transaction(requires_new: true) { membership.save }
+    if saved
+      update!(state: "accepted", accepted_at: Time.current, invitee: user)
+      membership
+    else
+      membership.errors.full_messages.each { |message| errors.add(:base, message) }
+      nil
+    end
+  rescue ActiveRecord::RecordNotUnique
+    if HouseholdMember.exists?(user_id: user.id)
+      errors.add(:base, :not_acceptable)
+    else
+      errors.add(:base, :household_full, max: HouseholdMember::COLORS.size)
+    end
+    nil
+  end
 
   def can_be_worked_through_by?(user)
     usable? && for?(user) && user.household_membership.nil?

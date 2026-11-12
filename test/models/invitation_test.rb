@@ -361,4 +361,50 @@ class InvitationTest < ActiveSupport::TestCase
 
     assert_equal [ :closed ], invitation.resend!
   end
+
+  # ---- Races (security review) ------------------------------------------------------
+
+  test "accept! re-reads the row: a cancel that committed meanwhile wins" do
+    invitation = @household.invitations.create!(email: "dana@test.com")
+    invitation.claim_for!(users(:dana))
+    stale = Invitation.find(invitation.id)
+    invitation.cancel!
+
+    assert_not stale.accept!(User.find(users(:dana).id))
+    assert_predicate invitation.reload, :cancelled?
+    assert_nil users(:dana).reload.household
+  end
+
+  test "accept! turns a unique-index collision into an error, not an exception" do
+    invitation = @household.invitations.create!(email: "dana@test.com")
+    invitation.claim_for!(users(:dana))
+    HouseholdMember.class_eval { alias_method :__save, :save; define_method(:save) { |*| raise ActiveRecord::RecordNotUnique, "dup" } }
+    begin
+      assert_not invitation.accept!(User.find(users(:dana).id))
+    ensure
+      HouseholdMember.class_eval { alias_method :save, :__save; remove_method :__save }
+    end
+    assert_predicate invitation.errors[:base], :any?
+    assert_predicate invitation.reload, :pending?
+  end
+
+  test "resend! checks the limit under the row lock, on fresh data" do
+    invitation = @household.invitations.create!(email: "new@test.com")
+    stale = Invitation.find(invitation.id)
+
+    travel 16.minutes do
+      assert_equal [ :ok ], invitation.resend!
+      verdict, = stale.resend! # a second request that loaded the row before the first committed
+      assert_equal :wait, verdict
+    end
+    assert_equal 1, invitation.reload.resend_count
+  end
+
+  test "cancel! on a closed invitation is false" do
+    invitation = @household.invitations.create!(email: "dana@test.com")
+    invitation.decline!(users(:dana))
+
+    assert_not invitation.cancel!
+    assert_predicate invitation.reload, :declined?
+  end
 end

@@ -302,4 +302,17 @@ class HouseholdInvitationsTest < ActionDispatch::IntegrationTest
     end
     assert_match "Trop d'invitations", flash[:alert]
   end
+
+  test "cancelling an invitation that is no longer pending does not claim it was cancelled" do
+    invite "dana@test.com"
+    invitation = Invitation.last
+    invitation.decline!(users(:dana))
+
+    delete household_invitation_path(@household, invitation)
+
+    assert_redirected_to household_invitation_path(@household, invitation)
+    assert_match "il n'y a rien à annuler", flash[:alert]
+    assert_not_equal "Invitation annulée.", flash[:notice]
+    assert_predicate invitation.reload, :declined?
+  end
 end

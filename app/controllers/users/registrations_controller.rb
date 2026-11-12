@@ -4,7 +4,7 @@ class Users::RegistrationsController < Devise::RegistrationsController
   rate_limit to: 10, within: 1.hour, only: :create, name: "sign-up-ip",
              with: -> { rate_limited_redirect }
   rate_limit to: 3, within: 1.hour, only: :create, name: "sign-up-email",
-             by: -> { params.dig(:user, :email).to_s.strip.downcase },
+             by: -> { sign_up_rate_limit_key },
              with: -> { rate_limited_redirect }
 
   # Old invitation links pointed here: the invitation screen (B7) replaces it.
@@ -56,7 +56,7 @@ class Users::RegistrationsController < Devise::RegistrationsController
     else
       clean_up_passwords resource
       set_minimum_password_length
-      return render("invitations/join", locals: { invitation: form_invitation, user: resource }, status: :unprocessable_entity) if form_invitation
+      return render_invitation_join if form_invitation
 
       respond_with resource
     end
@@ -123,6 +123,12 @@ class Users::RegistrationsController < Devise::RegistrationsController
     session.delete(:invitation_token)
   end
 
+  # The address the sign-up really targets: the invitation's when the form
+  # carries a usable token (the posted one is ignored), else the posted one.
+  def sign_up_rate_limit_key
+    (form_invitation&.email || params.dig(:user, :email)).to_s.strip.downcase
+  end
+
   def respond_to_known_email(existing)
     # The other validations (password, first name...) still apply so that the
     # response does not differ from a sign-up with a new address.
@@ -131,12 +137,19 @@ class Users::RegistrationsController < Devise::RegistrationsController
     if resource.errors.any?
       clean_up_passwords resource
       set_minimum_password_length
+      # Same screen as a new address would get (no enumeration).
+      return render_invitation_join if form_invitation
+
       return respond_with(resource)
     end
 
     AccountMailer.already_registered(existing).deliver_later
     set_flash_message! :notice, :signed_up_but_unconfirmed
     redirect_to new_user_session_path
+  end
+
+  def render_invitation_join
+    render "invitations/join", locals: { invitation: form_invitation, user: resource }, status: :unprocessable_entity
   end
 
   def rate_limited_redirect
