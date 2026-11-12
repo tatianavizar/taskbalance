@@ -1,0 +1,16 @@
+<%# D15, D16 : tâches proposées pour la semaine. La répartition validée ne change pas. %>
+<% handovers = household.task_handovers.for_week(household.current_week).where(status: %w[pending accepted])
+                         .where("from_user_id = :id OR to_user_id = :id", id: current_user.id).includes(:chore, :from_user, :to_user).order(:created_at) %>
+<section class="flex flex-col gap-2" aria-labelledby="handovers-title">
+  <h2 id="handovers-title" class="m-0 text-[15px] font-bold font-sans"><%= t("handovers.section.title") %></h2>
+  <% if handovers.any? %>
+    <div class="list-stack">
+      <% handovers.each do |handover| %>
+        <% subtitle = t("handovers.status.#{handover.status}") %>
+        <% title = handover.to_user_id == current_user.id ? t("handovers.section.offered_to_me", name: handover.from_user.first_name, chore: handover.chore.effective_name) : t("handovers.section.offered_by_me", name: handover.to_user.first_name, chore: handover.chore.effective_name) %>
+        <%= list_row title: title, subtitle: subtitle, href: household_handover_path(household, handover) %>
+      <% end %>
+    </div>
+  <% end %>
+  <%= link_to t("handovers.section.offer"), new_household_handover_path(household), class: "btn btn-secondary btn-sm w-full" %>
+</section>

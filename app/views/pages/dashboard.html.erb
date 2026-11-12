@@ -3,6 +3,8 @@
   <h1 class="screen-title"><%= t("nav.home") %></h1>
 
   <%= render "households/setup_card", household: current_household %>
+  <%# Emplacement D11 (lot 6) : la répartition de la semaine. %>
+  <%= render "households/splits/home_card", household: current_household %>
 
   <div class="list-stack">
     <%= list_row title: t("nav.tasks"), subtitle: t("chores.index.count", count: @chores.size), href: chores_path %>

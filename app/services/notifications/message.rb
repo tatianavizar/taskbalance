@@ -203,6 +203,16 @@ module Notifications
       { subject: title, title: title, lines: lines }
     end
 
+    def task_offered
+      title = m("title", name: facts["offered_by"]["first_name"], chore: facts["chore_name"])
+      { subject: title, title: title, lines: [ m("line", week: facts["week_number"]) ] }
+    end
+
+    def task_offer_answered
+      title = m(facts["accepted"] ? "accepted" : "refused", name: facts["answered_by"]["first_name"], chore: facts["chore_name"])
+      { subject: title, title: title }
+    end
+
     def monday_split
       counts = facts["counts"].map { |x| "#{name(x)} #{x["tasks"]}" }.join(", ")
       title = m("title", week: facts["week_number"])
