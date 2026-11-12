@@ -19,7 +19,9 @@
     <% @members.each do |member| %>
       <% since = l(member.created_at.in_time_zone(zone).to_date, format: :short) %>
       <% name = member.user_id == current_user.id ? t("households.show.you", name: member.user.first_name) : member.user.first_name %>
+      <%# P2 : on ouvre sa propre pastille pour changer de couleur ou de lettres. %>
       <%= list_row title: name, subtitle: t("households.show.role_since.#{member.role}", date: since),
+            href: (household_member_style_path(@household) if member.user_id == current_user.id && @members.size >= 2),
             leading: avatar(initials: member.monogram, color: member.color, size: 36) %>
     <% end %>
     <%= list_row title: t("households.show.invite_link"), href: new_household_invitation_path(@household),

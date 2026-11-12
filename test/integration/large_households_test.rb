@@ -328,6 +328,131 @@ class LargeHouseholdsTest < ActionDispatch::IntegrationTest
     assert_select "a[href=?]", new_household_invitation_path(household)
   end
 
+  test "P1: the partner step lists the household, shows the 3-person zone and invites another person" do
+    household, (a, _b) = build_household("Ana", "Ben")
+    household.update!(setup_step: "partner")
+    Invitation.invite(household: household, email: "cy@example.test", first_name: "Cy", inviter: a)
+    sign_in a
+
+    get household_setup_path(household)
+
+    assert_select "h2", "Les membres du foyer"
+    assert_text "À 3, la part égale est de 33 %, et la zone équilibrée va de 23 à 43 %."
+    assert_select ".list-row", text: /Cy/
+    assert_select "a[href=?]", new_household_invitation_path(household, setup: 1), text: "Inviter une autre personne"
+  end
+
+  test "P1: at the maximum the partner step says so and offers no more invitation" do
+    household, (a, *) = build_household("Ana", "Ben", "Cy", "Dani", "Eli")
+    household.update!(setup_step: "partner")
+    Invitation.invite(household: household, email: "fay@example.test", first_name: "Fay", inviter: a)
+    assert_not household.reload.room_for_another_person?
+    sign_in a
+
+    get household_setup_path(household)
+
+    assert_text "Le foyer compte déjà 6 personnes, invitations comprises : c'est le maximum."
+    assert_select "a[href=?]", new_household_invitation_path(household, setup: 1), count: 0
+  end
+
+  # ---- P2: colour and letters --------------------------------------------------
+
+  test "P2: a member opens their pastille: taken colours are named and disabled, radios are real" do
+    household, (a, b, _c) = build_household("Karim", "Karine", "Lou")
+    sign_in b
+
+    get household_member_style_path(household)
+
+    assert_response :success
+    assert_select "fieldset legend", "Couleur"
+    assert_select "input[type=radio][name=color]", count: 6
+    assert_select "input[type=radio][value=blue][checked]"
+    assert_select "input[type=radio][value=mint][disabled]"
+    assert_select "label.swatch", text: /Menthe · Karim/
+    assert_select "label[for=monogram]", "Lettres affichées"
+    assert_not_nil a
+  end
+
+  test "P2: a member changes colour and letters; two letters at most; taken colour refused" do
+    household, (karim, karine, _lou) = build_household("Karim", "Karine", "Lou")
+    sign_in karine
+
+    patch household_member_style_path(household), params: { color: "sky", monogram: "Kn" }
+    member = membership(household, karine).reload
+    assert_equal "sky", member.color
+    assert_equal "Kn", member.monogram
+    assert member.monogram_customized?
+
+    patch household_member_style_path(household), params: { color: "mint", monogram: "Kn" }
+    assert_response :unprocessable_entity
+    assert_select "#style-error[role=alert]", text: /déjà prise/
+    assert_equal "sky", member.reload.color
+
+    patch household_member_style_path(household), params: { color: "sky", monogram: "Kne" }
+    assert_response :unprocessable_entity
+    assert_select "input#monogram[aria-invalid=true][aria-describedby*=style-error]"
+
+    patch household_member_style_path(household), params: { color: "sky", monogram: "" }
+    assert_not member.reload.monogram_customized?
+    assert_equal "Ke", member.monogram, "the automatic letters come back"
+    assert_not_nil karim
+  end
+
+  test "P2: someone invited to a household of two picks colour and letters before joining; they are kept on joining" do
+    household, (virginie, _karim) = build_household("Virginie", "Karim")
+    chore!(household, "Ménage", [ virginie ])
+    household.update!(setup_step: "split")
+    WeekPlan.await_proposal!(household: household)
+    household.complete_setup_step!("split")
+    invitation = Invitation.invite(household: household, email: "karine@example.test", first_name: "Karine", inviter: virginie)
+    karine = User.create!(email: "karine@example.test", first_name: "Karine", password: "secret123", confirmed_at: Time.current)
+    sign_in karine
+
+    post claim_invitation_path(invitation.token)
+    assert_redirected_to household_member_style_path(household)
+    follow_redirect!
+    assert_select "h1", "Votre pastille"
+    assert_text "Étape 1 sur 3"
+    assert_select "input[type=radio][value=stone][checked]", count: 1 # the first free colour
+
+    patch household_member_style_path(household), params: { color: "sage", monogram: "Ki" }
+    assert_redirected_to household_preferences_path(household)
+    assert_equal "sage", invitation.reload.color
+
+    follow_redirect!
+    assert_response :success
+    post accept_invitation_path(invitation.token)
+    member = membership(household, karine)
+    assert_equal "sage", member.color
+    assert_equal "Ki", member.monogram
+  end
+
+  test "P2: if the colour was taken meanwhile, joining falls back to the first free one" do
+    household, (virginie, _karim) = build_household("Virginie", "Karim")
+    household.update!(setup_step: "split")
+    WeekPlan.await_proposal!(household: household)
+    household.complete_setup_step!("split")
+    invitation = Invitation.invite(household: household, email: "karine@example.test", first_name: "Karine", inviter: virginie)
+    invitation.update!(color: "sage")
+    karine = User.create!(email: "karine@example.test", first_name: "Karine", password: "secret123", confirmed_at: Time.current)
+    invitation.claim_for!(karine)
+    household.household_members.create!(user: User.create!(email: "x@example.test", first_name: "Xan", password: "secret123", confirmed_at: Time.current), color: "sage")
+
+    member = invitation.reload.accept!(karine)
+
+    assert member
+    assert_not_equal "sage", member.color
+  end
+
+  test "P2: a stranger has no access to someone else's pastille" do
+    household, _users = build_household("Karim", "Karine", "Lou")
+    sign_in users(:carol)
+
+    get household_member_style_path(household)
+
+    assert_response :not_found
+  end
+
   test "D16: colours are unique, handed out in palette order; two initials in common give two letters" do
     household, _users = build_household("Karim", "Karine", "Lou")
     members = household.household_members.order(:id)

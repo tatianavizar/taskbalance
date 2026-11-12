@@ -8,6 +8,11 @@ fr:
       subtitle: "La personne invitée donne ses préférences et valide la répartition avec vous. Vous pouvez aussi l'inviter plus tard."
       invite: "Inviter une personne"
       invited: "Invitation envoyée"
+      members_title: "Les membres du foyer"
+      you_creator: "Vous · a créé le foyer"
+      invite_another: "Inviter une autre personne"
+      full: "Le foyer compte déjà %{max} personnes, invitations comprises : c'est le maximum."
+      size_hint: "À %{size}, la part égale est de %{fair} %, et la zone équilibrée va de %{min} à %{max} %."
       continue: "Continuer"
       skip: "Continuer sans inviter"
   preferences:

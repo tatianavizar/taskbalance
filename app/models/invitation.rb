@@ -26,9 +26,12 @@ class Invitation < ApplicationRecord
 
   normalizes :email, with: ->(email) { email.to_s.strip.downcase }
   normalizes :first_name, with: ->(name) { name.to_s.strip.presence }
+  normalizes :monogram, with: ->(value) { value.to_s.strip.presence }
 
   validates :email, presence: true, format: { with: URI::MailTo::EMAIL_REGEXP }
   validates :token, presence: true
+  validates :color, inclusion: { in: HouseholdMember::COLORS }, allow_nil: true
+  validates :monogram, length: { maximum: HouseholdMember::MONOGRAM_MAX_LENGTH }
   # Same rules as User#first_name. Asked on B3 (`invite`); rows sent before
   # the column existed have none.
   validates :first_name, length: { maximum: User::FIRST_NAME_MAX_LENGTH }
@@ -150,7 +153,15 @@ class Invitation < ApplicationRecord
   # Where an invitee resumes: :waiting while the manager has not finished the
   # setup (B12), else :preferences (B10, then B11 or B14).
   def resume_stage
-    household.setup_ready_for_invitee? ? :preferences : :waiting
+    return :waiting unless household.setup_ready_for_invitee?
+
+    style_to_choose? ? :style : :preferences
+  end
+
+  # P2: the person who would be the third member or later picks a colour and
+  # letters first, once. At two, the first free colour does.
+  def style_to_choose?
+    color.blank? && household.household_members.count >= 2
   end
 
   # The last step: the invited person joins. Returns the membership, or false
@@ -225,9 +236,12 @@ class Invitation < ApplicationRecord
   # error on the invitation, not a 500.
   def join_household(user)
     membership = household.household_members.new(user: user)
+    # The colour picked on P2, when nobody took it since.
+    membership.color = color if color.present? && household.household_members.where(color: color).none?
     saved = transaction(requires_new: true) { membership.save }
     if saved
       update!(state: "accepted", accepted_at: Time.current, invitee: user)
+      membership.customize_monogram!(monogram) if monogram.present?
       # The chores and week plans that counted this invitation (D15) now
       # count the account. Same transaction, under the row lock.
       ChoreAssignee.transfer_invitation!(self, user)

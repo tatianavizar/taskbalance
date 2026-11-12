@@ -124,6 +124,8 @@ Rails.application.routes.draw do
     resource :setup, only: [ :show, :update ], controller: "households/setups"
     # C1, M1, C2 : tâches du foyer
     resource :chores_setup, only: [ :show, :update ], controller: "households/chores_setup"
+    # P2 : couleur et lettres du membre (ou de la personne invitée, avant d'avoir rejoint)
+    resource :member_style, path: "pastille", only: [ :show, :update ], controller: "households/member_styles"
     # C3, B10 : préférences, privées
     resource :preferences, only: [ :show, :update ], controller: "households/preferences"
     # C12, C4, C8, B11, B14 : répartition
