@@ -10,6 +10,8 @@ fr:
       invite_link: "Inviter un membre"
       back_link: "Retour"
       delete_confirm: "Supprimer ce foyer ? Les enregistrements de chaque membre sont conservés."
+      breadcrumb_tasks: "Foyer › Tâches du foyer"
+      breadcrumb_split: "Foyer › Répartition"
     new:
       title: "Créer le foyer"
       setup: "Mise en place"

@@ -1,0 +1,25 @@
+<%# « Prévu cette semaine » : une barre par foyer, la moyenne des deux charges de chaque personne (2.2c). La personne qui regarde en premier. %>
+<% ordered = split.participants.sort_by { |p| p.key == viewer.key ? 0 : 1 } %>
+<% values = ordered.map { |p| [ p, split.share_of(p.key)&.average ] } %>
+<% fair = HouseholdRules.fair_share(split.participants.size) %>
+<section class="callout flex flex-col gap-1" aria-labelledby="planned-title">
+  <h2 id="planned-title" class="m-0 text-[15px] font-bold text-center font-sans"><%= t("split.planned") %></h2>
+  <div class="flex justify-between gap-2 text-sm" style="font-variant-numeric: tabular-nums">
+    <% values.each_with_index do |(participant, value), i| %>
+      <span><% if i.zero? %><b><%= share_percent(value) %></b> <%= participant.first_name %><% else %><%= participant.first_name %> <b><%= share_percent(value) %></b><% end %></span>
+    <% end %>
+  </div>
+  <div role="img" class="relative mt-1 flex rounded-[6px] overflow-visible" style="height:12px;background:var(--color-track)"
+       aria-label="<%= t("split.bar_aria", fair: fair, shares: values.map { |p, v| "#{p.first_name} #{share_percent(v)}" }.to_sentence) %>">
+    <% values.each_with_index do |(participant, value), i| %>
+      <% next unless value %>
+      <div style="width:<%= value.clamp(0, 100).round(2) %>%;height:12px;background:<%= i.zero? ? "var(--color-self)" : "var(--color-member-#{participant.color})" %>;<%= "border-radius:6px 0 0 6px;" if i.zero? %>box-shadow:2px 0 0 #fff"></div>
+    <% end %>
+    <% if fair %>
+      <div class="absolute" style="left:calc(<%= fair %>% - 1px);top:-3px;width:2px;height:18px;background:var(--color-ink)"></div>
+    <% end %>
+  </div>
+  <% unless split.exact? %>
+    <p class="m-0 mt-2 text-[13px] leading-[18px]"><%= t("split.not_exact", even: even_split_label(split.participants)) %></p>
+  <% end %>
+</section>

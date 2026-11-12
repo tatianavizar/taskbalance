@@ -1,0 +1,33 @@
+<%# Mise en place, étape 2 : inviter la personne avec qui on partage le foyer. %>
+<% provide :chrome, "none" %>
+<% provide :title, t("setup.title") %>
+<div class="flex items-center gap-2.5">
+  <%= back_button(dashboard_path) %>
+  <%= logo %>
+  <span class="font-bold"><%= t("setup.title") %></span>
+</div>
+
+<%= step_progress steps: t("households.new.steps"), current: 2 %>
+
+<div>
+  <h1 class="screen-title"><%= t("setup.partner.heading") %></h1>
+  <p class="screen-subtitle"><%= t("setup.partner.subtitle") %></p>
+</div>
+
+<% if @invitations.any? %>
+  <div class="list-stack">
+    <% @invitations.each do |invitation| %>
+      <%= list_row title: invitation.email, subtitle: t("setup.partner.invited"),
+            leading: avatar(initials: invitation.email.first.upcase, pending: true, size: 36) %>
+    <% end %>
+  </div>
+<% end %>
+
+<%= sticky_cta do %>
+  <% if @invitations.any? %>
+    <%= button_to t("setup.partner.continue"), household_setup_path(@household), method: :patch, class: "btn btn-primary" %>
+  <% else %>
+    <%= link_to t("setup.partner.invite"), new_household_household_member_path(@household), class: "btn btn-primary" %>
+    <%= button_to t("setup.partner.skip"), household_setup_path(@household), method: :patch, class: "btn btn-secondary" %>
+  <% end %>
+<% end %>

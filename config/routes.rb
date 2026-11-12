@@ -52,16 +52,31 @@ Rails.application.routes.draw do
   get "styleguide" => "styleguide#show" if Rails.env.local?
 
 
-  resources :tasks, only: [:index]
+  resources :tasks, only: [ :index ]
 
-  resources :chores, only: [:index, :new, :create, :edit, :update, :destroy] do
-    resource :completion, only: [:new, :create], controller: "chores/completions"
+  resources :chores, only: [ :index, :new, :create, :edit, :update, :destroy ] do
+    # C7 : confirmation avant de supprimer une tâche perso
+    get :delete, on: :member
+    resource :completion, only: [ :new, :create ], controller: "chores/completions"
   end
 
   resources :households do
     resources :household_members
-    resource :chores_setup, only: [:show, :update], controller: "households/chores_setup"
-    resource :liking_session, only: [:show, :update], controller: "households/liking_sessions"
+    # Mise en place : reprend à l'étape en cours (« Mise en place 2 sur 4 »)
+    resource :setup, only: [ :show, :update ], controller: "households/setups"
+    # C1, M1, C2 : tâches du foyer
+    resource :chores_setup, only: [ :show, :update ], controller: "households/chores_setup"
+    # C3, B10 : préférences, privées
+    resource :preferences, only: [ :show, :update ], controller: "households/preferences"
+    # C12, C4, C8, B11, B14 : répartition
+    resource :split, only: [ :show, :update ], controller: "households/splits" do
+      get :choice
+      post :wait
+      post :approve
+    end
+    # C16 : réglages de la répartition
+    resource :split_settings, only: [ :show, :update ], controller: "households/split_settings" do
+      post :approve
+    end
   end
-  resources :liked_tasks, only: [:create]
 end

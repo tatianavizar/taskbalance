@@ -3,29 +3,39 @@ smith_cooking:
   task: cook_meal
   status: 0
   mental_load: false
-  execution_load: false
+  execution_load: true
+  frequency: 0
+  created_by: alice
 
 smith_laundry:
   household: smith_home
   task: do_laundry
   status: 0
   mental_load: false
-  execution_load: false
+  execution_load: true
+  frequency: 1
+  times_per_period: 3
+  created_by: alice
 
 smith_custom:
   household: smith_home
   custom_name: Fix the boiler
   category: maintenance
   status: 0
-  mental_load: false
+  mental_load: true
   execution_load: false
+  time_required: 30
+  frequency: 4
+  anchor_on: <%= Date.today %>
+  created_by: alice
 
 jones_cooking:
   household: jones_home
   task: cook_meal
   status: 0
   mental_load: false
-  execution_load: false
+  execution_load: true
+  frequency: 0
 
 smith_recurring:
   household: smith_home
@@ -36,6 +46,7 @@ smith_recurring:
   execution_load: true
   due_date: <%= Date.today %>
 
+# A legacy catalogue chore with neither load, spawned from a broken template.
 smith_from_broken_template:
   household: smith_home
   task: cook_meal

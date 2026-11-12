@@ -25,7 +25,8 @@ class HouseholdsController < ApplicationController
 
     @household = Household.create_for(current_user, household_params)
     if @household.persisted?
-      redirect_to household_path(@household), notice: t("households.flash.created")
+      # On to step 2 of the set-up.
+      redirect_to household_setup_path(@household), notice: t("households.flash.created")
     else
       render :new, status: :unprocessable_entity
     end

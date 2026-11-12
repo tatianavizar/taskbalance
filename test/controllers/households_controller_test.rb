@@ -37,7 +37,8 @@ class HouseholdsControllerTest < ActionDispatch::IntegrationTest
     end
 
     household = Household.find_by!(name: "Chez Dana")
-    assert_redirected_to household_path(household)
+    assert_redirected_to household_setup_path(household)
+    assert_equal "partner", household.setup_step
     assert dana.reload.household_membership.manager?
     assert_equal dana.time_zone, household.time_zone
   end

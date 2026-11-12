@@ -14,15 +14,3 @@ fr:
       admin: "Administratif"
       maintenance: "Entretien"
       other: "Autre"
-    liking_session:
-      title: "Mes préférences"
-      like: "J'aime"
-      dislike: "Bof"
-      submit: "Enregistrer mes préférences"
-      empty: "Aucune tâche choisie pour ce foyer."
-      flash:
-        saved: "Préférences enregistrées."
-  liked_tasks:
-    flash:
-      saved: "Préférence enregistrée."
-      error: "La préférence n'a pas pu être enregistrée."

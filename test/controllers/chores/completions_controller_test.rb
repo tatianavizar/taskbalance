@@ -37,7 +37,7 @@ module Chores
 
     test "new is scoped to the user's own households" do
       stranger = Household.create!(name: "Stranger Home")
-      other_chore = stranger.chores.create!(task: tasks(:cook_meal), status: :pending)
+      other_chore = insert_chore!(stranger, task: tasks(:cook_meal), status: :pending)
 
       get new_chore_completion_path(other_chore)
 
@@ -114,7 +114,7 @@ module Chores
 
     test "create is scoped to the user's own households" do
       stranger = Household.create!(name: "Stranger Home")
-      other_chore = stranger.chores.create!(task: tasks(:cook_meal), status: :pending)
+      other_chore = insert_chore!(stranger, task: tasks(:cook_meal), status: :pending)
 
       assert_no_difference "ChoreLog.count" do
         post chore_completion_path(other_chore), params: valid_params

@@ -1,0 +1,103 @@
+<%# C4, C8 (membre), B11, B14 (personne invitée, accès au lot 3). %>
+<% setting_up = !@household.setup_done? %>
+<% invitee = current_participant.provisional? %>
+<% provide :chrome, "none" if setting_up || invitee %>
+<% provide :title, t("split.title") %>
+<% provisional = @split.participants.select(&:provisional?) %>
+<% proposer = @plan&.proposed_by %>
+
+<div class="flex items-center gap-2.5">
+  <%= back_button(setting_up ? household_chores_setup_path(@household) : household_path(@household)) %>
+  <span class="font-bold flex-1"><%= invitee ? t("split.invitee.welcome", name: current_participant.first_name) : (setting_up ? t("setup.title") : t("households.show.breadcrumb_split")) %></span>
+  <% if invitee %><span class="text-[13px] text-muted"><%= t("split.invitee.step") %></span><% end %>
+</div>
+
+<% if setting_up && !invitee %>
+  <%= step_progress steps: t("households.new.steps"), current: 4 %>
+<% end %>
+
+<div>
+  <% if invitee && @plan&.awaiting_proposal? %>
+    <h1 class="screen-title"><%= t("split.invitee.propose_heading") %></h1>
+    <p class="screen-subtitle"><%= t("split.invitee.propose_subtitle", name: @household.manager&.first_name) %></p>
+  <% elsif invitee && proposer %>
+    <h1 class="screen-title"><%= t("split.invitee.proposed_heading") %></h1>
+    <p class="screen-subtitle"><%= t("split.invitee.proposed_subtitle", name: proposer.first_name, date: l(@plan.proposed_at.in_time_zone(@household.zone).to_date, format: :short)) %></p>
+  <% else %>
+    <h1 class="screen-title"><%= t("split.title") %></h1>
+    <p class="screen-subtitle">
+      <% if provisional.any? %>
+        <%= t("split.provisional", names: provisional.map(&:first_name).to_sentence) %>
+      <% else %>
+        <%= t("split.closest", even: even_split_label(@split.participants)) %>
+      <% end %>
+    </p>
+  <% end %>
+  <% if @plan && !@plan.awaiting_proposal? %>
+    <p class="mt-2 m-0"><%= status_pill validation_status(@plan), tone: (@plan.validated? ? :soft : :outline) %></p>
+  <% end %>
+</div>
+
+<% if @split.items.empty? %>
+  <%= callout do %><p class="m-0"><%= t("split.empty") %></p><% end %>
+  <%= link_to t("split.tasks_link"), household_chores_setup_path(@household), class: "btn btn-primary" %>
+<% else %>
+  <%= render "households/splits/planned_bar", split: @split, viewer: current_participant %>
+
+  <% if @locked %>
+    <%= callout do %><p class="m-0 text-sm"><%= t("split.locked") %></p><% end %>
+  <% end %>
+
+  <% if @error %>
+    <div class="alert-box" role="alert"><%= @error %></div>
+  <% end %>
+
+  <%= form_with url: household_split_path(@household), method: :patch, html: { class: "flex flex-col gap-3 flex-1" } do %>
+    <% @split.items_by_category.sort_by { |category, _| Chore::CATEGORIES.index(category) || 99 }.each do |category, items| %>
+      <details class="split-group" open>
+        <summary>
+          <span class="flex-1"><%= t("split.group_count", category: t("tasks.categories.#{category}"), count: items.size) %></span>
+          <svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg>
+        </summary>
+        <div class="card">
+          <% items.each do |item| %>
+            <div class="split-row">
+              <span class="flex-1 min-w-0">
+                <b class="font-semibold"><%= item.name %></b><br>
+                <span class="text-[13px] leading-[18px] text-muted">
+                  <%= loads_label(item.mental_load, item.execution_load) %> · <%= t("tasks.index.time_required", count: item.time_required.to_i) %> · <%= frequency_label(item.frequency, item.times_per_period) %>
+                </span>
+              </span>
+              <% if @locked %>
+                <span class="text-[13px] text-right"><%= assignees_label(item.assignees, @split.participants) %></span>
+              <% else %>
+                <span class="flex gap-1" role="group" aria-label="<%= item.name %>">
+                  <%= hidden_field_tag "assignments[#{item.chore_id}][]", "", id: nil %>
+                  <% @split.participants.each do |participant| %>
+                    <% id = "assign_#{item.chore_id}_#{participant.key.tr(':', '_')}" %>
+                    <%= check_box_tag "assignments[#{item.chore_id}][]", participant.key, item.assignees.include?(participant.key), id: id, class: "assign-input" %>
+                    <label for="<%= id %>" class="assign-chip" style="--chip-color: var(--color-member-<%= participant.color %>)"
+                           title="<%= t("split.assign_to", name: participant.first_name) %>">
+                      <span aria-hidden="true"><%= participant.monogram %></span>
+                      <span class="sr-only"><%= t("split.assign_to", name: participant.first_name) %></span>
+                    </label>
+                  <% end %>
+                </span>
+              <% end %>
+            </div>
+          <% end %>
+        </div>
+      </details>
+    <% end %>
+
+    <% unless @locked %>
+      <%= link_to t("split.add_task"), new_chore_path(return_to: "split"), class: "btn btn-secondary btn-sm w-full" %>
+
+      <%= sticky_cta do %>
+        <% label = if !invitee then t("split.validate") elsif @plan&.awaiting_proposal? then t("split.invitee.propose_and_join") else t("split.invitee.join") end %>
+        <%= button_tag label, name: "commit_action", value: "validate", class: "btn btn-primary" %>
+        <%= button_tag t("split.recompute"), name: "commit_action", value: "recompute", class: "btn btn-secondary" %>
+      <% end %>
+    <% end %>
+  <% end %>
+<% end %>

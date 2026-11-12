@@ -15,10 +15,11 @@ class User < ApplicationRecord
   # One household per account (decision of 2026-11-08).
   has_one :household_membership, class_name: "HouseholdMember"
   has_one :household, through: :household_membership
-  has_many :liked_tasks
-  has_many :tasks, through: :liked_tasks
   has_many :chores, through: :household       # all chores of the user's household
-  has_many :assigned_chores, class_name: "Chore", foreign_key: :assigned_to_id
+  has_many :chore_assignees, dependent: :delete_all
+  has_many :assigned_chores, through: :chore_assignees, source: :chore
+  # Private: only their author ever sees them.
+  has_many :chore_preferences, dependent: :delete_all
 
   before_validation { self.first_name = first_name.to_s.strip.presence }
 

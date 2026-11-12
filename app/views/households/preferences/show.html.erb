@@ -1,0 +1,48 @@
+<%# C3 (membre) et B10 (personne invitée, accès au lot 3). Privées : personne d'autre ne les voit. %>
+<% provide :chrome, "none" %>
+<% provide :title, t("preferences.title") %>
+<% invitee = current_participant.provisional? %>
+<% answered = @choices.count { |_, choice| choice != "neutral" } %>
+
+<div class="flex items-center gap-2.5">
+  <%= back_button household_path(@household) %>
+  <span class="font-bold flex-1"><%= invitee ? t("split.invitee.welcome", name: current_participant.first_name) : t("preferences.breadcrumb") %></span>
+  <span class="text-[13px] text-muted"><%= invitee ? t("split.invitee.preferences_step") : t("preferences.answered", count: answered, total: @chores.size) %></span>
+</div>
+
+<div>
+  <h1 class="screen-title"><%= t("preferences.heading") %></h1>
+  <p class="screen-subtitle"><%= invitee ? t("preferences.subtitle_invitee") : t("preferences.subtitle_member") %></p>
+</div>
+
+<% if @chores.empty? %>
+  <%= callout do %><p class="m-0"><%= t("preferences.empty") %></p><% end %>
+<% else %>
+  <%= form_with url: household_preferences_path(@household), method: :patch, html: { class: "flex flex-col gap-3 flex-1" } do %>
+    <% @chores.each do |chore| %>
+      <% choice = @choices[chore.id] || "neutral" %>
+      <fieldset class="card flex flex-col gap-2.5 min-w-0">
+        <legend class="sr-only"><%= chore.effective_name %></legend>
+        <div class="flex justify-between gap-2" aria-hidden="true">
+          <b><%= chore.effective_name %></b>
+          <span class="text-[13px] text-muted"><%= chore.custom_chore? ? t("chores.setup.custom_title") : t("tasks.categories.#{chore.effective_category}") %></span>
+        </div>
+        <div class="segments">
+          <% ChorePreference::CHOICES.each do |value| %>
+            <% id = "preference_#{chore.id}_#{value}" %>
+            <input type="radio" class="segment-input" name="preferences[<%= chore.id %>]" id="<%= id %>" value="<%= value %>" <%= "checked" if choice == value %>>
+            <label class="segment-label" for="<%= id %>"><%= t("preferences.#{value}") %></label>
+          <% end %>
+        </div>
+      </fieldset>
+    <% end %>
+
+    <%= sticky_cta do %>
+      <%= submit_tag(invitee ? t("preferences.continue") : t("preferences.submit"), class: "btn btn-primary", data: { disable_with: false }) %>
+    <% end %>
+  <% end %>
+  <% if invitee %>
+    <%= button_to t("preferences.skip"), household_preferences_path(@household), method: :patch, class: "btn btn-secondary" %>
+    <p class="text-[13px] text-muted text-center m-0"><%= t("preferences.later") %></p>
+  <% end %>
+<% end %>

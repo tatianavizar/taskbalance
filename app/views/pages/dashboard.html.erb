@@ -2,6 +2,8 @@
   <% provide :title, t("nav.home") %>
   <h1 class="screen-title"><%= t("nav.home") %></h1>
 
+  <%= render "households/setup_card", household: current_household %>
+
   <div class="list-stack">
     <%= list_row title: t("nav.tasks"), subtitle: t("chores.index.count", count: @chores.size), href: chores_path %>
     <%= list_row title: t("nav.household"), subtitle: current_household.name, href: household_path(current_household) %>

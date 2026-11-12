@@ -1,9 +1,14 @@
 <% provide :chrome, "none" %>
 <% provide :title, t("chores.new.title") %>
-<%= back_button household_path(@household) %>
+<% back = case @return_to
+          when "split" then household_split_path(@household, mode: "now")
+          when "catalogue" then household_chores_setup_path(@household)
+          else household_path(@household)
+          end %>
+<%= back_button back %>
 <div>
   <h1 class="screen-title"><%= t("chores.new.title") %></h1>
-  <p class="screen-subtitle"><%= @household.name %></p>
+  <p class="screen-subtitle"><%= t("chores.new.subtitle") %></p>
 </div>
 
 <%= render "form" %>

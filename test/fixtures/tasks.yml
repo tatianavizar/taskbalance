@@ -1,13 +1,33 @@
 cook_meal:
+  key: cook_a_meal
   name: Cook a meal
   time_required: 45
   priority: 3
   category: cooking
-  recurring: false
+  recurring: true
+  default_mental_load: false
+  default_execution_load: true
+  frequency: 0
 
 do_laundry:
+  key: start_a_wash
   name: Do laundry
   time_required: 60
   priority: 2
   category: laundry
   recurring: false
+  default_mental_load: false
+  default_execution_load: true
+  frequency: 1
+  times_per_period: 3
+
+pay_bills:
+  key: pay_bills
+  name: Payer les factures
+  time_required: 20
+  priority: 4
+  category: admin
+  recurring: true
+  default_mental_load: true
+  default_execution_load: false
+  frequency: 2

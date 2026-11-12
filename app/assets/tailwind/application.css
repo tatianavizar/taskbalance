@@ -223,6 +223,27 @@
   .steps { display: flex; justify-content: space-between; gap: 4px; margin-top: 8px; font-size: 12px; line-height: 16px; color: var(--color-muted); }
   .steps [aria-current="step"] { color: var(--color-ink); font-weight: 700; }
 
+  /* Assignment (C4, C5, B11, B14): one round chip per person, a checkbox
+     underneath; several can be ticked (a shared task counts for each). */
+  .assign-input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  .assign-chip { flex: none; width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; box-sizing: border-box; border: 1.5px solid var(--color-field); color: var(--color-muted); background: var(--color-surface); cursor: pointer; }
+  .assign-input:checked + .assign-chip { border: 2px solid var(--color-ink); color: var(--color-ink); background: var(--chip-color, var(--color-mint)); }
+  .assign-input:focus-visible + .assign-chip, .person-input:focus-visible + .person-chip { outline: 3px solid var(--color-ink); outline-offset: 2px; }
+  .person-input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  .person-chip { flex: none; display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 14px 0 6px; border-radius: 22px; border: 1.5px solid var(--color-field); background: var(--color-surface); font-size: 14px; font-weight: 600; cursor: pointer; }
+  .person-input:checked + .person-chip { border: 2px solid var(--color-ink); background: #f0fbf5; }
+  .split-row { display: flex; align-items: center; gap: 10px; min-height: 58px; border-top: 1px solid var(--color-divider); }
+  .split-row:first-child { border-top: 0; }
+  .split-group > summary { display: flex; align-items: center; gap: 10px; min-height: 52px; padding: 0 16px; border: 1px solid var(--color-line); border-radius: 16px; background: var(--color-surface); font-weight: 700; cursor: pointer; list-style: none; }
+  .split-group > summary::-webkit-details-marker { display: none; }
+  .split-group[open] > summary { border-bottom-left-radius: 0; border-bottom-right-radius: 0; border-bottom: 0; }
+  .split-group[open] > .card { border-top-left-radius: 0; border-top-right-radius: 0; padding-top: 4px; padding-bottom: 4px; }
+  .split-group > summary .chevron { transition: transform .15s; }
+  .split-group[open] > summary .chevron { transform: rotate(180deg); }
+  /* C12: two choices of the same weight. */
+  .choice-card { display: block; width: 100%; text-align: left; background: var(--color-surface); border: 1.5px solid var(--color-field); border-radius: 16px; padding: 14px 16px; color: var(--color-ink); font: inherit; cursor: pointer; text-decoration: none; }
+  .choice-card:hover, .choice-card:focus-visible { border: 2px solid var(--color-ink); }
+
   @keyframes rise { from { opacity: 0; transform: translateY(28px); } to { opacity: 1; transform: none; } }
   @keyframes slice-in { 0% { opacity: 0; transform: rotate(-120deg) scale(.4); } 70% { transform: rotate(8deg) scale(1.05); } 100% { opacity: 1; transform: none; } }
   @keyframes sway { 0% { width: 78%; } 30% { width: 30%; } 55% { width: 62%; } 75% { width: 46%; } 100% { width: 52%; } }

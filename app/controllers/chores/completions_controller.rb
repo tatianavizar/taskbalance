@@ -19,7 +19,10 @@ module Chores
 
       ChoreLog.transaction do
         @chore_log.save!
-        @chore.completed!
+        # The status is the occurrence's, not the chore's definition: it
+        # changes without re-validating the chore (a legacy chore without
+        # loads must not cost the user their log).
+        @chore.update_columns(status: Chore.statuses[:completed], updated_at: Time.current)
       end
 
       spawn_next_occurrence
