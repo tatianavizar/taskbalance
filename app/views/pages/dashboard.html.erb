@@ -41,30 +41,34 @@
     <% end %>
   <% end %>
 
-  <% if home.empty? %>
-    <div class="callout">
-      <div class="font-display text-lg font-semibold leading-6"><%= t("home.empty.title") %></div>
-      <p class="mt-1.5 mb-0 text-sm leading-5"><%= t("home.empty.body", date: l(week.sunday, format: :day_month)) %></p>
-    </div>
-  <% elsif (headline = home.headline) && !home.viewer_arrived? %>
-    <div class="callout" id="home-headline">
-      <% if headline.kind == :balanced %>
-        <div class="font-display text-xl font-semibold leading-[26px]"><%= t("home.headline.balanced") %></div>
-        <p class="mt-1.5 mb-0 text-sm leading-5"><%= t("home.headline.balanced_body", min: headline.zone.begin, max: headline.zone.end) %></p>
-      <% else %>
-        <div class="font-display text-xl font-semibold leading-[26px] tabular"><%= t("home.headline.#{headline.kind}.#{headline.dimension}", name: headline.member.first_name, share: headline.share) %></div>
-        <p class="mt-1.5 mb-0 text-sm leading-5">
-          <%= t("home.headline.#{headline.kind}_body", bound: (headline.kind == :above ? headline.zone.end : headline.zone.begin)) %>
-          <%= link_to t("home.how"), rules_path, class: "font-bold" %>
-        </p>
+  <%# Région vive : l'accueil se rafraîchit pour tout le foyer (Turbo morph). Quand la phrase de la semaine change,
+      les technologies d'assistance l'annoncent, sans voler le focus. %>
+  <div id="home-live" aria-live="polite" class="flex flex-col gap-4">
+    <% if home.empty? %>
+      <div class="callout">
+        <div class="font-display text-lg font-semibold leading-6"><%= t("home.empty.title") %></div>
+        <p class="mt-1.5 mb-0 text-sm leading-5"><%= t("home.empty.body", date: l(week.sunday, format: :day_month)) %></p>
+      </div>
+    <% elsif (headline = home.headline) && !home.viewer_arrived? %>
+      <div class="callout" id="home-headline">
+        <% if headline.kind == :balanced %>
+          <div class="font-display text-xl font-semibold leading-[26px]"><%= t("home.headline.balanced") %></div>
+          <p class="mt-1.5 mb-0 text-sm leading-5"><%= t("home.headline.balanced_body", min: headline.zone.begin, max: headline.zone.end) %></p>
+        <% else %>
+          <div class="font-display text-xl font-semibold leading-[26px] tabular"><%= t("home.headline.#{headline.kind}.#{headline.dimension}", name: headline.member.first_name, share: headline.share) %></div>
+          <p class="mt-1.5 mb-0 text-sm leading-5">
+            <%= t("home.headline.#{headline.kind}_body", bound: (headline.kind == :above ? headline.zone.end : headline.zone.begin)) %>
+            <%= link_to t("home.how"), rules_path, class: "font-bold" %>
+          </p>
+        <% end %>
+      </div>
+      <% if stats.neutral_reason.in?(%i[no_mental_logs no_execution_logs too_few_active_members]) %>
+        <p class="m-0 text-[13px] leading-[18px] text-muted"><%= t("home.neutral.#{stats.neutral_reason}") %></p>
       <% end %>
-    </div>
-    <% if stats.neutral_reason.in?(%i[no_mental_logs no_execution_logs too_few_active_members]) %>
-      <p class="m-0 text-[13px] leading-[18px] text-muted"><%= t("home.neutral.#{stats.neutral_reason}") %></p>
+    <% elsif stats.neutral_reason == :too_few_active_members %>
+      <p class="m-0 text-[13px] leading-[18px] text-muted"><%= t("home.neutral.too_few_active_members") %></p>
     <% end %>
-  <% elsif stats.neutral_reason == :too_few_active_members %>
-    <p class="m-0 text-[13px] leading-[18px] text-muted"><%= t("home.neutral.too_few_active_members") %></p>
-  <% end %>
+  </div>
 
   <% me = home.viewer_member %>
   <% if me&.paused %>

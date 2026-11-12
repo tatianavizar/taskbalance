@@ -4,7 +4,7 @@
 <div class="flex flex-col gap-4 flex-1">
   <div class="flex justify-between items-center min-h-[44px]">
     <%= progress_dots current: @step, total: IntroController::STEPS %>
-    <%= link_to t("intro.skip"), @exit_path, class: "font-bold" unless @last %>
+    <%= link_to t("intro.skip"), @exit_path, class: "font-bold inline-flex items-center min-h-[44px]" unless @last %>
   </div>
 
   <%= render({ 1 => "intro/step1", 2 => "intro/step2", 3 => "intro/step3" }.fetch(@step)) %>

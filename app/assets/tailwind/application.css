@@ -61,7 +61,9 @@
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
       animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
       transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
     }
   }
 }
@@ -268,7 +270,7 @@
   .done-btn { flex: none; min-height: 44px; padding: 0 14px; border-radius: 17px; border: 1.5px solid var(--color-ink); background: transparent; font: 700 13px var(--font-sans); color: var(--color-ink); cursor: pointer; }
   .stepper { display: flex; align-items: center; justify-content: space-between; gap: 6px; background: var(--color-surface); border: 1.5px solid var(--color-field); border-radius: 14px; min-height: 52px; padding: 0 6px; }
   .stepper[data-invalid="true"] { border: 2px solid var(--color-ink); }
-  .stepper-btn { width: 44px; height: 40px; border-radius: 10px; border: 0; background: var(--color-soft); font: 700 20px var(--font-sans); color: var(--color-ink); cursor: pointer; }
+  .stepper-btn { width: 44px; height: 44px; border-radius: 10px; border: 0; background: var(--color-soft); font: 700 20px var(--font-sans); color: var(--color-ink); cursor: pointer; }
   .stepper-input { flex: 1; min-width: 0; border: 0; background: transparent; text-align: center; font: 700 18px var(--font-sans); color: var(--color-ink); font-variant-numeric: tabular-nums; }
   .stepper-input:focus-visible { outline: 3px solid var(--color-ink); outline-offset: 2px; border-radius: 8px; }
   .kv-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; min-height: 42px; border-top: 1px solid var(--color-divider); font-size: 14px; }
