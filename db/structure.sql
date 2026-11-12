@@ -768,6 +768,42 @@ ALTER SEQUENCE public.notifications_id_seq OWNED BY public.notifications.id;
 
 
 --
+-- Name: push_devices; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.push_devices (
+    id bigint NOT NULL,
+    user_id bigint NOT NULL,
+    platform character varying NOT NULL,
+    token text NOT NULL,
+    token_digest character varying NOT NULL,
+    last_seen_at timestamp(6) without time zone NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL,
+    CONSTRAINT push_devices_platform CHECK (((platform)::text = ANY ((ARRAY['ios'::character varying, 'android'::character varying])::text[])))
+);
+
+
+--
+-- Name: push_devices_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.push_devices_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: push_devices_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.push_devices_id_seq OWNED BY public.push_devices.id;
+
+
+--
 -- Name: schema_migrations; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -1187,6 +1223,13 @@ ALTER TABLE ONLY public.notifications ALTER COLUMN id SET DEFAULT nextval('publi
 
 
 --
+-- Name: push_devices id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.push_devices ALTER COLUMN id SET DEFAULT nextval('public.push_devices_id_seq'::regclass);
+
+
+--
 -- Name: split_gap_entries id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -1393,6 +1436,14 @@ ALTER TABLE ONLY public.notification_preferences
 
 ALTER TABLE ONLY public.notifications
     ADD CONSTRAINT notifications_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: push_devices push_devices_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.push_devices
+    ADD CONSTRAINT push_devices_pkey PRIMARY KEY (id);
 
 
 --
@@ -1922,6 +1973,20 @@ CREATE UNIQUE INDEX index_notifications_weekly_cap ON public.notifications USING
 
 
 --
+-- Name: index_push_devices_on_token_digest; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_push_devices_on_token_digest ON public.push_devices USING btree (token_digest);
+
+
+--
+-- Name: index_push_devices_on_user_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_push_devices_on_user_id ON public.push_devices USING btree (user_id);
+
+
+--
 -- Name: index_split_gap_entries_on_household_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -2246,6 +2311,14 @@ ALTER TABLE ONLY public.chore_assignees
 
 
 --
+-- Name: push_devices fk_rails_4389e5ccb6; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.push_devices
+    ADD CONSTRAINT fk_rails_4389e5ccb6 FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
+
+
+--
 -- Name: chore_preferences fk_rails_46cccc49f4; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -2557,6 +2630,7 @@ ALTER TABLE ONLY public.week_plans
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20261113120000'),
 ('20261113092400'),
 ('20261113092300'),
 ('20261113092200'),

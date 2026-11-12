@@ -15,6 +15,22 @@ fr:
       unsubscribe: "Ne plus recevoir « %{type} »"
       manage: "Réglages des notifications"
       why: "Vous recevez cet email parce que vous êtes membre d'un foyer sur 50/50."
+    permission:
+      title: "Les notifications sur ce téléphone"
+      intro: "50/50 vous prévient de ce qui concerne votre foyer :"
+      items:
+        - "le bilan de la semaine ;"
+        - "les alertes : semaine sans saisie, blocage, déblocage ;"
+        - "les tâches qu'un autre membre vous assigne, la répartition du lundi ;"
+        - "la question d'absence et les pauses."
+      limits: "Pas de rappel quotidien, pas de relance pour enregistrer. Un bilan et une alerte par semaine au plus."
+      email: "Chaque type se règle dans Mon compte. Sans notifications, les mêmes messages arrivent par email."
+      enable: "Activer"
+      later: "Plus tard"
+      denied: "Notifications refusées sur ce téléphone. Le bilan et les alertes arrivent par email. Pour changer d'avis, passez par les réglages du téléphone."
+      settings: "Ouvrir les réglages du téléphone"
+      account_row: "Sur ce téléphone"
+      account_hint: "Autoriser ou refuser les notifications"
     event_types:
       weekly_report: "Bilan de la semaine"
       task_assigned: "Une tâche m'est assignée"

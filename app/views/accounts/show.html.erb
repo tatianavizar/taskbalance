@@ -31,6 +31,11 @@
     <% end %>
     <%= f.submit t("notifications.account.save"), variant: :secondary %>
   <% end %>
+  <% if hotwire_native_app? %>
+    <div class="list-stack mt-2">
+      <%= list_row title: t("notifications.permission.account_row"), subtitle: t("notifications.permission.account_hint"), href: push_permission_path %>
+    </div>
+  <% end %>
 </section>
 
 <div class="list-stack">
