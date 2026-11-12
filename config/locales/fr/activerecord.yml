@@ -68,7 +68,7 @@ fr:
               taken: Cet email est déjà utilisé.
             password:
               blank: Choisissez un mot de passe.
-              too_short: "Trop court : %{count} caractères minimum."
+              too_short: "%{count} caractères minimum."
               too_long: "Trop long : %{count} caractères au maximum."
             password_confirmation:
               confirmation: Les deux mots de passe sont différents.

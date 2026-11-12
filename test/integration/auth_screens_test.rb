@@ -29,7 +29,7 @@ class AuthScreensTest < ActionDispatch::IntegrationTest
     assert_response :unprocessable_entity
     assert_select ".alert-box", /1 champ à corriger/
     assert_select "input[aria-invalid=true]", 1
-    assert_field_error "Trop court : 6 caractères minimum."
+    assert_field_error "6 caractères minimum."
   end
 
   test "the browser time zone is kept when valid and ignored when unknown" do
@@ -95,12 +95,12 @@ class AuthScreensTest < ActionDispatch::IntegrationTest
 
   # --- A4 / A5 ----------------------------------------------------------
 
-  test "the sign-in screen has no remember box: the session lasts a week anyway" do
+  test "the sign-in screen has no remember box and no session note" do
     get new_user_session_path
 
     assert_select "h1", "Se connecter"
     assert_select "input[type=checkbox]", 0
-    assert_match "La session reste ouverte une semaine.", response.body
+    assert_no_match "La session reste ouverte", response.body
     assert_select "a[href=?]", new_user_password_path
     assert_select ".alert-box", 0
   end

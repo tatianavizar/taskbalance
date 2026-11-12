@@ -100,7 +100,7 @@ class AccountScreensTest < ActionDispatch::IntegrationTest
 
     patch edit_password_path, params: { user: { current_password: "password123", password: "abc", password_confirmation: "abc" } }
     assert_response :unprocessable_entity
-    assert_field_error "Trop court : 6 caractères minimum."
+    assert_field_error "6 caractères minimum."
     assert @alice.reload.valid_password?("password123")
   end
 

@@ -14,7 +14,6 @@ fr:
       ownership: "Vos enregistrements vous appartiennent. Si vous quittez un foyer, ils vous suivent."
       submit: "Créer mon compte"
     sign_in_form:
-      session_note: "La session reste ouverte une semaine."
       failed_title: "Email ou mot de passe incorrect."
       failed_body: "Vérifiez les deux, ou recevez un lien pour choisir un nouveau mot de passe."
       failed_link: "Recevoir un lien de réinitialisation"
