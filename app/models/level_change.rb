@@ -10,9 +10,10 @@ class LevelChange < ApplicationRecord
   enum :reason, {
     reached: "reached",                     # a balanced week crossed a threshold
     regressed: "regressed",                 # 2 empty weeks, no pause by the deadline
-    ultimate_lost: "ultimate_lost",         # ratio since first reached fell to the keep rate or less
-    ultimate_regained: "ultimate_regained", # ratio back above the keep rate
-    regression_cancelled: "regression_cancelled" # D3: a retroactive pause covered the empty weeks
+    ultimate_lost: "ultimate_lost",         # more unbalanced weeks in the window than the quota
+    ultimate_regained: "ultimate_regained", # back within the quota (the window is not restarted)
+    regression_cancelled: "regression_cancelled", # D3: a retroactive pause covered the empty weeks
+    membership_changed: "membership_changed" # a member arrived or left: back to level 0
   }, validate: true
 
   validates :from_level, :to_level, inclusion: { in: 0..Progression::ULTIMATE }

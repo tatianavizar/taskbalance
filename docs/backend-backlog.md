@@ -17,7 +17,7 @@ Validated by the product owner on 2026-11-08 unless marked *(default)*.
   - 4 members: 15–35 %.
 - **Balanced week:** every active member is in the zone on both dimensions. Time is shown but does not count.
 - **Neutral week:** no mental-load log or no execution log that week, or fewer than 2 active (non-paused) members. It is neither balanced nor unbalanced; nothing moves.
-- **Unbalanced week:** the household does not progress. It is **never** a cause of regression or blocking, except at the ultimate level, which drops back to level 4 below 85 % (see below).
+- **Unbalanced week:** the household does not progress. It is **never** a cause of regression or blocking, except at the ultimate level, which drops back to level 4 above 7 unbalanced weeks in its window (see below).
 - **Levels:** reached by cumulative balanced weeks.
 
   | Level | Total balanced weeks | Added |

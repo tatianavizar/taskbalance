@@ -9,11 +9,13 @@ module HouseholdRules
   ZONE = 10
   # Cumulative balanced weeks needed for levels 1 to 4, then the ultimate level.
   LEVEL_THRESHOLDS = [ 1, 3, 6, 10, 15 ].freeze
-  # Share of balanced weeks, in %, the ultimate level needs to be kept: the
-  # ratio must be strictly above it.
-  ULTIMATE_KEEP_RATE = 85
-  # The ratio is measured over the final weeks since the ultimate level was
-  # first reached, capped at this many weeks.
+  # The ultimate level is kept while the household has at most this many
+  # unbalanced weeks in its window (decision 2026-11-12, replaces the 85 %
+  # ratio). Neutral weeks, including those a retroactive pause neutralised
+  # (D3), don't count.
+  ULTIMATE_UNBALANCED_QUOTA = 7
+  # The window starts at the last reach of the ultimate level, capped at this
+  # many weeks.
   ULTIMATE_WINDOW_WEEKS = 52
 
   # Fair share of one member, in %, for a household of `members` people
