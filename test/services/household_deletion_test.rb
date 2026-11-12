@@ -3,6 +3,7 @@ require "test_helper"
 # F3, backlog 3.5: only the manager deletes the household, after typing its name.
 class HouseholdDeletionTest < ActiveSupport::TestCase
   include WeeklyEngineHelpers
+  include ActiveJob::TestHelper
 
   setup do
     travel_to paris(2026, 11, 11, 10)
@@ -61,15 +62,23 @@ class HouseholdDeletionTest < ActiveSupport::TestCase
     assert_not Notification.exists?(user: @ann, kind: "household_deleted")
   end
 
-  test "the notice is transactional: sent even with alerts off, without unsubscribe" do
+  test "the notice is in-app only: no email and no channel, even with a confirmed address" do
+    @ben.update_columns(confirmed_at: Time.current)
+    assert_no_enqueued_jobs(only: ActionMailer::MailDeliveryJob) { assert deletion.save }
+
+    notification = Notification.find_by!(user: @ben, kind: "household_deleted")
+    assert_nil notification.channel
+    assert_nil notification.suppressed_reason
+    assert_includes Notification.where(user: @ben).feed, notification
+  end
+
+  test "the notice stays in the feed even with alerts off" do
     NotificationPreference.create!(user: @ben, event_type: "alert", enabled: false)
     assert deletion.save
 
     notification = Notification.find_by!(user: @ben, kind: "household_deleted")
     assert_nil notification.suppressed_reason
-    mail = NotificationMailer.notify(notification)
-    assert_nil mail.header["List-Unsubscribe"]
-    assert_no_match "/desinscription/", mail.body.encoded
+    assert_includes Notification.where(user: @ben).feed, notification
   end
 
   test "another household is untouched" do

@@ -50,8 +50,7 @@ class Notification < ApplicationRecord
   end
 
   # Still for this person at sending time: not withdrawn, and, when it is
-  # about a household, the person is still one of its members. A
-  # transactional message without a household (household_deleted) always is.
+  # about a household, the person is still one of its members.
   def deliverable?
     return false if suppressed_reason.present?
     return true if household_id.nil?

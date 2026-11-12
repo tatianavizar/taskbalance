@@ -5,8 +5,7 @@
 # Each message carries the one-click unsubscribe (D9, RFC 8058): the
 # List-Unsubscribe headers and a link in the footer, both with a signed token
 # for this person and this event type. Transactional mail (invitations,
-# password, address confirmation) is not governed by a preference and has no
-# such link.
+# password, address confirmation) does not go through here.
 #
 # A notification about a household goes only to its current members (see
 # Notification#deliverable?).
@@ -20,16 +19,13 @@ class NotificationMailer < ApplicationMailer
     @message = notification.message
     @user = notification.user
     @event_type = notification.event_type
-    @transactional = Notifications::Catalogue.transactional?(notification.kind)
-    @unsubscribe_url = unsubscribe_url(Notifications::Unsubscribe.token_for(@user, @event_type)) unless @transactional
+    @unsubscribe_url = unsubscribe_url(Notifications::Unsubscribe.token_for(@user, @event_type))
     @settings_url = account_url
     @cta_url = public_send("#{Notifications::Catalogue.fetch(notification.kind).target}_url",
                            **Notifications::Catalogue.path_options(notification))
 
-    unless @transactional
-      headers["List-Unsubscribe"] = "<#{@unsubscribe_url}>"
-      headers["List-Unsubscribe-Post"] = "List-Unsubscribe=One-Click"
-    end
+    headers["List-Unsubscribe"] = "<#{@unsubscribe_url}>"
+    headers["List-Unsubscribe-Post"] = "List-Unsubscribe=One-Click"
     headers["Auto-Submitted"] = "auto-generated"
 
     mail(to: @user.email, subject: @message.subject)
