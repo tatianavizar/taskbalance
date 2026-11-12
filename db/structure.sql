@@ -1,4 +1,3 @@
-\restrict Ql9pAnvL60hORjPoFeqKdF29BRgMQrGaIXYPrHY2PaVliad2opolt8tLRai3h58
 
 -- Dumped from database version 16.14 (Homebrew)
 -- Dumped by pg_dump version 16.14 (Homebrew)
@@ -2554,7 +2553,6 @@ ALTER TABLE ONLY public.week_plans
 -- PostgreSQL database dump complete
 --
 
-\unrestrict Ql9pAnvL60hORjPoFeqKdF29BRgMQrGaIXYPrHY2PaVliad2opolt8tLRai3h58
 
 SET search_path TO "$user", public;
 
