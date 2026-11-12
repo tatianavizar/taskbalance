@@ -143,7 +143,6 @@ Les autres restent ouvertes. Chacune bloque le lot indiqué.
 | D2 | D15 et D16 disent qu'une tâche réassignée « compte dans votre charge mentale cette semaine », alors que le bilan ne compte que ce qui est enregistré. On change le texte (« prévue ») ou la règle ? | D15, D16 | Lot 6 |
 | D4 | Qui peut remettre l'écart à zéro : la personne qui le porte, ou celle qu'il avantage ? Le backlog dit les deux (constat 17 de l'audit). | C9 | Lot 6 |
 | D7 | I3 dit qu'une semaine déséquilibrée « ne fait pas reculer, sauf au niveau ultime ». Le backlog dit jamais. Quel texte ? | I2, I3 | Lot 10 |
-| D12 | Les renvois d'invitation : 3 envois ou 4 ? Comptés par invitation ou par email et foyer ? | B5, B13 | Lot 3 |
 | D17 | Taille maximale du foyer ? | P2, P6 | Lot 10 |
 | D19 | Restent ouvertes, depuis le handoff : textes d'E4 et E15, repère à 50 % du temps, variantes d'E10, E4 et E2 pour un foyer de 3, chiffres divergents entre écrans (constat 20), CGU et politique de confidentialité. | — | Lot 10 |
 

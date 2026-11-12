@@ -243,3 +243,15 @@
 - **Décidé par :** la porteuse du projet.
 - **Règle :** un réglage par type d'événement. L'événement part en push quand la personne a un appareil enregistré et les notifications autorisées, sinon par email. Plafond : un bilan et une alerte par semaine et par personne, tous canaux confondus.
 - **Repose sur :** H1, H4.
+
+## 2026-11-13 · Renvoi d'une invitation : la personne qui l'a envoyée
+- **Décidé par :** la porteuse du projet.
+- **Règle :** seule la personne qui a envoyé l'invitation peut la renvoyer, ainsi que l'équipe 50/50 depuis le back-office. L'annulation reste ouverte à tout membre du foyer.
+
+## 2026-11-13 · D12 : 3 envois en tout
+- **Décidé par :** la porteuse du projet.
+- **Règle :** 3 emails au plus par invitation, le premier envoi compris (donc 2 renvois), espacés de 15 minutes au moins, comptés par email et par foyer.
+
+## 2026-11-13 · Pas d'email quand une invitation est déclinée
+- **Décidé par :** la porteuse du projet.
+- **Règle :** la personne qui gère le foyer le voit dans l'app (B13) ; aucun email.
