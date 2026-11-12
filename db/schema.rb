@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_11_12_100000) do
+ActiveRecord::Schema[8.0].define(version: 2026_11_12_110000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -136,7 +136,9 @@ ActiveRecord::Schema[8.0].define(version: 2026_11_12_100000) do
     t.string "reason", null: false
     t.date "week_start"
     t.datetime "created_at", null: false
+    t.bigint "cancelled_level_change_id"
     t.index ["absence_inquiry_id"], name: "index_level_changes_on_absence_inquiry_id"
+    t.index ["cancelled_level_change_id"], name: "index_level_changes_on_cancelled_level_change_id"
     t.index ["household_id"], name: "index_level_changes_on_household_id"
     t.index ["household_week_id"], name: "index_level_changes_on_household_week_id"
   end
@@ -212,6 +214,23 @@ ActiveRecord::Schema[8.0].define(version: 2026_11_12_100000) do
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
   end
 
+  create_table "week_corrections", force: :cascade do |t|
+    t.bigint "household_id", null: false
+    t.bigint "household_week_id", null: false
+    t.bigint "member_pause_id"
+    t.bigint "user_id"
+    t.bigint "declared_by_id"
+    t.string "first_name", null: false
+    t.datetime "declared_at", null: false
+    t.datetime "created_at", null: false
+    t.index ["declared_by_id"], name: "index_week_corrections_on_declared_by_id"
+    t.index ["household_id"], name: "index_week_corrections_on_household_id"
+    t.index ["household_week_id", "user_id"], name: "index_week_corrections_on_household_week_id_and_user_id", unique: true
+    t.index ["household_week_id"], name: "index_week_corrections_on_household_week_id"
+    t.index ["member_pause_id"], name: "index_week_corrections_on_member_pause_id"
+    t.index ["user_id"], name: "index_week_corrections_on_user_id"
+  end
+
   add_foreign_key "absence_inquiries", "household_members", on_delete: :cascade
   add_foreign_key "absence_inquiries", "households", on_delete: :cascade
   add_foreign_key "chore_logs", "chores", on_delete: :nullify
@@ -228,6 +247,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_11_12_100000) do
   add_foreign_key "level_changes", "absence_inquiries", on_delete: :nullify
   add_foreign_key "level_changes", "household_weeks", on_delete: :nullify
   add_foreign_key "level_changes", "households", on_delete: :cascade
+  add_foreign_key "level_changes", "level_changes", column: "cancelled_level_change_id", on_delete: :nullify
   add_foreign_key "liked_tasks", "tasks"
   add_foreign_key "liked_tasks", "users"
   add_foreign_key "member_pauses", "household_members", on_delete: :cascade
@@ -235,4 +255,9 @@ ActiveRecord::Schema[8.0].define(version: 2026_11_12_100000) do
   add_foreign_key "recurring_chores", "households"
   add_foreign_key "recurring_chores", "tasks"
   add_foreign_key "recurring_chores", "users", column: "assigned_to_id"
+  add_foreign_key "week_corrections", "household_weeks", on_delete: :cascade
+  add_foreign_key "week_corrections", "households", on_delete: :cascade
+  add_foreign_key "week_corrections", "member_pauses", on_delete: :nullify
+  add_foreign_key "week_corrections", "users", column: "declared_by_id", on_delete: :nullify
+  add_foreign_key "week_corrections", "users", on_delete: :nullify
 end

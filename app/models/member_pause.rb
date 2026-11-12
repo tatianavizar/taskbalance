@@ -5,10 +5,12 @@
 # day *(default)*: that week never counts as empty for them, and they are left
 # out of the fair share. `reason` is private to the member concerned.
 #
-# Retroactive pauses are limited (product decision 2026-11-08): the start can
-# go back 14 days at most, or to the first week of an absence inquiry about
-# that member; and every closed week it covers must be a week the member
-# logged nothing.
+# Retroactive pauses are limited (product decisions 2026-11-08 and D3,
+# 2026-11-12): the start can go back 14 days at most, or to the first week of
+# an absence inquiry or regression about that member while it is open (until
+# the next final report after its deadline); and every closed week it covers
+# must be a week the member logged nothing. Over final weeks, the engine then
+# records a correction and may cancel a regression (WeeklyEngine, D3).
 class MemberPause < ApplicationRecord
   RETROACTIVE_DAYS = 14
 
@@ -62,7 +64,8 @@ class MemberPause < ApplicationRecord
     today = zone.today
     return unless starts_on < today
 
-    inquiry_start = AbsenceInquiry.where(household_member_id: household_member_id).minimum(:first_week_start)
+    inquiry_start = AbsenceInquiry.where(household_member_id: household_member_id)
+      .select { |inquiry| inquiry.correction_window_open? }.map(&:first_week_start).min
     earliest = [ today - RETROACTIVE_DAYS, inquiry_start ].compact.min
     return errors.add(:starts_on, :too_far_back, days: RETROACTIVE_DAYS) if starts_on < earliest
 

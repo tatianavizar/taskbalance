@@ -433,25 +433,6 @@ class WeeklyEngineTest < ActiveSupport::TestCase
     assert_equal [ "too_few_active_members" ], household.household_weeks.where.not(week_start: week(-1).monday).distinct.pluck(:neutral_reason)
   end
 
-  test "TODO(D3) seam: a pause declared after the regression changes no final week and cancels nothing" do
-    household, (alice, bob) = couple
-    two_empty_weeks_for_bob(household, alice, bob)
-    run_engine(household, paris(2026, 10, 28, 21))
-    assert household.blocked?
-    before = household.household_weeks.final.map(&:attributes)
-
-    travel_to(paris(2026, 10, 29, 9)) do
-      pause = MemberPause.declare!(member: membership(household, bob), declared_by: alice,
-                                   starts_on: week(1).monday, ends_on: week(2).sunday)
-      assert_equal :undecided_d3, WeeklyEngine.new(household).retroactive_pause_on_final_weeks(pause, [])
-    end
-
-    household.reload
-    assert household.blocked?
-    assert_equal 0, household.level
-    assert_equal before, household.household_weeks.final.map(&:attributes)
-  end
-
   # ---- state on arrivals and departures ------------------------------------
 
   test "solo until a second member joins, solo again when they leave" do
