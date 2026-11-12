@@ -16,6 +16,7 @@ fr:
       sent: "Invitation envoyée."
       resent: "Invitation renvoyée."
       cancelled: "Invitation annulée."
+      not_cancellable: "Cette invitation n'est plus en attente : il n'y a rien à annuler."
       joined: "Vous avez rejoint le foyer."
       declined: "Invitation refusée."
       resend_wait: "Un envoi est parti il y a peu. Réessayez dans %{minutes} min."

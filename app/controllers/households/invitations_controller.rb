@@ -41,8 +41,11 @@ class Households::InvitationsController < ApplicationController
   end
 
   def destroy
-    @invitation.cancel!
-    redirect_to household_path(@household), notice: t("invitations.flash.cancelled")
+    if @invitation.cancel!
+      redirect_to household_path(@household), notice: t("invitations.flash.cancelled")
+    else
+      redirect_to household_invitation_path(@household, @invitation), alert: t("invitations.flash.not_cancellable")
+    end
   end
 
   def resend

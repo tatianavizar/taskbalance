@@ -321,4 +321,43 @@ class InvitationFlowTest < ActionDispatch::IntegrationTest
     assert @invitation.grants_setup_access_to?(users(:dana))
     assert_not @invitation.grants_setup_access_to?(users(:carol))
   end
+
+  # ---- Security review fixes -----------------------------------------------------
+
+  test "the sign-up rate limit counts the invitation's address, not the posted one" do
+    3.times { |i| reset!; sign_up_from_invitation(@invitation, email: "x#{i}@y.com") }
+    reset!
+
+    assert_no_enqueued_emails do
+      sign_up_from_invitation(@invitation, email: "x9@y.com")
+    end
+    assert_redirected_to new_user_registration_path
+  end
+
+  test "a known address that fails validation gets the same invitation screen as a new one" do
+    normalise = lambda do |invitation, body|
+      body.gsub(invitation.token, "TOKEN").gsub(invitation.email, "EMAIL")
+          .gsub(/<meta name="csrf-token"[^>]*>/, "").gsub(/<input[^>]*authenticity_token[^>]*>/, "")
+    end
+
+    sign_up_from_invitation(@invitation, password: "x", password_confirmation: "x")
+    assert_response :unprocessable_entity
+    assert_select "h1", "Rejoindre Smith Home"
+    known = normalise.call(@invitation, response.body)
+
+    reset!
+    sign_up_from_invitation(@newcomer, password: "x", password_confirmation: "x")
+    new_address = normalise.call(@newcomer, response.body)
+
+    assert_equal known, new_address
+  end
+
+  test "claim, accept, decline and waiting on an unknown token are a 404, not a 500" do
+    [ [ :post, claim_invitation_path("nope") ], [ :post, accept_invitation_path("nope") ],
+      [ :post, decline_invitation_path("nope") ], [ :get, waiting_invitation_path("nope") ] ].each do |verb, path|
+      sign_in users(:dana)
+      public_send(verb, path)
+      assert_response :not_found, path
+    end
+  end
 end
