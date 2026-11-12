@@ -352,3 +352,8 @@
 - **Déblocage par l'équipe (back-office) :** seul le membre concerné par le blocage est prévenu, pas le reste du foyer.
 - **Back-office :** rôle superadmin, qui a tous les droits (y compris gérer les admins et voir les données individuelles) ; chaque consultation de données individuelles est journalisée. « Dernière activité » gardée. Pas de QR code à l'activation de la double authentification.
 - **Applications iOS et Android (lots 8b, 9) :** écrites par les agents sans pouvoir les compiler ; la compilation et les essais sur appareil restent à faire.
+
+## 2026-11-13 · Pause sans semaine saisie, foyer supprimé sans email
+- **Pause :** elle ne peut ni commencer ni s'étendre sur une semaine locale (fuseau du foyer) où la personne a déjà enregistré une tâche, semaine en cours comprise. Fin de la pause d'un dimanche qui neutralise une semaine faible. Le message pointe le lundi suivant (« Vous avez déjà enregistré une tâche cette semaine : la pause peut commencer lundi 16 novembre. », avec le prénom pour une pause déclarée pour quelqu'un d'autre). Une saisie faite après la déclaration, dans une semaine déjà couverte, ne l'annule pas.
+- **« Oui » à la question d'absence :** la pause ne couvre que les semaines sans saisie (une saisie antidatée est possible) ; si les deux semaines ont des saisies, la réponse est refusée.
+- **Foyer supprimé :** notification dans l'app seulement, jamais d'email. Sans foyer, la personne la lit sur son écran d'arrivée (une fois, puis elle est marquée lue).

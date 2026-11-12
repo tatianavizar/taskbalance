@@ -4,6 +4,7 @@ fr:
     formats:
       short: "%-d %b"
       day_month: "%-d %B"
+      weekday_day_month: "%A %-d %B"
   time:
     formats:
       hour: "%H:%M"

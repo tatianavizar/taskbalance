@@ -5,11 +5,16 @@
 # day *(default)*: that week never counts as empty for them, and they are left
 # out of the fair share. `reason` is private to the member concerned.
 #
+# Whole weeks only, and never a week with a log (decision 2026-11-13): a pause
+# cannot be created, nor extended, so that it covers a local week (household
+# zone) in which the member already logged a task, current week included. A
+# one-day pause on the Sunday would otherwise neutralise a weak week. The
+# error names the next possible start, the Monday after the latest such week.
+#
 # Retroactive pauses are limited (product decisions 2026-11-08 and D3,
 # 2026-11-12): the start can go back 14 days at most, or to the first week of
 # an absence inquiry or regression about that member while it is open (until
-# the next final report after its deadline); and every closed week it covers
-# must be a week the member logged nothing. Over final weeks, the engine then
+# the next final report after its deadline). Over final weeks, the engine then
 # records a correction and may cancel a regression (WeeklyEngine, D3).
 class MemberPause < ApplicationRecord
   RETROACTIVE_DAYS = HouseholdRules::PAUSE_RETROACTIVE_DAYS
@@ -20,6 +25,7 @@ class MemberPause < ApplicationRecord
   validates :starts_on, presence: true
   validate :ends_after_start
   validate :retroactive_limits, on: :create
+  validate :covers_no_logged_week
   validate :declared_for_someone_else_stays_in_the_inquiry, if: :declared_for_someone_else?
   validate :extension_limits, on: :update
 
@@ -124,17 +130,43 @@ class MemberPause < ApplicationRecord
     inquiry_start = AbsenceInquiry.where(household_member_id: household_member_id)
       .select { |inquiry| inquiry.correction_window_open? }.map(&:first_week_start).min
     earliest = [ today - RETROACTIVE_DAYS, inquiry_start ].compact.min
-    return errors.add(:starts_on, :too_far_back, days: RETROACTIVE_DAYS) if from < earliest
+    errors.add(:starts_on, :too_far_back, days: RETROACTIVE_DAYS) if from < earliest
+  end
 
+  # The local weeks a pause from `from` to `to` (nil = open) touches, as far
+  # as logs can exist (up to the current week).
+  def weeks_touched(from, to)
+    last_day = [ to, household.zone.today ].compact.min
     week = Week.containing(from, household.time_zone)
-    last_day = [ ends_on, today ].compact.min
-    now = Time.current
-    while week.monday <= last_day && week.end_at < now
-      if ChoreLog.where(user_id: household_member.user_id, completed_at: week.range).exists?
-        return errors.add(:starts_on, :member_logged_that_week, week: week.label)
-      end
+    weeks = []
+    while week.monday <= last_day
+      weeks << week
       week = week.next
     end
+    weeks
+  end
+
+  def logged_in?(week)
+    ChoreLog.where(user_id: household_member.user_id, completed_at: week.range).exists?
+  end
+
+  # On a creation every touched week counts; on an edit only the weeks the
+  # new dates add (a log written after the declaration, in a week the pause
+  # already covered, does not undo it).
+  def covers_no_logged_week
+    return if starts_on.nil? || household_member.nil? || (ends_on && ends_on < starts_on)
+    return if persisted? && !(starts_on_changed? || ends_on_changed?)
+
+    known = persisted? && starts_on_was ? weeks_touched(starts_on_was, ends_on_was).map(&:monday) : []
+    logged = weeks_touched(starts_on, ends_on).reject { |week| known.include?(week.monday) }.select { |week| logged_in?(week) }
+    return if logged.empty?
+
+    week = logged.last
+    own = household_member.user_id == declared_by_id || declared_by_id.nil?
+    attribute = persisted? && !starts_on_changed? ? :ends_on : :starts_on
+    when_key = week.monday == household.week_containing(Time.current).monday ? "this" : "that"
+    errors.add(attribute, :"logged_#{when_key}_week_#{own ? 'self' : 'other'}", name: household_member.user.first_name,
+               week: week.label.downcase, next_start: I18n.l(week.next.monday, format: :weekday_day_month))
   end
 
   def notify_engine

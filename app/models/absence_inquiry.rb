@@ -32,7 +32,7 @@
 class AbsenceInquiry < ApplicationRecord
   DEADLINE_WDAY_OFFSET = HouseholdRules::ABSENCE_DEADLINE_DAY_OFFSET # Wednesday, counted from the Monday of the closing
   DEADLINE_HOUR = HouseholdRules::ABSENCE_DEADLINE_HOUR
-  REFUSALS = %i[invalid_answer closed not_a_member not_concerned not_correctable].freeze
+  REFUSALS = %i[invalid_answer closed not_a_member not_concerned not_correctable member_logged].freeze
 
   class AnswerRefused < StandardError
     attr_reader :reason
@@ -199,11 +199,20 @@ class AbsenceInquiry < ApplicationRecord
     weeks.any? { |week| household_member.member_pauses.overlapping(week).exists? }
   end
 
-  # "Yes, they were away": declares the pause over the two empty weeks.
+  # "Yes, they were away": declares the pause over the two empty weeks. A pause
+  # never covers a week with a log (MemberPause), so if the person logged
+  # something in one of them after all (a backdated entry), the pause covers
+  # the other one only; with both weeks logged there was no absence to
+  # declare and the answer is refused (:member_logged).
   def answer_yes!(by:)
+    empty = weeks.reject do |week|
+      ChoreLog.where(user_id: household_member.user_id, completed_at: week.range).exists?
+    end
+    raise AnswerRefused, :member_logged if empty.empty?
+
     MemberPause.declare!(
       member: household_member, declared_by: by,
-      starts_on: first_week_start, ends_on: last_week_start + 6
+      starts_on: empty.first.monday, ends_on: empty.last.sunday
     )
   end
 

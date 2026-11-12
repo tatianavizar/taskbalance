@@ -48,14 +48,62 @@ class MemberPauseTest < ActiveSupport::TestCase
     travel_to(paris(2026, 10, 20, 9)) do
       pause = declare(Date.new(2026, 10, 6), Date.new(2026, 10, 18))
       assert_not pause.valid?
-      assert_includes pause.errors[:starts_on].first, "Semaine 41"
+      assert_equal "Vous avez déjà enregistré une tâche en semaine 41 : la pause peut commencer lundi 12 octobre.",
+                   pause.errors[:starts_on].first
       assert declare(Date.new(2026, 10, 12)).valid?, "the week after is empty"
     end
   end
 
-  test "logs in the current week do not stop a pause that started earlier this week" do
+  test "a pause cannot cover the current week once the member logged in it, even for one day or from tomorrow" do
     log!(@household, @bob, at: paris(2026, 10, 19, 9))
-    travel_to(paris(2026, 10, 20, 9)) { assert declare(Date.new(2026, 10, 19)).valid? }
+    travel_to(paris(2026, 10, 20, 9)) do
+      [ Date.new(2026, 10, 19), Date.new(2026, 10, 20), Date.new(2026, 10, 25) ].each do |sunday_or_earlier|
+        pause = declare(sunday_or_earlier, sunday_or_earlier)
+        assert_not pause.valid?, "#{sunday_or_earlier} is in the logged week"
+      end
+      pause = declare(Date.new(2026, 10, 22))
+      assert_not pause.valid?
+      assert_equal "Vous avez déjà enregistré une tâche cette semaine : la pause peut commencer lundi 26 octobre.",
+                   pause.errors[:starts_on].first
+      assert declare(Date.new(2026, 10, 26)).valid?, "the following Monday is free"
+    end
+  end
+
+  test "a log in an earlier week only matters for the weeks the pause touches" do
+    log!(@household, @bob, at: paris(2026, 10, 14, 9))
+    travel_to(paris(2026, 10, 20, 9)) do
+      assert declare(Date.new(2026, 10, 19), Date.new(2026, 10, 25)).valid?
+      assert_not declare(Date.new(2026, 10, 18), Date.new(2026, 10, 25)).valid?, "the Sunday belongs to the logged week"
+    end
+  end
+
+  test "the message names the person when someone else declares the pause (F8)" do
+    open_inquiry
+    log!(@household, @bob, at: paris(2026, 10, 7, 9))
+    travel_to(paris(2026, 10, 20, 9)) do
+      pause = declare(Date.new(2026, 10, 5), Date.new(2026, 10, 18), by: @alice)
+      assert_not pause.valid?
+      assert_equal "Bob a déjà enregistré une tâche en semaine 41 : la pause peut commencer lundi 12 octobre.",
+                   pause.errors[:starts_on].first
+    end
+  end
+
+  test "extending a pause over a week with a log is refused, within the same week it is not" do
+    travel_to(paris(2026, 10, 19, 9)) { @pause = declare(Date.new(2026, 10, 19), Date.new(2026, 10, 20)).tap(&:save!) }
+    log!(@household, @bob, at: paris(2026, 10, 22, 9)) # logged during the pause's own week
+    travel_to(paris(2026, 10, 23, 9)) do
+      @pause.ends_on = Date.new(2026, 10, 24)
+      assert @pause.valid?, "no new week is covered"
+      @pause.ends_on = Date.new(2026, 10, 27)
+      assert @pause.valid?, "next week is empty"
+    end
+    log!(@household, @bob, at: paris(2026, 10, 28, 9))
+    travel_to(paris(2026, 10, 29, 9)) do
+      @pause.ends_on = Date.new(2026, 11, 1)
+      assert_not @pause.valid?
+      assert_equal "Vous avez déjà enregistré une tâche cette semaine : la pause peut commencer lundi 2 novembre.",
+                   @pause.errors[:ends_on].first
+    end
   end
 
   test "overlapping a week means touching at least one of its days" do
@@ -157,7 +205,8 @@ class MemberPauseTest < ActiveSupport::TestCase
     travel_to(paris(2026, 10, 20, 9)) do
       @pause.ends_on = Date.new(2026, 10, 18)
       assert_not @pause.valid?
-      assert_includes @pause.errors[:starts_on].first, "Semaine 42"
+      assert_equal "Vous avez déjà enregistré une tâche en semaine 42 : la pause peut commencer lundi 19 octobre.",
+                   @pause.errors[:ends_on].first
     end
   end
 

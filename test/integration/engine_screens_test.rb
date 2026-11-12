@@ -609,6 +609,21 @@ class EngineScreensTest < ActionDispatch::IntegrationTest
     assert household.reload.blocked?, "nothing was cancelled"
   end
 
+  test "F6: a pause over a week where the person already logged is refused, pointing to the next Monday" do
+    household, (virginie, karim) = couple
+    travel_to(paris(2026, 11, 12, 10)) # Thursday
+    log!(household, karim, at: paris(2026, 11, 10, 9))
+    sign_in karim
+
+    post member_pauses_path, params: { member_pause: { starts_on: "2026-11-15", ends_on: "2026-11-15" } }
+    assert_response :unprocessable_entity
+    assert_text "Vous avez déjà enregistré une tâche cette semaine : la pause peut commencer lundi 16 novembre."
+    assert_empty membership(household, karim).member_pauses
+
+    post member_pauses_path, params: { member_pause: { starts_on: "2026-11-16", ends_on: "2026-11-22" } }
+    assert_redirected_to member_pauses_path
+  end
+
   test "F6: a finished pause cannot be extended" do
     household, (virginie, karim) = couple
     travel_to(paris(2026, 10, 14, 10))
