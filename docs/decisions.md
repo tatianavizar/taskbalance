@@ -275,3 +275,11 @@
 - **Décidé par :** la porteuse du projet.
 - **Règle :** un foyer de moins de deux membres ne reçoit pas de bilan hebdomadaire. Une semaine où personne n'a rien enregistré, dans un foyer de deux membres ou plus, remplace le bilan par un court email qui invite à revenir sur l'app : le fait, une ligne sur ce que fait l'app, un seul bouton. Il prend la place du bilan dans le plafond hebdomadaire et suit le réglage « Bilan de la semaine ».
 - **Note :** l'entrée du 2026-11-08 sur les pratiques manipulatrices excluait toute relance pour enregistrer. Cet email reste hebdomadaire, factuel, sans culpabilisation ni urgence ; il remplace un bilan qui n'aurait rien dit, il ne s'ajoute pas.
+
+## 2026-11-13 · Suppression de compte : les enregistrements partent avec la personne
+- **Décidé par :** la porteuse du projet.
+- **Règle :** supprimer son compte supprime ses enregistrements : ils lui appartiennent et elle part. Le compte est anonymisé ; dans les bilans passés du foyer, son prénom devient « Ancien membre » et les chiffres agrégés restent.
+
+## 2026-11-13 · Recalcul des parts en direct
+- **Décidé par :** la porteuse du projet.
+- **Règle :** dans les écrans de répartition (C9, C12, B11), les pourcentages se mettent à jour dès qu'une assignation change, sans enregistrer. Seul « Valider » enregistre.
