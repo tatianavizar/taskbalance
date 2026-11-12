@@ -159,10 +159,13 @@ fr:
               household_full: "Le foyer compte déjà %{max} personnes, invitations en attente comprises. C'est le maximum."
               not_acceptable: "Cette invitation ne peut plus être acceptée avec ce compte."
         member_pause:
+          logged_this_week_self: "Vous avez déjà enregistré une tâche cette semaine : la pause peut commencer %{next_start}."
+          logged_this_week_other: "%{name} a déjà enregistré une tâche cette semaine : la pause peut commencer %{next_start}."
+          logged_that_week_self: "Vous avez déjà enregistré une tâche en %{week} : la pause peut commencer %{next_start}."
+          logged_that_week_other: "%{name} a déjà enregistré une tâche en %{week} : la pause peut commencer %{next_start}."
           attributes:
             starts_on:
               too_far_back: Une pause peut commencer au plus %{days} jours en arrière.
-              member_logged_that_week: "%{week} contient des enregistrements de cette personne : la pause ne peut pas la couvrir."
             ends_on:
               before_start: La fin de la pause doit venir après son début.
               in_the_past: La fin de la pause ne peut pas être dans le passé.

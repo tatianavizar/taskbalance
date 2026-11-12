@@ -112,11 +112,12 @@ class DeparturesTest < ActionDispatch::IntegrationTest
     assert Household.exists?(@household.id)
   end
 
-  test "F3: the manager deletes it, Bob is emailed, both land without a household" do
+  test "F3: the manager deletes it, nobody is emailed, Bob reads the notice once on his landing screen" do
     log = ChoreLog.create!(user: @bob, chore: chores(:smith_laundry), mental_load: false, execution_load: true, time_spent: 10, completed_at: Time.current)
+    @bob.update_columns(confirmed_at: Time.current)
     sign_in @alice
 
-    assert_enqueued_emails 1 do
+    assert_no_enqueued_emails do
       delete household_path(@household), params: { household_deletion: { confirmation_name: "Smith Home" } }
     end
     assert_redirected_to dashboard_path(departed: 1)
@@ -124,6 +125,16 @@ class DeparturesTest < ActionDispatch::IntegrationTest
     assert_nil @bob.reload.household
     assert_nil log.reload.household_id
     assert ChoreLog.exists?(log.id)
+
+    sign_in @bob
+    assert_equal 1, Notification.unread_count_for(@bob)
+    get dashboard_path(departed: 1)
+    assert_text "Alice a supprimé le foyer « Smith Home »."
+    assert_text "Votre journal vous suit"
+    assert_equal 0, Notification.unread_count_for(@bob)
+
+    get dashboard_path
+    assert_not_includes response.body, "Alice a supprimé le foyer"
   end
 
   # ---- F5 -------------------------------------------------------------------

@@ -21,7 +21,7 @@ The app lives at `~/code/taskbalance`. It previously sat directly in `/Users/tat
 - The **household** is the entity that progresses, not individuals.
 - Individual contribution is always visible.
 - Household progression goes through levels 1–4 then an ultimate level, earned by cumulative **balanced weeks** (1, 3, 6, 10, 15). A week is balanced when every member carries their fair share (100 / members, rounded) ± 10 points of **both** mental load and execution. An unbalanced week only stops progression.
-- The household **regresses one level and is blocked** when a member logs nothing for 2 consecutive weeks, unless the other members answer that they were away (a pause is then declared for them). A member can declare as many pauses as they want, and paused weeks don't count. Full rules: `docs/backend-backlog.md`.
+- The household **regresses one level and is blocked** when a member logs nothing for 2 consecutive weeks, unless the other members answer that they were away (a pause is then declared for them). A member can declare as many pauses as they want, and paused weeks don't count. A pause (creation or extension) can never cover a local week where the paused person already has a log, the current week included (error names the next Monday; `AbsenceInquiry#answer_yes!` trims to the empty week or refuses with `member_logged`). Full rules: `docs/backend-backlog.md`.
 - Each task log tracks two independent dimensions: **mental load** (plan/organize/decide) and **execution load** (physically doing it).
 
 ## Domain model

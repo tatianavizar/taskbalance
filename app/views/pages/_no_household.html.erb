@@ -15,6 +15,14 @@
   <p class="screen-subtitle"><%= t("auth.no_household.subtitle") %></p>
 </div>
 
+<% Array(@closure_notices).each do |notice| %>
+  <% message = notice.message %>
+  <%= callout do %>
+    <p class="m-0 font-semibold"><%= message.title %></p>
+    <p class="m-0 mt-1 text-sm leading-5"><%= message.lines.first %></p>
+  <% end %>
+<% end %>
+
 <%= card do %>
   <b><%= t("auth.no_household.journal_title") %></b>
   <p class="mt-1 mb-0 text-sm leading-5"><%= t("auth.no_household.journal_body") %></p>

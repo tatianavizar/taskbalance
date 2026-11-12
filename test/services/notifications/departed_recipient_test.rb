@@ -1,8 +1,7 @@
 require "test_helper"
 
 # The engine writes the report and alerts at 03:00 and they go out at 08:00. A
-# member who leaves in between must get neither; household_deleted (no
-# household) still goes out.
+# member who leaves in between must get neither.
 class NotificationsDepartedRecipientTest < ActiveSupport::TestCase
   include WeeklyEngineHelpers
   include ActionMailer::TestHelper
@@ -33,14 +32,6 @@ class NotificationsDepartedRecipientTest < ActiveSupport::TestCase
 
     assert report.deliverable?
     assert_emails(1) { NotificationMailer.notify(report).deliver_now }
-  end
-
-  test "household_deleted has no household and always goes out" do
-    deleted = notification!(@ann, kind: "household_deleted", household: nil)
-    HouseholdMember.where(user_id: @ann.id).delete_all
-
-    assert deleted.deliverable?
-    assert_emails(1) { NotificationMailer.notify(deleted).deliver_now }
   end
 
   test "leaving withdraws the leaver's notifications that are not due yet, nobody else's" do

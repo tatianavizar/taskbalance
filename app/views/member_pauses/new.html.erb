@@ -33,10 +33,12 @@
       <% if self_pause %>
         <li><%= t("pauses.new.rule_not_empty") %></li>
         <li><%= @household.household_members.count == 2 ? t("pauses.new.rule_two") : t("pauses.new.rule_more") %></li>
+        <li><%= t("pauses.new.rule_logged") %></li>
         <li><%= t("pauses.new.rule_notified") %></li>
       <% else %>
         <li><%= t("pauses.new.for_window", days: MemberPause::RETROACTIVE_DAYS) %></li>
         <% if regression %><li><%= t("pauses.new.for_cancels", level: level_name(regression.from_level)) %></li><% end %>
+        <li><%= t("pauses.new.rule_logged_for", name: name) %></li>
         <li><%= t("pauses.new.for_notified", name: name) %></li>
       <% end %>
     </ul>

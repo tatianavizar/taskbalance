@@ -213,6 +213,7 @@ fr:
       closed: "Le délai est passé : les réponses sont closes."
       not_a_member: "Seuls les membres du foyer répondent."
       not_concerned: "Seule la personne concernée peut corriger cette réponse."
+      member_logged: "Cette personne a enregistré des tâches pendant ces deux semaines : une pause ne peut pas les couvrir."
       not_correctable: "Cette réponse ne peut pas être corrigée : la personne concernée change la sienne en répondant elle-même."
     index:
       title: "Questions d'absence"
@@ -258,6 +259,8 @@ fr:
       rule_not_empty: "Vos semaines en pause ne comptent pas comme des semaines sans saisie : le foyer ne redescend pas."
       rule_two: "À deux, les semaines de pause sont neutres : le foyer ne progresse pas, et ne recule pas."
       rule_more: "Pendant la pause, la part juste des autres membres se calcule sans vous."
+      rule_logged: "Une pause couvre des semaines entières : elle ne peut pas couvrir une semaine où une tâche est déjà enregistrée. Dans ce cas, elle commence le lundi suivant."
+      rule_logged_for: "Une pause ne peut pas couvrir une semaine où %{name} a déjà enregistré une tâche."
       rule_notified: "Les autres membres reçoivent une notification des dates. Vous pouvez arrêter la pause plus tôt à tout moment."
       for_window: "Les semaines sans saisie qui ont déclenché la question d'absence peuvent toujours être mises en pause. Au-delà, %{days} jours en arrière au plus."
       for_cancels: "La pause annule la descente : le foyer revient au niveau %{level}, compteur rétabli comme avant."

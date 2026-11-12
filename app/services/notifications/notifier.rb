@@ -43,9 +43,10 @@ module Notifications
       existing = Notification.find_by(user_id: user.id, dedup_key: event.dedup_key)
       return existing if existing
 
+      in_app_only = Catalogue.in_app_only?(event.kind)
       reason = suppression(user)
-      channel = reason ? nil : Channels.for(user)
-      reason ||= "no_channel" unless channel
+      channel = reason || in_app_only ? nil : Channels.for(user)
+      reason ||= "no_channel" unless channel || in_app_only
 
       record = create_record(user, facts, channel: (channel::NAME if channel), reason: reason)
       return record unless record.sent?
@@ -59,7 +60,7 @@ module Notifications
     end
 
     def suppression(user)
-      unless Catalogue.transactional?(event.kind) || NotificationPreference.enabled?(user, event.event_type)
+      unless Catalogue.in_app_only?(event.kind) || NotificationPreference.enabled?(user, event.event_type)
         return "preference"
       end
       return "stale" if @now > event.deliver_at + Event::STALE_AFTER

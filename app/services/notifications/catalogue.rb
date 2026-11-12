@@ -31,15 +31,16 @@ module Notifications
       Entry.new("absence_question", "absence_question", nil,      :absence_inquiries), # E11, P5, H5
       Entry.new("absence_outcome",  "absence_question", nil,      :member_pauses),     # F10
       Entry.new("pause_declared",   "absence_question", nil,      :member_pauses),     # F10
-      # Lot 7, F3. Transactional (decision 2026-11-13): sent whatever the
-      # preferences, never capped, no unsubscribe link.
+      # Lot 7, F3. In-app only (decision 2026-11-13): never emailed, shown
+      # to the person on the screen they land on without a household.
       Entry.new("household_deleted", "alert",           nil,      :dashboard)
     ].index_by(&:kind).freeze
 
-    # Account-level messages: they ignore preferences and carry no unsubscribe.
-    TRANSACTIONAL = %w[household_deleted].freeze
+    # Recorded for the feed, never sent through a channel (no email, no push).
+    # They ignore the alert preference: it governs messages, not this notice.
+    IN_APP_ONLY = %w[household_deleted].freeze
 
-    def self.transactional?(kind) = TRANSACTIONAL.include?(kind.to_s)
+    def self.in_app_only?(kind) = IN_APP_ONLY.include?(kind.to_s)
 
     # The route options a notification adds to its target: the report opens on
     # the week it is about (E14), not on the week in progress.

@@ -83,6 +83,27 @@ class AbsenceInquiryTest < ActiveSupport::TestCase
     assert_equal "regressed", events(household, "absence_inquiry.resolved").sole.payload["outcome"]
   end
 
+  test "a yes never makes a pause cover a week where the person logged after all" do
+    household, alice, bob = household_with_inquiry("Alice", "Bob")
+    log!(household, bob, at: paris(2026, 10, 14, 9)) # backdated entry in the first empty week
+    inquiry = inquiry_about(household, bob)
+    answer(inquiry, alice, "yes")
+
+    pause = inquiry.absence_answers.sole.reload.member_pause
+    assert_equal [ Date.new(2026, 10, 19), Date.new(2026, 10, 25) ], [ pause.starts_on, pause.ends_on ]
+  end
+
+  test "a yes is refused when the person logged in both weeks (no pause declared)" do
+    household, alice, bob = household_with_inquiry("Alice", "Bob")
+    log!(household, bob, at: paris(2026, 10, 14, 9))
+    log!(household, bob, at: paris(2026, 10, 21, 9))
+    inquiry = inquiry_about(household, bob)
+
+    error = assert_raises(Refused) { answer(inquiry, alice, "yes") }
+    assert_equal :member_logged, error.reason
+    assert_empty household.member_pauses
+  end
+
   test "the absent member's own 'Yes' declares the pause at once; no regression at the deadline" do
     household, _alice, bob = household_with_inquiry("Alice", "Bob")
     inquiry = inquiry_about(household, bob)

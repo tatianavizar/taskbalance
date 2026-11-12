@@ -1,9 +1,9 @@
 module Notifications
   module Events
-    # F3: the manager deleted the household. The other members hear it (by
-    # email, backlog 3.5). Sent before the household row goes: the
+    # F3: the manager deleted the household. The other members hear it (in
+    # the app only, decision 2026-11-13, backlog 3.5). Sent before the household row goes: the
     # notification keeps its recipient and loses its household reference
-    # (foreign key nullified), so the feed and the email job still find it.
+    # (foreign key nullified), so the feed still finds it.
     class HouseholdDeleted < Event
       KIND = "household_deleted".freeze
 
