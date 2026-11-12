@@ -256,12 +256,14 @@ Ordre conseillé. Chaque lot se termine sur des écrans utilisables de bout en b
 - Composant bridge pour l'autorisation des notifications. H1 vient avant l'inscription : l'app garde le jeton du téléphone et l'envoie au serveur après la connexion. M
 - Emails H3, et emails d'alerte E3, E4, E5. M
 - **Écrans :** H1 à H5, F4 (notifications), P9.
+- **Fait (8b, branche `native-push`) :** `push_devices`, envoi FCM HTTP v1 sans gem (FCM relaie vers APNs), repli email et plafond commun, jetons morts supprimés, H1, désinscription du téléphone à la déconnexion. **Reste :** compiler et essayer les apps (`native/README.md`).
 
 ### Lot 9 — Finitions natives (≈ 1,5 semaine)
 - Liens universels et App Links (`apple-app-site-association`, `assetlinks.json`) pour les emails d'invitation, de réinitialisation et de confirmation. M
 - Composants bridge : sélecteur de date (D10, F6), menu « ⋯ » (E6), confirmation native (E16, B15, C2), ouverture des réglages du téléphone. M
 - Hors ligne G1 (bandeau et boutons désactivés), session expirée G5 en modale. S
 - Tirer pour rafraîchir, icônes, écran de lancement, fiches des stores. M
+- **Fait (branche `native-push`, non compilé) :** coquilles iOS et Android (`native/`), fichiers de liens universels et App Links, composants bridge (date, menu « ⋯ », confirmation, réglages, notifications), icônes provisoires. **Reste :** compilation et essais sur appareil, G5 en modale, bandeau hors ligne web, icônes et fiches des stores.
 
 ### Lot 10 — Foyer de 3 et plus, accessibilité, lancement (≈ 2 semaines) · backlog 2.2e
 - Une barre par membre, panneau d'assignation P6, choix de la couleur P2, inviter plusieurs membres P1, taille maximale (D17). M

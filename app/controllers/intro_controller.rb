@@ -18,6 +18,8 @@ class IntroController < ApplicationController
 
     @last = @step == STEPS
     @exit_path = user_signed_in? ? account_path : new_user_registration_path
-    @next_path = @last ? @exit_path : intro_path(@step + 1)
+    # In the native shells, the intro ends on H1 (notifications), then the exit.
+    finish = hotwire_native_app? ? push_permission_path : @exit_path
+    @next_path = @last ? finish : intro_path(@step + 1)
   end
 end

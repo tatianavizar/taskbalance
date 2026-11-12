@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Design tokens (app/assets/tailwind/tokens.css). -->
+<resources>
+    <color name="mint">#B9F2D4</color>
+    <color name="ink">#0F1A14</color>
+    <color name="muted">#55625B</color>
+    <color name="surface">#F6FBF8</color>
+    <color name="launcher_background">#F6FBF8</color>
+</resources>

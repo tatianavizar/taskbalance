@@ -26,6 +26,8 @@ class User < ApplicationRecord
   has_many :chore_logs
   # Private: only their author ever sees them.
   has_many :chore_preferences, dependent: :delete_all
+  # Lot 8b: the phones that accepted notifications (PushDevice).
+  has_many :push_devices, dependent: :delete_all
 
   # What the back office may filter on (never a log, a preference or a household figure).
   self.ransackable_attribute_names = %w[first_name email confirmed_at created_at deleted_at]

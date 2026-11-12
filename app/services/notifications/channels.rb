@@ -7,13 +7,12 @@ module Notifications
   #   .available_for?(user)      can this person be reached this way now?
   #   #deliver(notification)     hands the message over (enqueue; never raises
   #                              for a recoverable problem)
-  # Lot 8b adds `Channels::Push` and lists it before Email in `registry`; the
-  # Notifier does not change.
+  # Push (lot 8b) comes first; the Notifier does not know about it.
   module Channels
     class << self
       # Most preferred first. Email last: it is the fallback.
       def registry
-        @registry ||= [ Email ]
+        @registry ||= [ Push, Email ]
       end
       attr_writer :registry
 

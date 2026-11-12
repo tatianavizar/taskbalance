@@ -9,9 +9,10 @@
 #      handed over, manager role passed on; the last one out deletes it);
 #   2. their logs: see `dispose_of_logs!` (product decision, below);
 #   3. what is theirs only goes: chore preferences, notifications and their
-#      settings, validations; invitations addressed to them are cancelled,
-#      and every invitation that named them (by account or by address, in any
-#      state) gets the anonymised address and « Ancien membre »;
+#      settings, the phones registered for push (lot 8b), validations;
+#      invitations addressed to them are cancelled, and every invitation that
+#      named them (by account or by address, in any state) gets the
+#      anonymised address and « Ancien membre »;
 #   4. past snapshots that name them (household_weeks members and pauses,
 #      week plans, week corrections, other people's notifications, the
 #      engine outbox) keep their figures and read « Ancien membre »;
@@ -117,6 +118,7 @@ class AccountDeletion
   def drop_personal_data!
     ChorePreference.where(user_id: user.id).delete_all
     NotificationPreference.where(user_id: user.id).delete_all
+    PushDevice.where(user_id: user.id).delete_all
     Notification.where(user_id: user.id).delete_all
     Approval.where(user_id: user.id).delete_all
     ChoreAssignee.where(user_id: user.id).delete_all

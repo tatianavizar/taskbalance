@@ -1,0 +1,40 @@
+<%# H1 : annoncer les notifications avant que le téléphone ne demande l'autorisation.
+    « Plus tard » a le même poids visuel qu'« Activer » (vérification des pratiques manipulatrices). %>
+<% provide :chrome, "none" %>
+<% provide :title, t("notifications.permission.title") %>
+
+<div class="flex flex-col gap-4 flex-1"
+     data-controller="bridge--push-notifications"
+     data-bridge--push-notifications-mode-value="ask"
+     data-bridge--push-notifications-url-value="<%= push_device_path %>"
+     data-bridge--push-notifications-signed-in-value="<%= user_signed_in? %>"
+     data-bridge--push-notifications-next-url-value="<%= @next_path %>">
+  <h1 class="screen-title"><%= t("notifications.permission.title") %></h1>
+
+  <div class="card">
+    <p class="m-0 font-semibold"><%= t("notifications.permission.intro") %></p>
+    <ul class="mt-2 mb-0 pl-5 text-sm leading-5">
+      <% t("notifications.permission.items").each do |item| %>
+        <li><%= item %></li>
+      <% end %>
+    </ul>
+  </div>
+
+  <%= callout do %>
+    <p class="m-0 text-sm leading-5"><b><%= t("notifications.permission.limits") %></b></p>
+  <% end %>
+  <p class="m-0 text-[13px] leading-[18px] text-muted"><%= t("notifications.permission.email") %></p>
+
+  <div class="alert-box" role="status" hidden data-bridge--push-notifications-target="denied">
+    <p class="m-0"><%= t("notifications.permission.denied") %></p>
+    <button type="button" class="btn btn-outline btn-on-ink mt-3" data-controller="bridge--settings" data-action="bridge--settings#open">
+      <%= t("notifications.permission.settings") %>
+    </button>
+  </div>
+
+  <div class="mt-auto pb-2 flex gap-3">
+    <%= link_to t("notifications.permission.later"), @next_path, class: "btn btn-outline flex-1" %>
+    <%= link_to t("notifications.permission.enable"), @next_path, class: "btn btn-outline flex-1",
+          data: { action: "bridge--push-notifications#request" } %>
+  </div>
+</div>

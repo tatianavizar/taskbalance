@@ -6,6 +6,9 @@ class FiftyFormBuilder < ActionView::Helpers::FormBuilder
   #   f.field :email, as: :email, hint: "…", label: "Email"
   def field(method, as: :text, label: nil, hint: nil, **html)
     html[:class] = [ "field-input", html[:class] ].compact.join(" ")
+    # Lot 9: in the native shells, the date picker is native (bridge
+    # component « date-picker »); a browser keeps its own.
+    html[:data] = { controller: "bridge--date-picker", action: "click->bridge--date-picker#open" }.merge(html[:data] || {}) if as == :date
     wrap(method, label: label, hint: hint, html: html) do |attrs|
       public_send(INPUT_TYPES.fetch(as), method, **attrs)
     end

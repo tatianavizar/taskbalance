@@ -62,7 +62,7 @@ class NativeAppTest < ActionDispatch::IntegrationTest
       assert_equal "default", rules.first["properties"]["context"]
 
       modal = rules.find { |r| r["properties"]["context"] == "modal" }
-      assert_equal [ "/new$", "/edit$", "/completion/new$" ], modal["patterns"]
+      assert_equal [ "/new$", "/edit$", "/completion/new$", "/delete$", "/cancel$" ], modal["patterns"]
 
       none = rules.find { |r| r["properties"]["presentation"] == "none" }
       assert_includes none["patterns"], "/recede_historical_location$"
