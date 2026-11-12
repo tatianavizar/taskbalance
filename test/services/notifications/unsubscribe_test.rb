@@ -37,6 +37,13 @@ class NotificationsUnsubscribeTest < ActiveSupport::TestCase
     assert_nil Notifications::Unsubscribe.resolve(Notifications::Unsubscribe.verifier.generate([ 0, "alert" ], purpose: :notification_unsubscribe))
   end
 
+  test "a token for a deleted account no longer resolves" do
+    token = Notifications::Unsubscribe.token_for(@user, "alert")
+    @user.update_column(:deleted_at, Time.current)
+
+    assert_nil Notifications::Unsubscribe.resolve(token)
+  end
+
   test "the token for one type cannot be turned into another" do
     token = Notifications::Unsubscribe.token_for(@user, "alert")
 

@@ -7,8 +7,15 @@
 # for this person and this event type. Transactional mail (invitations,
 # password, address confirmation) is not governed by a preference and has no
 # such link.
+#
+# A notification about a household goes only to its current members (see
+# Notification#deliverable?).
 class NotificationMailer < ApplicationMailer
   def notify(notification)
+    # Sent hours after it was written (deliver_at): the person may have left
+    # the household in between. No `mail` call, nothing goes out.
+    return unless notification.deliverable?
+
     @notification = notification
     @message = notification.message
     @user = notification.user
