@@ -1,10 +1,12 @@
 # What the Tasks tab lists (D3, D4) for one person of a household: the open
 # occurrences of the week, in three sections.
 #
-#   late    due before today, of this week or an earlier one. Nothing lapses:
-#           a task nobody did stays late until it is done, whatever its
-#           frequency. `late_groups` folds them by chore, with a count, so a
-#           daily task missed for a week is one line, not seven.
+#   late    due before today, this local week, and not done. A daily or
+#           weekly occurrence of an earlier week drops out (nothing counts
+#           it: reports count logs only); monthly, yearly and one-off ones
+#           stay late across weeks until done. `late_groups` folds them by
+#           chore, with a count, so a daily task missed three times is one
+#           line (the count stays within the week, except carried-over ones).
 #   today   due today
 #   later   due after today, until Sunday
 #
@@ -113,7 +115,7 @@ class TaskBoard
 
     current = ChoreOccurrence.of_active_chores.where(household_id: household.id).in_week(week)
     occurrences = ChoreOccurrence.where(id: current.select(:id))
-      .or(ChoreOccurrence.where(id: ChoreOccurrence.earlier_weeks(household, week).select(:id)))
+      .or(ChoreOccurrence.where(id: ChoreOccurrence.carried_over(household, week).select(:id)))
       .includes(:chore_logs, chore: [ :task, :chore_assignees ])
 
     occurrences.filter_map do |occurrence|
