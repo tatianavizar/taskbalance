@@ -17,8 +17,8 @@
 <% if @invitations.any? %>
   <div class="list-stack">
     <% @invitations.each do |invitation| %>
-      <%= list_row title: invitation.email, subtitle: t("setup.partner.invited"),
-            leading: avatar(initials: invitation.email.first.upcase, pending: true, size: 36) %>
+      <%= list_row title: invitation.display_name, subtitle: "#{invitation.email} · #{t("setup.partner.invited")}",
+            leading: avatar(initials: invitation.display_name.first.upcase, pending: true, size: 36) %>
     <% end %>
   </div>
 <% end %>

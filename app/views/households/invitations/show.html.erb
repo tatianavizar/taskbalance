@@ -17,9 +17,9 @@
 
 <%= card do %>
   <div class="flex items-center gap-3">
-    <%= avatar(initials: @invitation.email.first.upcase, pending: true) %>
+    <%= avatar(initials: @invitation.display_name.first.upcase, pending: true) %>
     <span class="flex-1 min-w-0">
-      <b class="font-semibold break-all"><%= @invitation.email %></b><br>
+      <b class="font-semibold"><%= @invitation.display_name %></b> <span class="text-[13px] text-muted break-all"><%= @invitation.email %></span><br>
       <span class="text-[13px] text-muted">
         <% if state == "pending" %>
           <%= t("invitations.show.sent_expires", sent: l(sent_at, format: "%-d %b à %H:%M"), expires: l(expires_at.to_date, format: :short)) %>
@@ -63,7 +63,7 @@
 <% end %>
 
 <% if state == "declined" %>
-  <p class="m-0"><%= t("invitations.show.declined_body", email: @invitation.email) %></p>
+  <p class="m-0"><%= t("invitations.show.declined_body", name: @invitation.display_name) %></p>
 <% end %>
 <p class="m-0 text-[13px] leading-[18px] text-muted"><%= t("invitations.show.footnote.#{state}", max: Invitation::MAX_RESENDS) %></p>
 
@@ -71,7 +71,7 @@
   <% if state == "pending" %>
     <%= link_to t("invitations.show.next_setup"), household_chores_setup_path(@household), class: "btn btn-primary" %>
   <% else %>
-    <%= link_to t("invitations.show.invite_again"), new_household_invitation_path(@household, email: @invitation.email), class: "btn btn-primary" %>
+    <%= link_to t("invitations.show.invite_again"), new_household_invitation_path(@household, email: @invitation.email, first_name: @invitation.first_name), class: "btn btn-primary" %>
     <%= link_to t("invitations.show.continue_solo"), household_path(@household), class: "btn btn-secondary" %>
   <% end %>
 <% end %>

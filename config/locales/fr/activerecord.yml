@@ -29,6 +29,7 @@ fr:
         role: Rôle
         email: Email
       invitation:
+        first_name: Prénom
         email: Email
       chore:
         status: Statut
@@ -141,6 +142,9 @@ fr:
               not_a_member: ne fait pas partie de ce foyer
         invitation:
           attributes:
+            first_name:
+              blank: Indiquez le prénom de la personne à inviter.
+              too_long: Le prénom ne peut pas dépasser %{count} caractères.
             email:
               blank: "Saisissez l'adresse de la personne à inviter."
               invalid: "Cette adresse n'est pas valide. Vérifiez qu'elle contient un @."

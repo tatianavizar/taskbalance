@@ -26,8 +26,8 @@
     <div class="list-stack">
       <% invitations.each do |invitation| %>
         <% state = invitation.current_state %>
-        <%= list_row title: invitation.email, href: household_invitation_path(@household, invitation),
-              leading: avatar(initials: invitation.email.first.upcase, pending: true, size: 36),
+        <%= list_row title: invitation.display_name, subtitle: invitation.email, href: household_invitation_path(@household, invitation),
+              leading: avatar(initials: invitation.display_name.first.upcase, pending: true, size: 36),
               trailing: status_pill(t("invitations.show.pill.#{state}"), tone: (state == "pending" ? :outline : :soft)) %>
       <% end %>
     </div>

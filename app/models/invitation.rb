@@ -25,9 +25,14 @@ class Invitation < ApplicationRecord
   }, default: "pending", validate: true
 
   normalizes :email, with: ->(email) { email.to_s.strip.downcase }
+  normalizes :first_name, with: ->(name) { name.to_s.strip.presence }
 
   validates :email, presence: true, format: { with: URI::MailTo::EMAIL_REGEXP }
   validates :token, presence: true
+  # Same rules as User#first_name. Asked on B3 (`invite`); rows sent before
+  # the column existed have none.
+  validates :first_name, length: { maximum: User::FIRST_NAME_MAX_LENGTH }
+  validates :first_name, presence: true, on: :create, if: :sent_by
   validate :email_domain_complete
   validate :checks_for_new_invitation, on: :create
 
@@ -48,9 +53,9 @@ class Invitation < ApplicationRecord
 
   # Opens a new invitation and queues the email. Returns the invitation:
   # `persisted?` is false and `errors` explains why when nothing was sent.
-  def self.invite(household:, email:, inviter:)
+  def self.invite(household:, email:, inviter:, first_name: nil)
     expire_overdue!(where(household_id: household.id))
-    invitation = new(household: household, email: email, inviter: inviter, sent_by: inviter)
+    invitation = new(household: household, email: email, first_name: first_name, inviter: inviter, sent_by: inviter)
     InvitationMailer.invite(invitation).deliver_later if invitation.save
     invitation
   rescue ActiveRecord::RecordNotUnique
@@ -94,6 +99,12 @@ class Invitation < ApplicationRecord
     return unless user
 
     live.where(invitee_id: user.id).order(:created_at, :id).last
+  end
+
+  # The name to show for the invited person: their first name, or, for an
+  # invitation sent before B3 asked for it, the start of the email.
+  def display_name
+    first_name.presence || email.to_s.split("@").first.to_s
   end
 
   # ---- State ---------------------------------------------------------------

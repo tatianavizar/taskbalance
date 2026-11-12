@@ -11,7 +11,7 @@ class HouseholdInvitationsTest < ActionDispatch::IntegrationTest
   end
 
   def invite(email)
-    post household_invitations_path(@household), params: { invitation: { email: email } }
+    post household_invitations_path(@household), params: { invitation: { first_name: "Karim", email: email } }
   end
 
   test "the form renders, for the setup step and on its own" do
@@ -266,8 +266,8 @@ class HouseholdInvitationsTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "h1", "Invitation déclinée"
     assert_select ".pill", "Déclinée"
-    assert_select "p", /votre mise en place est conservée/
-    assert_select "a[href=?]", new_household_invitation_path(@household, email: "dana@test.com")
+    assert_select "p", /Karim n.a pas rejoint le foyer.*votre mise en place est conservée/
+    assert_select "a[href=?]", new_household_invitation_path(@household, email: "dana@test.com", first_name: "Karim")
     assert_equal 2, @household.household_members.count
 
     get household_path(@household)
@@ -288,7 +288,7 @@ class HouseholdInvitationsTest < ActionDispatch::IntegrationTest
   # ---- Access ---------------------------------------------------------------------------
 
   test "another household's invitation is a 404" do
-    other = Invitation.invite(household: households(:jones_home), email: "x@test.com", inviter: users(:carol))
+    other = Invitation.invite(household: households(:jones_home), email: "x@test.com", inviter: users(:carol), first_name: "Xavier")
 
     get household_invitation_path(@household, other)
     assert_response :not_found

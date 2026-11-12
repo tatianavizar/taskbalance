@@ -93,7 +93,7 @@ class InvitationsController < ApplicationController
   end
 
   def render_join
-    render :join, locals: { invitation: @invitation, user: User.new(email: @invitation.email) }
+    render :join, locals: { invitation: @invitation, user: User.new(email: @invitation.email, first_name: @invitation.first_name) }
   end
 
   def render_invalid(reason, status: :ok)

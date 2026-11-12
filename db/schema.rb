@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_11_13_090700) do
+ActiveRecord::Schema[8.0].define(version: 2026_11_13_090800) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -207,6 +207,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_11_13_090700) do
     t.datetime "cancelled_at"
     t.bigint "invitee_id"
     t.bigint "inviter_id"
+    t.string "first_name"
     t.index ["email", "household_id"], name: "index_invitations_pending_on_email_and_household_id", unique: true, where: "((state)::text = 'pending'::text)"
     t.index ["household_id", "email"], name: "index_invitations_on_household_id_and_email"
     t.index ["invitee_id"], name: "index_invitations_on_invitee_id"

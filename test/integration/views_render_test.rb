@@ -44,7 +44,7 @@ class ViewsRenderTest < ActionDispatch::IntegrationTest
 
   test "a form with errors shows the dark summary and the inline error" do
     sign_in users(:alice)
-    post household_invitations_path(@household), params: { invitation: { email: "pas-un-email" } }
+    post household_invitations_path(@household), params: { invitation: { first_name: "Karim", email: "pas-un-email" } }
 
     assert_response :unprocessable_entity
     assert_select "input[aria-invalid=true]"

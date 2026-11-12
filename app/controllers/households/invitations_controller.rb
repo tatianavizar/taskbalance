@@ -12,13 +12,14 @@ class Households::InvitationsController < ApplicationController
 
   # B3
   def new
-    @invitation = Invitation.new(email: params[:email])
+    @invitation = Invitation.new(email: params[:email], first_name: params[:first_name])
   end
 
   # Every answer is the same whether or not the address has an account: the
   # invitation always goes through the invitee's consent (backlog 3.1).
   def create
-    @invitation = Invitation.invite(household: @household, email: params.dig(:invitation, :email), inviter: current_user)
+    @invitation = Invitation.invite(household: @household, email: params.dig(:invitation, :email),
+                                    first_name: params.dig(:invitation, :first_name), inviter: current_user)
     if @invitation.persisted?
       redirect_to household_invitation_path(@household, @invitation), notice: t("invitations.flash.sent")
     else

@@ -76,7 +76,7 @@ class HouseholdsControllerTest < ActionDispatch::IntegrationTest
   test "someone cannot invite into a household that is not theirs" do
     sign_in users(:carol)
     assert_no_difference "Invitation.count" do
-      post household_invitations_path(households(:smith_home)), params: { invitation: { email: "x@test.com" } }
+      post household_invitations_path(households(:smith_home)), params: { invitation: { first_name: "Karim", email: "x@test.com" } }
     end
     assert_response :not_found
   end

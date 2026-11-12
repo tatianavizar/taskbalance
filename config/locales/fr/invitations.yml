@@ -3,6 +3,7 @@ fr:
     invite:
       someone: "Une personne du foyer"
       subject: "%{inviter} vous invite à rejoindre %{household}"
+      greeting: "Bonjour %{name},"
       heading: "%{inviter} vous invite sur 50/50"
       what: "50/50 mesure qui, dans un foyer, planifie les tâches domestiques et qui les exécute. Chaque membre enregistre ses propres tâches ; le foyer voit la répartition réelle, semaine après semaine."
       visibility_html: "En rejoignant %{household}, vous voyez les chiffres du foyer, et %{inviter} voit les vôtres. Votre journal reste à vous."
@@ -25,6 +26,8 @@ fr:
     new:
       title: "Invitez votre partenaire"
       subtitle: "La répartition se mesure à partir de deux membres. Personne n'entre dans le foyer sans avoir accepté."
+      first_name_label: "Prénom de la personne à inviter"
+      first_name_hint: "Il s'affiche dans la répartition jusqu'à son arrivée. Elle pourra le changer en créant son compte."
       email_label: "Email de la personne à inviter"
       email_placeholder: "prenom@exemple.fr"
       preview_label: "Ce que la personne recevra"
@@ -53,7 +56,7 @@ fr:
       resends_used:
         one: "%{count} renvoi sur %{max} utilisé (3 envois au total, le premier compris). %{minutes} min minimum entre deux envois."
         other: "%{count} renvois sur %{max} utilisés (3 envois au total, le premier compris). %{minutes} min minimum entre deux envois."
-      declined_body: "%{email} n'a pas rejoint le foyer. Le foyer reste comme il était, et votre mise en place est conservée."
+      declined_body: "%{name} n'a pas rejoint le foyer. Le foyer reste comme il était, et votre mise en place est conservée."
       footnote:
         pending: "Tant que personne n'a rejoint, les chiffres du foyer ne montrent que les vôtres, et le rappellent."
         declined: "La personne ne voit plus rien du foyer. Une nouvelle invitation reste possible, dans la limite de %{max} renvois par adresse."

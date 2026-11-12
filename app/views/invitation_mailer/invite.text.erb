@@ -1,4 +1,6 @@
-<%= t("invitation_mailer.invite.heading", inviter: @inviter_name) %>
+<% if @invitation.first_name.present? %><%= t("invitation_mailer.invite.greeting", name: @invitation.first_name) %>
+
+<% end %><%= t("invitation_mailer.invite.heading", inviter: @inviter_name) %>
 
 <%= t("invitation_mailer.invite.what") %>
 

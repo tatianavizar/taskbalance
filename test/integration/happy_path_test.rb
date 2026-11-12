@@ -30,7 +30,7 @@ class HappyPathTest < ActionDispatch::IntegrationTest
 
     # --- Set-up step 2: the partner (B3) ------------------------------------------
     assert_emails 1 do
-      post household_invitations_path(household), params: { invitation: { email: "karim@exemple.fr" } }
+      post household_invitations_path(household), params: { invitation: { first_name: "Karim", email: "karim@exemple.fr" } }
     end
     invitation = household.invitations.find_by!(email: "karim@exemple.fr")
     assert_predicate invitation, :pending?
@@ -52,13 +52,14 @@ class HappyPathTest < ActionDispatch::IntegrationTest
     get household_split_path(household, mode: "now")
     assert_response :success
     assert_select "input.assign-input[value=?]", "invitation:#{invitation.id}"
+    assert_text "Provisoire : elle sera recalculée quand Karim aura rejoint"
     assignments = household.chores.active.to_h { |c| [ c.id, c.assignee_keys ] }
     patch household_split_path(household), params: { commit_action: "validate", assignments: assignments }
     assert_redirected_to dashboard_path
     assert household.reload.setup_done?
     plan = household.starting_plan
     assert plan.proposed? && plan.provisional?, "D15: Karim counts in the starting split"
-    assert_equal "Répartition enregistrée. En attente de karim.", flash[:notice]
+    assert_equal "Répartition enregistrée. En attente de Karim.", flash[:notice]
     delete destroy_user_session_path
 
     # --- Karim opens the link and signs up: straight to his preferences (B10) ------

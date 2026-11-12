@@ -8,7 +8,7 @@ class InviteeSetupTest < ActionDispatch::IntegrationTest
     @dana = users(:dana)
     @dana.confirm
     @household = Household.create_for(@dana, name: "Chez Dana")
-    @invitation = Invitation.invite(household: @household, email: "karim@example.com", inviter: @dana)
+    @invitation = Invitation.invite(household: @household, email: "karim@example.com", inviter: @dana, first_name: "Karim")
     @karim = User.create!(email: "karim@example.com", first_name: "Karim", password: "secret123", confirmed_at: Time.current)
     @chore = @household.chores.create!(task: tasks(:cook_meal), assignee_user_ids: [ @dana.id ])
   end

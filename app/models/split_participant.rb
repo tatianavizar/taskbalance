@@ -15,10 +15,9 @@ SplitParticipant = Data.define(:key, :user_id, :invitation_id, :first_name, :mon
         provisional: false)
   end
 
-  # An invitation carries only an email until lot 3 adds the invitee's
-  # account (invitations.invitee_id): the local part stands in for a name.
+  # The first name given on B3, the account's once the person signed up.
   def self.for_invitation(invitation, color:, user: nil)
-    name = user&.first_name.presence || invitation.email.to_s.split("@").first.to_s
+    name = user&.first_name.presence || invitation.display_name
     new(key: "invitation:#{invitation.id}", user_id: user&.id, invitation_id: invitation.id,
         first_name: name, monogram: name.first.to_s.upcase, color: color, provisional: true)
   end
