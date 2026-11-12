@@ -108,15 +108,29 @@ class HappyPathTest < ActionDispatch::IntegrationTest
 
     # --- Both log the task during the week, through the completion form ----------
     travel_to(monday + 1.day)
-    post chore_completion_path(chore), params: { chore_log: { mental_load: "1", execution_load: "1", time_spent: "30" } }
-    assert_redirected_to chores_path
+    get new_chore_log_path(chore_id: chore.id)
+    assert_response :success
+    post chore_logs_path, params: { log_entry: { chore_id: chore.id, mental_load: "1", execution_load: "1",
+                                                 time_spent: "30", idempotency_key: SecureRandom.uuid } }
+    assert_redirected_to dashboard_path
+    follow_redirect!
+    assert_text "Karim"
     delete destroy_user_session_path
 
     sign_in virginie
     travel_to(monday + 2.days)
-    post chore_completion_path(chore), params: { chore_log: { mental_load: "1", execution_load: "1", time_spent: "25" } }
-    assert_redirected_to chores_path
+    post chore_logs_path, params: { log_entry: { chore_id: chore.id, mental_load: "1", execution_load: "1",
+                                                 time_spent: "25", idempotency_key: SecureRandom.uuid } }
+    assert_redirected_to dashboard_path
     assert_equal 2, ChoreLog.where(chore: chore).count
+
+    # The home reads the same figures as WeeklyStats: 50 % each, in the zone.
+    get dashboard_path
+    assert_response :success
+    live = WeeklyStats.new(household.reload, household.current_week)
+    assert_equal [ 50, 50 ], live.members.map(&:mental_share)
+    assert_select "section.card b", text: "50 %", count: 4 # two dimensions, two people
+    assert_text "ne compte pas pour le niveau"
 
     stats = WeeklyStats.new(household.reload, household.current_week)
     assert_equal :neutral, stats.outcome, "Karim's arrival week is neutral"

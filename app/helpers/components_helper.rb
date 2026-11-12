@@ -56,19 +56,24 @@ module ComponentsHelper
   end
 
   # Balance d'une charge.
-  #   share      : part de la personne qui regarde, en %
+  #   share      : part de la personne qui regarde, en % (nil : rien de mesuré)
   #   others     : [{ name:, share: }] les autres membres
   #   fair       : repère de la part juste (par défaut 100 / nombre de membres)
   #   balanced   : semaine équilibrée -> la part passe en vert foncé
   def balance(title:, count:, name:, share:, others:, balanced: false, fair: nil, aria: nil)
     members = others.size + 1
     fair ||= (100.0 / members).round
-    aria ||= t("components.balance.aria", title: title, you: name, share: share,
-               others: others.map { |o| "#{o[:name]} #{o[:share]} %" }.to_sentence, fair: fair)
+    aria ||= if share.nil?
+      t("components.balance.aria_empty", title: title, fair: fair)
+    else
+      t("components.balance.aria", title: title, you: name, share: share,
+        others: others.map { |o| "#{o[:name]} #{o[:share]} %" }.to_sentence, fair: fair)
+    end
     render "components/balance", title: title, count: count, name: name, share: share,
            others: others, balanced: balanced, fair: fair, aria: aria
   end
 
+  # `total` nil : niveau ultime, il n'y a plus de niveau suivant.
   def level_progress(level:, done:, total:, href: nil)
     render "components/level_progress", level: level, done: done, total: total, href: href
   end

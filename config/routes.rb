@@ -65,10 +65,21 @@ Rails.application.routes.draw do
 
   resources :tasks, only: [ :index ]
 
-  resources :chores, only: [ :index, :new, :create, :edit, :update, :destroy ] do
+  # D3 (liste de la semaine), D5 (détail), C5/C6/M1 (ajout et modification), C7.
+  resources :chores, only: [ :index, :show, :new, :create, :edit, :update, :destroy ] do
     # C7 : confirmation avant de supprimer une tâche perso
     get :delete, on: :member
-    resource :completion, only: [ :new, :create ], controller: "chores/completions"
+  end
+
+  # « Fait » en un geste sur une occurrence de la liste (D3).
+  resources :chore_occurrences, path: "occurrences", only: [] do
+    post :complete, on: :member
+  end
+
+  # Enregistrer une tâche (D6, D7, D10), mon journal (E6), corriger (E12) et
+  # supprimer (E16) un enregistrement. Seule son autrice ou son auteur le peut.
+  resources :chore_logs, path: "journal", only: [ :index, :new, :create, :edit, :update, :destroy ] do
+    get :delete, on: :member
   end
 
   # Invitation, côté personne invitée (B7 à B9, B12). Le jeton fait office d'identifiant.

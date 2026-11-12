@@ -1,12 +1,29 @@
 class ChoresController < ApplicationController
   # Where to go back after adding a task: the screen it was added from.
   RETURN_TO = %w[catalogue split].freeze
+  RECENT_LOGS = 5
 
   before_action :authenticate_user!
-  before_action :set_chore, only: [ :edit, :update, :delete, :destroy ]
+  before_action :set_chore, only: [ :show, :edit, :update, :delete, :destroy ]
 
+  # D3, D4: the week's tasks, late, today and later. The scheduler is also
+  # run here, a safety net should the job have missed the week.
   def index
-    @chores = current_user.chores.active.includes(:task, :household).order("households.name")
+    @household = current_user.household
+    return redirect_to(dashboard_path) unless @household
+
+    RecurringChoreScheduler.sync_household(@household)
+    @board = TaskBoard.new(user: current_user, scope: params[:scope], category: params[:category])
+  end
+
+  # D5: one task of the household and what has been logged on it.
+  def show
+    @logs = @chore.chore_logs.includes(:user).order(completed_at: :desc, id: :desc)
+    @recent_logs = @logs.limit(RECENT_LOGS)
+    @log_counts = @chore.log_counts_by_member
+    @first_logged_on = @logs.last&.completed_on
+    @participants = @household.split_participants.select { |p| @chore.assignee_keys.include?(p.key) }
+    @open_occurrence = open_occurrence_for_user
   end
 
   # C5: a custom task. Any member can add one (decision D14).
@@ -74,6 +91,15 @@ class ChoresController < ApplicationController
   end
 
 private
+
+  # The occurrence of this week the person has still to do, if any: what
+  # « Enregistrer » on D5 ticks off.
+  def open_occurrence_for_user
+    return unless @chore.active? && @chore.assigned_to?(current_user)
+
+    ChoreOccurrence.in_week(@household.current_week).where(chore_id: @chore.id).includes(:chore_logs)
+      .order(:due_on, :slot).find { |occurrence| !occurrence.done_by?(current_user.id) }
+  end
 
   def set_chore
     @chore = current_user.chores.find(params[:id])

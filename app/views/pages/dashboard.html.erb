@@ -1,17 +1,87 @@
+<%# D1, D2, D8, D12 : l'accueil, sur les vraies données de la semaine en cours (WeeklyStats). %>
 <% if current_household %>
+  <% home = @home %>
+  <% stats = home.stats %>
+  <% week = home.week %>
   <% provide :title, t("nav.home") %>
-  <h1 class="screen-title"><%= t("nav.home") %></h1>
+  <%# Une saisie, une correction ou une suppression rafraîchit l'accueil de tous les membres. %>
+  <%= turbo_stream_from Household.home_stream(current_household) %>
+  <%= turbo_refreshes_with method: :morph, scroll: :preserve %>
 
-  <%= render "households/setup_card", household: current_household %>
-  <%# Emplacement D11 (lot 6) : la répartition de la semaine. %>
-  <%= render "households/splits/home_card", household: current_household %>
-
-  <div class="list-stack">
-    <%= list_row title: t("nav.tasks"), subtitle: t("chores.index.count", count: @chores.size), href: chores_path %>
-    <%= list_row title: t("nav.household"), subtitle: current_household.name, href: household_path(current_household) %>
+  <div>
+    <h1 class="screen-title"><%= week.label %></h1>
+    <p class="screen-subtitle">
+      <%= week_range_label(week) %> · <%= t("home.updated_at", time: hour_label(Time.current, current_household.zone)) %>
+      <% if home.status %><%= status_pill t("home.status.#{home.status}"), tone: (home.status == :final ? :soft : :outline) %><% end %>
+    </p>
+    <% if home.status %><p class="screen-subtitle mt-1"><%= t("home.status_note.#{home.status}") %></p><% end %>
   </div>
 
-  <%= button_to t("nav.log_out"), destroy_user_session_path, method: :delete, class: "btn btn-secondary" %>
+  <%= render "households/setup_card", household: current_household %>
+
+  <%# D12 : arrivée en cours de semaine. %>
+  <% if home.viewer_arrived? %>
+    <%= callout do %>
+      <p class="m-0 text-sm leading-5"><%= t("home.arrival.viewer", week: week.number, next_week: home.first_counting_week.number,
+            date: l(home.first_counting_week.next.monday, format: :day_month)) %></p>
+    <% end %>
+    <% planned = home.planned_for_viewer %>
+    <% if planned %>
+      <%= card href: chores_path(scope: :mine), class: "flex items-center justify-between min-h-[44px]" do %>
+        <span><b><%= t("home.arrival.your_tasks") %></b><br><span class="text-[13px] text-muted"><%= t("home.arrival.planned", count: planned) %></span></span>
+        <span aria-hidden="true">›</span>
+      <% end %>
+    <% end %>
+  <% elsif home.arrived_members.any? %>
+    <%= callout do %>
+      <p class="m-0 text-sm leading-5"><%= t("home.arrival.others", names: home.arrived_members.map(&:first_name).to_sentence, week: week.number) %></p>
+    <% end %>
+  <% end %>
+
+  <% if home.empty? %>
+    <div class="callout">
+      <div class="font-display text-lg font-semibold leading-6"><%= t("home.empty.title") %></div>
+      <p class="mt-1.5 mb-0 text-sm leading-5"><%= t("home.empty.body", date: l(week.sunday, format: :day_month)) %></p>
+    </div>
+  <% elsif (headline = home.headline) && !home.viewer_arrived? %>
+    <div class="callout" id="home-headline">
+      <% if headline.kind == :balanced %>
+        <div class="font-display text-xl font-semibold leading-[26px]"><%= t("home.headline.balanced") %></div>
+        <p class="mt-1.5 mb-0 text-sm leading-5"><%= t("home.headline.balanced_body", min: headline.zone.begin, max: headline.zone.end) %></p>
+      <% else %>
+        <div class="font-display text-xl font-semibold leading-[26px] tabular"><%= t("home.headline.#{headline.kind}.#{headline.dimension}", name: headline.member.first_name, share: headline.share) %></div>
+        <p class="mt-1.5 mb-0 text-sm leading-5">
+          <%= t("home.headline.#{headline.kind}_body", bound: (headline.kind == :above ? headline.zone.end : headline.zone.begin)) %>
+          <%= link_to t("home.how"), intro_path(1), class: "font-bold" %>
+        </p>
+      <% end %>
+    </div>
+    <% if stats.neutral_reason.in?(%i[no_mental_logs no_execution_logs too_few_active_members]) %>
+      <p class="m-0 text-[13px] leading-[18px] text-muted"><%= t("home.neutral.#{stats.neutral_reason}") %></p>
+    <% end %>
+  <% elsif stats.neutral_reason == :too_few_active_members %>
+    <p class="m-0 text-[13px] leading-[18px] text-muted"><%= t("home.neutral.too_few_active_members") %></p>
+  <% end %>
+
+  <% me = home.viewer_member %>
+  <% if me&.paused %>
+    <%= callout do %><p class="m-0 text-sm"><%= t("home.paused") %></p><% end %>
+  <% end %>
+  <% %i[mental execution].each do |dimension| %>
+    <% b = home.balance(dimension) %>
+    <%= balance title: t("home.dimension.#{dimension}"),
+          count: (b.total.zero? ? t("home.count_none") : t("home.count", count: b.count.to_i, total: b.total)),
+          name: current_user.first_name, share: b.share, others: b.others, balanced: b.in_zone, fair: b.fair %>
+  <% end %>
+
+  <%= level_progress level: home.level, done: home.balanced_weeks, total: home.next_threshold, href: report_path %>
+
+  <%# D11 : la répartition de la semaine (lot 6). %>
+  <%= render "households/splits/home_card", household: current_household %>
+
+  <%= sticky_cta do %>
+    <%= link_to t("home.log"), new_chore_log_path, class: "btn btn-primary" %>
+  <% end %>
 <% else %>
   <%= render "pages/no_household" %>
 <% end %>

@@ -3,3 +3,7 @@
 <%= callout do %>
   <p class="m-0"><%= t("reports.show.empty") %></p>
 <% end %>
+
+<div class="list-stack">
+  <%= list_row title: t("chore_logs.index.title"), subtitle: t("chore_logs.index.link_hint"), href: chore_logs_path %>
+</div>

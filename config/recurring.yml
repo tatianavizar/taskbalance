@@ -12,3 +12,9 @@ production:
     class: WeeklyEngineJob
     queue: default
     schedule: every 15 minutes
+  # Writes each household's occurrences for the week that has begun in its own
+  # time zone (lot 4). Idempotent; a chore also schedules itself when saved.
+  recurring_chore_scheduler:
+    class: RecurringChoreSchedulerJob
+    queue: default
+    schedule: every 15 minutes

@@ -1,9 +1,16 @@
 fr:
   components:
     balance:
+      out_of_zone: "hors zone"
+      aria_empty: "%{title} : rien n'est encore mesuré. Repère de la part juste : %{fair} %."
       aria: "%{title} : %{you} %{share} %, %{others}. Repère de la part juste : %{fair} %."
     level_progress:
       level: "Niveau %{level}"
+      ultimate: "Niveau ultime"
+      ultimate_summary:
+        zero: "0 semaine équilibrée"
+        one: "%{count} semaine équilibrée"
+        other: "%{count} semaines équilibrées"
       summary:
         zero: "0 semaine équilibrée sur %{total} pour le niveau %{next_level}"
         one: "%{count} semaine équilibrée sur %{total} pour le niveau %{next_level}"

@@ -1,0 +1,75 @@
+fr:
+  week:
+    today: "Aujourd'hui"
+    yesterday: "Hier"
+    minutes: "%{count} min"
+    min_unit: "min"
+    off_split: "hors répartition"
+    loads:
+      mental: "Mentale"
+      execution: "Exécution"
+      both: "Mentale et exécution"
+    repeat:
+      daily: "Chaque jour"
+      daily_times: "%{count} fois par jour"
+      weekly: "Chaque semaine"
+      weekly_times: "%{count} fois par semaine"
+      monthly: "Chaque mois"
+      annually: "Chaque année"
+      once: "Une seule fois"
+  home:
+    updated_at: "mis à jour à %{time}"
+    log: "Enregistrer une tâche"
+    how: "Comment on calcule ?"
+    paused: "Vous êtes en pause cette semaine : vos enregistrements restent dans votre journal, hors du bilan."
+    dimension:
+      mental: "Charge mentale"
+      execution: "Exécution"
+    count:
+      one: "%{count} tâche sur %{total}"
+      other: "%{count} tâches sur %{total}"
+    count_none: "0 tâche enregistrée"
+    status:
+      provisional: "Provisoire"
+      final: "Définitif"
+    status_note:
+      provisional: "Bilan provisoire : ce que vous enregistrez jusqu'à lundi 3:00 compte encore."
+      final: "Bilan définitif : il ne change plus."
+    empty:
+      title: "Rien n'est encore mesuré."
+      body: "Enregistrez une tâche dès qu'elle est faite. Le premier bilan arrive dimanche %{date} au soir."
+    headline:
+      balanced: "La semaine est équilibrée pour l'instant."
+      balanced_body: "La charge mentale et l'exécution sont dans la zone de %{min} à %{max} %."
+      above:
+        mental: "%{name} porte %{share} % de la charge mentale."
+        execution: "%{name} porte %{share} % de l'exécution."
+      below:
+        mental: "%{name} ne porte que %{share} % de la charge mentale."
+        execution: "%{name} ne porte que %{share} % de l'exécution."
+      above_body: "Au-dessus de %{bound} % : pour l'instant, la semaine n'est pas équilibrée."
+      below_body: "Sous %{bound} % : pour l'instant, la semaine n'est pas équilibrée."
+    neutral:
+      no_mental_logs: "Sans charge mentale enregistrée, la semaine ne compte pas pour le niveau."
+      no_execution_logs: "Sans exécution enregistrée, la semaine ne compte pas pour le niveau."
+      too_few_active_members: "Il faut au moins deux membres actifs pour qu'une semaine compte."
+    arrival:
+      viewer: "Votre arrivée a eu lieu en cours de semaine : la semaine %{week} ne compte pas pour le niveau. La semaine %{next_week} sera la première à compter, close le lundi %{date}. Vous pouvez déjà enregistrer."
+      others: "L'arrivée de %{names} a eu lieu en cours de semaine : la semaine %{week} ne compte pas pour le niveau."
+      your_tasks: "Vos tâches cette semaine"
+      planned:
+        one: "%{count} sur la répartition validée"
+        other: "%{count} sur la répartition validée"
+  log_entries:
+    errors:
+      no_household: "Il faut un foyer pour enregistrer une tâche."
+      unknown_chore: "Cette tâche n'est pas dans votre foyer."
+      name_blank: "Indiquez quelle tâche vous avez faite."
+      name_long: "Le nom est trop long (%{max} caractères au plus)."
+      category_unknown: "Choisissez une catégorie de la liste."
+      no_load: "Cochez au moins une charge. Les deux sont possibles."
+      time_blank: "Indiquez combien de temps ça a pris, même approximativement."
+      time_long: "Une journée au plus (1 440 minutes)."
+      day_future: "Choisissez aujourd'hui ou un jour passé."
+      day_too_old: "Pas plus de %{days} jours en arrière."
+      not_author: "Seule la personne qui l'a enregistré peut le modifier."

@@ -1,0 +1,42 @@
+<%# E6 : mon journal. Mes enregistrements, y compris ceux d'un foyer quitté ou supprimé. %>
+<% provide :title, t("chore_logs.index.title") %>
+<% today = @zone.today %>
+<div>
+  <h1 class="screen-title"><%= t("chore_logs.index.title") %></h1>
+  <p class="screen-subtitle"><%= t("chore_logs.index.subtitle") %></p>
+</div>
+
+<% if @weeks.empty? %>
+  <%= callout do %><p class="m-0"><%= t("chore_logs.index.empty") %></p><% end %>
+<% end %>
+
+<% @weeks.each do |week, logs| %>
+  <div class="bg-mint rounded-[14px] px-3.5 py-2.5 tabular" role="group" aria-label="<%= week.label %>">
+    <div class="flex justify-between gap-3"><span><%= week.label %></span><b><%= t("chore_logs.index.week_total", count: logs.size, time: minutes_label(logs.sum(&:time_spent))) %></b></div>
+    <div class="text-[13px] mt-0.5"><%= week_range_label(week) %></div>
+  </div>
+
+  <% logs.group_by { |log| log.completed_at.in_time_zone(@zone).to_date }.each do |day, day_logs| %>
+    <h2 class="section-label font-sans"><%= day == today ? t("chore_logs.index.today_prefix", day: l(day, format: "%a %-d %b")) : day_label(day) %></h2>
+    <div class="card px-3.5 py-0 tabular">
+      <% day_logs.each do |log| %>
+        <div class="task-row">
+          <span class="flex-1 min-w-0">
+            <b class="font-semibold"><%= log.chore_name %></b><br>
+            <span class="text-[13px] leading-[18px] text-muted">
+              <%= loads_label(log.mental_load, log.execution_load) %> · <%= minutes_label(log.time_spent) %> · <%= hour_label(log.completed_at, @zone) %>
+              <% if log.off_split? %> · <%= t("week.off_split") %><% end %>
+              <% if log.household_id.nil? %> · <%= t("chore_logs.index.detached") %><% end %>
+            </span>
+          </span>
+          <%= link_to edit_chore_log_path(log), "aria-label": t("chore_logs.index.edit_aria", name: log.chore_name),
+                class: "flex items-center justify-center min-w-[44px] min-h-[44px] no-underline text-ink text-xl" do %>⋯<% end %>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+<% end %>
+
+<% if @older %>
+  <%= link_to t("chore_logs.index.older"), chore_logs_path(weeks: @weeks_shown + ChoreLogsController::WEEKS_PER_PAGE), class: "btn btn-secondary" %>
+<% end %>
