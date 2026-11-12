@@ -12,8 +12,8 @@
 #   stats.active_members  # => members who count: present since Monday 00:00
 #                         #    or arrived during the week, and not paused
 #   stats.member_for(user_or_id) # => WeeklyStats::Member or nil
-#   stats.fair_share      # => Integer, (100 / active members).round; nil if none
-#   stats.zone            # => Range, (fair_share - 10)..(fair_share + 10); nil if none
+#   stats.fair_share      # => Integer, HouseholdRules.fair_share(active members); nil if none
+#   stats.zone            # => Range, HouseholdRules.zone(active members); nil if none
 #   stats.mental_total    # => Integer, mental-load logs of the active members
 #   stats.execution_total # => Integer, execution logs of the active members
 #   stats.minutes_total   # => Integer, minutes of the active members (shown, never judged)
@@ -27,8 +27,11 @@
 # WeeklyStats::Member fields:
 #   household_member_id, user_id, first_name, color, monogram,
 #   mental_count, execution_count, minutes, logs_count  (Integers, own logs of the week)
-#   mental_share, execution_share  (Integer percent of the active totals, nil
-#                                   when paused or when that total is 0)
+#   mental_share, execution_share  (Integer percent of the active totals, rounded
+#                                   half up, FOR DISPLAY; nil when paused or
+#                                   when that total is 0)
+#   mental_share_exact, execution_share_exact (Rational percent, unrounded,
+#                                   same nil cases: the value the zone judges)
 #   paused, arrived               (Booleans: arrived = joined after Monday 00:00)
 #   in_zone_mental, in_zone_execution, in_zone (Booleans; false when paused)
 #   active?                       (not paused)
@@ -37,9 +40,10 @@
 # - A log counts in the week of its `completed_at`, read in the household zone.
 # - Only logs carrying this household_id count. A log whose chore was deleted
 #   (chore_id nil) still counts; a custom chore (task_id nil) counts like any other.
-# - Shares are rounded to the integer percent (half up) before being compared
-#   to the zone, so what the screen shows is exactly what is judged:
-#   two members, 40 % and 60 % are in the zone, 39 % and 61 % are not.
+# - The zone check uses the exact share; rounding is for display only. The
+#   fair share itself is rounded (100 / 3 -> 33). Two members: 40.0 % and
+#   60.0 % are in the 40-60 zone; 39.5 % (shown "40 %") and 60.4 % are not.
+# - Every number (zone, fair share) comes from HouseholdRules.
 # - Fair share uses the number of *active* members: a paused member is not
 #   active, so a household of 3 with one person paused judges the other two on 50 %.
 #   Logs of a paused member are shown on their line but left out of the shares.
@@ -49,30 +53,33 @@
 #   too_few_active_members (fewer than 2), member_arrived (someone joined after
 #   Monday 00:00: the arrival week counts for nobody), no_mental_logs, no_execution_logs.
 class WeeklyStats
-  ZONE_MARGIN = 10
   NEUTRAL_REASONS = %i[too_few_active_members member_arrived no_mental_logs no_execution_logs].freeze
 
   Member = Data.define(
     :household_member_id, :user_id, :first_name, :color, :monogram,
     :mental_count, :execution_count, :minutes, :logs_count,
-    :mental_share, :execution_share, :paused, :arrived,
+    :mental_share, :execution_share, :mental_share_exact, :execution_share_exact,
+    :paused, :arrived,
     :in_zone_mental, :in_zone_execution
   ) do
     def in_zone = in_zone_mental && in_zone_execution
     def active? = !paused
     def empty? = logs_count.zero?
 
+    # Exact shares are stored as floats (JSON has no rationals).
     def to_snapshot
-      to_h.merge(in_zone: in_zone).stringify_keys
+      to_h.merge(
+        mental_share_exact: mental_share_exact&.to_f,
+        execution_share_exact: execution_share_exact&.to_f,
+        in_zone: in_zone
+      ).stringify_keys
     end
   end
 
   attr_reader :household, :week
 
   def self.fair_share_for(count)
-    return nil if count.to_i <= 0
-
-    (100r / count).round
+    HouseholdRules.fair_share(count)
   end
 
   def initialize(household, week = household.current_week)
@@ -98,7 +105,7 @@ class WeeklyStats
   end
 
   def zone
-    fair_share && ((fair_share - ZONE_MARGIN)..(fair_share + ZONE_MARGIN))
+    HouseholdRules.zone(active_memberships.size)
   end
 
   def mental_total = active_members.sum(&:mental_count)
@@ -208,13 +215,13 @@ class WeeklyStats
       totals[0] += mental
       totals[1] += execution
     end
-    fair = fair_share
+    zone = self.zone
 
     memberships.map do |membership|
       mental, execution, minutes, logs = counts_by_user.fetch(membership.user_id, [ 0, 0, 0, 0 ])
       paused = paused_membership_ids.include?(membership.id)
-      mental_share = paused ? nil : percent(mental, totals[0])
-      execution_share = paused ? nil : percent(execution, totals[1])
+      mental_exact = paused ? nil : exact_percent(mental, totals[0])
+      execution_exact = paused ? nil : exact_percent(execution, totals[1])
 
       Member.new(
         household_member_id: membership.id,
@@ -226,25 +233,28 @@ class WeeklyStats
         execution_count: execution,
         minutes: minutes,
         logs_count: logs,
-        mental_share: mental_share,
-        execution_share: execution_share,
+        mental_share: mental_exact&.round,
+        execution_share: execution_exact&.round,
+        mental_share_exact: mental_exact,
+        execution_share_exact: execution_exact,
         paused: paused,
         arrived: membership.created_at > week.start_at,
-        in_zone_mental: in_zone?(mental_share, fair),
-        in_zone_execution: in_zone?(execution_share, fair)
+        in_zone_mental: in_zone?(mental_exact, zone),
+        in_zone_execution: in_zone?(execution_exact, zone)
       )
     end
   end
 
-  def percent(count, total)
+  # Rational percent, never rounded: the zone judges this value.
+  def exact_percent(count, total)
     return nil if total.zero?
 
-    (count * 100r / total).round
+    count * 100r / total
   end
 
-  def in_zone?(share, fair)
-    return false if share.nil? || fair.nil?
+  def in_zone?(exact_share, zone)
+    return false if exact_share.nil? || zone.nil?
 
-    (share - fair).abs <= ZONE_MARGIN
+    zone.cover?(exact_share)
   end
 end

@@ -8,8 +8,8 @@ class LevelChange < ApplicationRecord
   enum :reason, {
     reached: "reached",                     # a balanced week crossed a threshold
     regressed: "regressed",                 # 2 empty weeks, no pause by the deadline
-    ultimate_lost: "ultimate_lost",         # ratio over the window fell to 85 % or less (D5)
-    ultimate_regained: "ultimate_regained"  # ratio back above 85 % (D5)
+    ultimate_lost: "ultimate_lost",         # ratio since first reached fell to the keep rate or less
+    ultimate_regained: "ultimate_regained"  # ratio back above the keep rate
   }, validate: true
 
   validates :from_level, :to_level, inclusion: { in: 0..Progression::ULTIMATE }

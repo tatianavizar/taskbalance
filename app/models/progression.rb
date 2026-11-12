@@ -1,12 +1,11 @@
 # Household levels, from cumulative balanced weeks (docs/backend-backlog.md,
-# "Levels"). Level 0 is the start, 1-4 the levels, 5 the ultimate level.
+# "Levels"). Level 0 is the start, 1-4 the levels, the last one the ultimate
+# level. Every number comes from HouseholdRules.
 module Progression
-  ULTIMATE = 5
-  # Total balanced weeks needed for each level.
-  THRESHOLDS = { 1 => 1, 2 => 3, 3 => 6, 4 => 10, ULTIMATE => 15 }.freeze
-
-  ULTIMATE_WINDOW_WEEKS = 52
-  ULTIMATE_MIN_RATIO = 0.85r
+  # Level n needs HouseholdRules::LEVEL_THRESHOLDS[n - 1] balanced weeks.
+  THRESHOLDS = HouseholdRules::LEVEL_THRESHOLDS.each_with_index.to_h { |weeks, i| [ i + 1, weeks ] }.freeze
+  ULTIMATE = HouseholdRules::LEVEL_THRESHOLDS.size
+  ULTIMATE_MIN_RATIO = Rational(HouseholdRules::ULTIMATE_KEEP_RATE, 100)
 
   module_function
 
@@ -25,27 +24,29 @@ module Progression
     [ level - 1, 0 ].max
   end
 
-  # Share of balanced weeks among the final, non-neutral weeks of the window
-  # ending with `week` (52 weeks, or since creation for a younger household).
+  # First Monday of the window that keeps the ultimate level, for a report on
+  # `week`: the week the household first reached the ultimate level
+  # (households.ultimate_reached_on), capped at the last
+  # HouseholdRules::ULTIMATE_WINDOW_WEEKS weeks (`week` included). Losing and
+  # regaining the level does not restart it (product owner, 2026-11-12).
+  def ultimate_window_start(household, week)
+    cap = week.monday - (7 * (HouseholdRules::ULTIMATE_WINDOW_WEEKS - 1))
+    [ household.ultimate_reached_on, cap ].compact.max
+  end
+
+  # Share of balanced weeks among the final, non-neutral weeks of that window.
   # nil when the window holds no such week.
-  #
-  # TODO(D5): the ultimate-level margin over the sliding 52-week window is an
-  # open product decision (docs/plan-de-travail.md, D5). Until it is decided
-  # this is the simplest reading of the backlog: balanced / (balanced +
-  # unbalanced) over the final weeks whose Monday is within the last 52
-  # Mondays, neutral weeks excluded, "more than 85 %" read as strictly > 0.85.
-  # Reaching the ultimate level (the 15th balanced week) is unconditional; the
-  # ratio is checked at every later final report.
   def ultimate_ratio(household, week)
     weeks = household.household_weeks.final.where.not(outcome: "neutral")
-      .where(week_start: (week.monday - (7 * (ULTIMATE_WINDOW_WEEKS - 1)))..week.monday)
+      .where(week_start: ultimate_window_start(household, week)..week.monday)
     total = weeks.count
     return nil if total.zero?
 
     weeks.balanced.count.to_r / total
   end
 
-  # TODO(D5): see ultimate_ratio. An empty window keeps the level.
+  # Kept while the ratio is strictly above HouseholdRules::ULTIMATE_KEEP_RATE %.
+  # An empty window keeps the level.
   def keeps_ultimate?(household, week)
     ratio = ultimate_ratio(household, week)
     ratio.nil? || ratio > ULTIMATE_MIN_RATIO

@@ -180,27 +180,62 @@ class WeeklyEngineTest < ActiveSupport::TestCase
     assert household.active?
   end
 
-  # TODO(D5): these figures follow the provisional reading in Progression.ultimate_ratio.
-  test "ultimate level: lost when the window ratio drops to 85 % or less, regained above 85 %" do
+  # The ultimate window runs from the week the level was first reached,
+  # capped at 52 weeks; neutral weeks excluded; kept while strictly above 85 %.
+  test "ultimate level: lost when the ratio since reaching it drops to 85 % or less, regained above, window not restarted" do
     household, (alice, bob) = couple
-    (0..14).each { |n| log_balanced_week!(household, [ alice, bob ], week(n)) }
-    (15..17).each { |n| unbalanced_week!(household, alice, bob, week(n)) }   # 15/18 = 83 %
-    (18..20).each { |n| log_balanced_week!(household, [ alice, bob ], week(n)) } # 17/20 = 85 %, 18/21 = 86 %
+    (0..19).each { |n| log_balanced_week!(household, [ alice, bob ], week(n)) } # reached at week 14, then 6/6
+    (20..21).each { |n| unbalanced_week!(household, alice, bob, week(n)) }   # 6/7 = 85.7 %, 6/8 = 75 %
+    (22..27).each { |n| log_balanced_week!(household, [ alice, bob ], week(n)) } # ... 11/13 = 84.6 %, 12/14 = 85.7 %
 
-    run_engine(household, final_at(week(16)))
-    assert_equal 5, household.level, "15/17 = 88 % keeps the ultimate level"
+    run_engine(household, final_at(week(14)))
+    assert_equal 5, household.level
+    assert_equal week(14).monday, household.ultimate_reached_on
 
-    run_engine(household, final_at(week(17)))
+    run_engine(household, final_at(week(20)))
+    assert_equal 5, household.level, "6/7 = 85.7 % keeps it"
+
+    run_engine(household, final_at(week(21)))
     assert_equal 4, household.level
     assert household.level_changes.chronological.last.ultimate_lost?
 
-    run_engine(household, final_at(week(19)))
-    assert_equal 4, household.level, "exactly 85 % is not more than 85 %"
+    run_engine(household, final_at(week(26)))
+    assert_equal 4, household.level, "11/13 = 84.6 %"
 
-    run_engine(household, final_at(week(20)))
+    run_engine(household, final_at(week(27)))
     assert_equal 5, household.level
     assert household.level_changes.chronological.last.ultimate_regained?
-    assert_equal 18, household.balanced_weeks_count
+    assert_equal week(14).monday, household.ultimate_reached_on, "a regain does not restart the window"
+    assert_equal 26, household.balanced_weeks_count
+  end
+
+  test "a household that took 40 weeks to reach the ultimate level does not lose it the next week" do
+    household, (alice, bob) = couple
+    # 15 balanced weeks among 40, the 15th on week 39: 25 unbalanced weeks before.
+    balanced = (0..39).select { |n| n % 8 < 3 }.first(14) + [ 39 ]
+    (0..39).each do |n|
+      balanced.include?(n) ? log_balanced_week!(household, [ alice, bob ], week(n)) : unbalanced_week!(household, alice, bob, week(n))
+    end
+    log_balanced_week!(household, [ alice, bob ], week(40))
+
+    run_engine(household, final_at(week(39)))
+    assert_equal [ 5, 15 ], [ household.level, household.balanced_weeks_count ]
+    assert_equal week(39).monday, household.ultimate_reached_on
+
+    run_engine(household, final_at(week(40)))
+    assert_equal 5, household.level, "2/2 since reaching it; the 25 unbalanced weeks before do not count"
+    assert_empty household.level_changes.where(reason: "ultimate_lost")
+  end
+
+  test "regaining the ultimate level by thresholds after a regression keeps the first reach date" do
+    household, = couple
+    household.update_columns(level: 4, balanced_weeks_count: 14, ultimate_reached_on: week(-30).monday)
+    alice, bob = household.users.order(:id).to_a
+    log_balanced_week!(household, [ alice, bob ], week(0))
+
+    run_engine(household, final_at(week(0)))
+    assert_equal 5, household.level
+    assert_equal week(-30).monday, household.ultimate_reached_on
   end
 
   # ---- empty weeks, absence inquiry, regression, block ---------------------

@@ -58,18 +58,56 @@ class WeeklyStatsTest < ActiveSupport::TestCase
     assert s.member_for(alice).in_zone_execution
   end
 
-  test "shares are rounded half up before the zone check (39.5 % shows and counts as 40 %)" do
-    household, (alice, bob) = build_household("Alice", "Bob")
-    # 79 / 200 = 39.5 %
-    rows = [ [ alice, 79 ], [ bob, 121 ] ].flat_map do |user, n|
+  # Bulk logs carrying both dimensions: { user => count }.
+  def bulk_log!(household, counts)
+    rows = counts.flat_map do |user, n|
       Array.new(n) { { user_id: user.id, household_id: household.id, chore_name: "Ménage", mental_load: true, execution_load: true, time_spent: 5, completed_at: @wednesday } }
     end
     ChoreLog.insert_all!(rows)
+  end
+
+  # Two members, fair share 50, zone 40-60. The zone judges the exact share;
+  # the rounded share is for display only.
+  {
+    [ 79, 121 ] => [ 39.5, 60.5, false, false, 40, 61 ],
+    [ 2, 3 ] => [ 40.0, 60.0, true, true, 40, 60 ],
+    [ 302, 198 ] => [ 60.4, 39.6, false, false, 60, 40 ]
+  }.each do |(a, b), (exact_a, exact_b, in_a, in_b, shown_a, shown_b)|
+    test "zone boundary on the exact share: #{exact_a} % and #{exact_b} %" do
+      household, (alice, bob) = build_household("Alice", "Bob")
+      bulk_log!(household, alice => a, bob => b)
+
+      s = stats(household)
+      alice_stats, bob_stats = s.member_for(alice), s.member_for(bob)
+      assert_equal [ exact_a, exact_b ], [ alice_stats.mental_share_exact.to_f, bob_stats.execution_share_exact.to_f ]
+      assert_kind_of Rational, alice_stats.mental_share_exact
+      assert_equal [ shown_a, shown_b ], [ alice_stats.mental_share, bob_stats.mental_share ]
+      assert_equal [ in_a, in_b ], [ alice_stats.in_zone, bob_stats.in_zone ]
+      assert_equal (in_a && in_b), s.balanced?
+    end
+  end
+
+  test "39.5 % is shown as 40 % but is out of the zone, and the snapshot keeps both values" do
+    household, (alice, bob) = build_household("Alice", "Bob")
+    bulk_log!(household, alice => 79, bob => 121)
+
+    member = stats(household).to_snapshot[:members].first
+    assert_equal 40, member["mental_share"]
+    assert_equal 39.5, member["mental_share_exact"]
+    assert_equal 39.5, member["execution_share_exact"]
+    assert_equal false, member["in_zone"]
+  end
+
+  test "with three members the fair share is rounded (33) and the zone judges the exact share" do
+    household, (a, b, c) = build_household("Alice", "Bob", "Chloé")
+    # 43.2 % is out of 23-43 even though it is shown as 43 %.
+    bulk_log!(household, a => 216, b => 142, c => 142)
 
     s = stats(household)
-    assert_equal [ 40, 61 ], s.members.map(&:mental_share)
-    assert s.member_for(alice).in_zone
-    assert_not s.member_for(bob).in_zone
+    assert_equal 33, s.fair_share
+    assert_equal 43, s.member_for(a).mental_share
+    assert_not s.member_for(a).in_zone
+    assert s.member_for(b).in_zone
   end
 
   test "one dimension in the zone and the other out is unbalanced" do

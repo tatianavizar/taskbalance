@@ -233,7 +233,11 @@ class WeeklyEngine
     if to && to != from
       result.level_changes << record_level_change(from, to, count_before, count, reason, week_start: week.monday, household_week: record)
     end
-    household.update!(level: to || from, balanced_weeks_count: count)
+    attrs = { level: to || from, balanced_weeks_count: count }
+    # The ultimate window starts at the first time the level was reached; it
+    # is never moved by a loss, a regain or a regression.
+    attrs[:ultimate_reached_on] = week.monday if to == Progression::ULTIMATE && household.ultimate_reached_on.nil?
+    household.update!(attrs)
   end
 
   def record_level_change(from, to, before, after, reason, **attrs)

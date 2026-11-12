@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_11_10_100400) do
+ActiveRecord::Schema[8.0].define(version: 2026_11_12_100000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -113,6 +113,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_11_10_100400) do
     t.string "state", default: "solo", null: false
     t.integer "silent_weeks_count", default: 0, null: false
     t.datetime "blocked_at"
+    t.date "ultimate_reached_on"
   end
 
   create_table "invitations", force: :cascade do |t|
