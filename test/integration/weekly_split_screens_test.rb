@@ -80,6 +80,45 @@ class WeeklySplitScreensTest < ActionDispatch::IntegrationTest
     assert_includes flash[:alert], "L'écart réel de la semaine sera reporté."
   end
 
+  # ---- the waiver does not survive edits --------------------------------------------
+
+  test "a waiver is dropped when the split is edited: the author no longer carries the surplus" do
+    patch household_split_path(@household), params: { commit_action: "validate", assignments: everything_to(@alice), carry_gap: "0" }
+    assert_not @household.week_plan_for.carry_gap
+
+    sign_in @bob
+    patch household_split_path(@household), params: { commit_action: "validate", assignments: everything_to(@bob) }
+
+    plan = @household.week_plan_for
+    assert plan.carry_gap, "the gap is carried again"
+    assert_nil plan.gap_waived_by
+    assert_not plan.gap_waiver_valid?
+  end
+
+  test "the author edits to a split where they are below the zone and asks again: still refused" do
+    patch household_split_path(@household), params: { commit_action: "validate", assignments: everything_to(@alice), carry_gap: "0" }
+    patch household_split_path(@household), params: { commit_action: "validate", assignments: everything_to(@bob), carry_gap: "0" }
+
+    plan = @household.week_plan_for
+    assert plan.carry_gap
+    assert_nil plan.gap_waived_by
+  end
+
+  test "the author re-waives on an edit that keeps them above the zone: the waiver stands" do
+    patch household_split_path(@household), params: { commit_action: "validate", assignments: everything_to(@alice), carry_gap: "0" }
+    patch household_split_path(@household), params: { commit_action: "validate", assignments: everything_to(@alice), carry_gap: "0" }
+
+    assert_equal @alice, @household.week_plan_for.gap_waived_by
+  end
+
+  test "the approval screen tells the others that the gap is waived, and at whose request" do
+    patch household_split_path(@household), params: { commit_action: "validate", assignments: everything_to(@alice), carry_gap: "0" }
+
+    sign_in @bob
+    get household_split_path(@household)
+    assert_text "L'écart de cette semaine ne sera pas reporté, à la demande de Alice."
+  end
+
   # ---- C9 gap -------------------------------------------------------------------
 
   def carried!(amount)

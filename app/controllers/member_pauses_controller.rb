@@ -44,9 +44,12 @@ class MemberPausesController < ApplicationController
   # « Modifier les dates »: only the end moves, never into the past (a start
   # or a past end would change closed weeks, which only a new declaration can).
   def edit
+    refuse_finished_pause
   end
 
   def update
+    return if refuse_finished_pause
+
     ends_on = pause_params[:ends_on].presence
     @pause.assign_attributes(ends_on: ends_on)
     if @pause.ends_on && @pause.ends_on < @household.today
@@ -66,6 +69,15 @@ class MemberPausesController < ApplicationController
   end
 
   private
+
+  # A finished pause is history: its closed weeks only change through a new
+  # declaration (which runs the retroactive checks and D3).
+  def refuse_finished_pause
+    return false if @pause.editable?(@household.today)
+
+    redirect_to member_pauses_path, alert: t("pauses.refused.finished")
+    true
+  end
 
   def set_household
     @household = current_user.household

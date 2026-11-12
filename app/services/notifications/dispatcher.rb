@@ -25,6 +25,7 @@ module Notifications
   #   level.changed regression_cancelled   absence outcome "cancelled"
   #   absence_inquiry.resolved paused      absence outcome "paused"
   #   member_pause.declared       the dates, to everyone (every pause path)
+  #   member_pause.updated        the new dates of a pause, same message
   # Anything else (provisional week, answers, other level moves) has no
   # message yet and is simply marked delivered. A caught-up week is reported
   # too; the Notifier keeps a week that came due long ago out of inboxes.
@@ -67,6 +68,7 @@ module Notifications
       when "level.changed" then level_change(subject)
       when "absence_inquiry.resolved" then resolved(subject, event.payload["outcome"])
       when "member_pause.declared" then send_event Events::PauseDeclared.new(subject)
+      when "member_pause.updated" then send_event Events::PauseDeclared.new(subject, updated: true)
       end
     end
 

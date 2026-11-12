@@ -114,7 +114,7 @@ class RetroactivePauseTest < ActiveSupport::TestCase
     travel_to(paris(2026, 11, 2, 9)) { assert_not too_late.valid? }
     assert too_late.errors.added?(:starts_on, :too_far_back, days: 14)
 
-    declare(household, bob, by: alice, from: Date.new(2026, 10, 19), to: Date.new(2026, 10, 25), at: paris(2026, 11, 2, 9))
+    declare(household, bob, by: bob, from: Date.new(2026, 10, 19), to: Date.new(2026, 10, 25), at: paris(2026, 11, 2, 9))
     household.reload
     assert_equal [ week(2).monday ], household.week_corrections.map { _1.household_week.week_start }
     assert household.blocked?
