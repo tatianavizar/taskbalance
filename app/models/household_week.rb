@@ -10,8 +10,8 @@
 # first_name, starts_on, ends_on, declared_by_id (the reason is private and
 # never copied here).
 class HouseholdWeek < ApplicationRecord
-  PROVISIONAL_HOUR = 20 # Sunday 20:00
-  FINAL_HOUR = 3        # Monday 03:00, the Monday after the week
+  PROVISIONAL_HOUR = HouseholdRules::REPORT_PROVISIONAL_HOUR # Sunday 20:00
+  FINAL_HOUR = HouseholdRules::REPORT_FINAL_HOUR # Monday 03:00, the Monday after the week
 
   belongs_to :household
   has_many :level_changes, dependent: nil # nullified by the foreign key

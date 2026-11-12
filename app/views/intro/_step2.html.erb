@@ -21,7 +21,7 @@
     <% HouseholdRules::LEVEL_THRESHOLDS.each_with_index do |weeks, i| %>
       <% ultimate = i == HouseholdRules::LEVEL_THRESHOLDS.size - 1 %>
       <div>
-        <div class="level-dot" <%= tag.attributes(style: ("background: var(--color-self); color: #fff; font-size: 15px" if ultimate)) %>><%= ultimate ? t("intro.progress.ultimate_short") : i + 1 %></div>
+        <div class="level-dot" <%= tag.attributes(style: ("background: #fff; color: var(--color-ink); font-size: 15px" if ultimate)) %>><%= ultimate ? t("intro.progress.ultimate_short") : i + 1 %></div>
         <div class="text-xs leading-4 mt-1.5" style="color: #c3d9cc"><%= t("intro.progress.weeks", count: weeks) %></div>
       </div>
     <% end %>

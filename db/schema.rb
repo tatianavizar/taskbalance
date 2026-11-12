@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_11_13_091400) do
+ActiveRecord::Schema[8.0].define(version: 2026_11_13_092000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -226,6 +226,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_11_13_091400) do
     t.bigint "invitee_id"
     t.bigint "inviter_id"
     t.string "first_name"
+    t.string "color"
+    t.string "monogram"
     t.index ["email", "household_id"], name: "index_invitations_pending_on_email_and_household_id", unique: true, where: "((state)::text = 'pending'::text)"
     t.index ["household_id", "email"], name: "index_invitations_on_household_id_and_email"
     t.index ["invitee_id"], name: "index_invitations_on_invitee_id"
@@ -338,7 +340,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_11_13_091400) do
     t.datetime "responded_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["chore_id", "week_start", "from_user_id"], name: "index_task_handovers_live", unique: true, where: "((status)::text = ANY ((ARRAY['pending'::character varying, 'accepted'::character varying])::text[]))"
+    t.index ["chore_id", "week_start", "from_user_id"], name: "index_task_handovers_live", unique: true, where: "((status)::text = ANY (ARRAY[('pending'::character varying)::text, ('accepted'::character varying)::text]))"
     t.index ["chore_id"], name: "index_task_handovers_on_chore_id"
     t.index ["from_user_id"], name: "index_task_handovers_on_from_user_id"
     t.index ["household_id"], name: "index_task_handovers_on_household_id"

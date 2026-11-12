@@ -19,7 +19,7 @@ SplitParticipant = Data.define(:key, :user_id, :invitation_id, :first_name, :mon
   def self.for_invitation(invitation, color:, user: nil)
     name = user&.first_name.presence || invitation.display_name
     new(key: "invitation:#{invitation.id}", user_id: user&.id, invitation_id: invitation.id,
-        first_name: name, monogram: name.first.to_s.upcase, color: color, provisional: true)
+        first_name: name, monogram: invitation.monogram.presence || name.first.to_s.upcase, color: color, provisional: true)
   end
 
   def provisional?

@@ -12,7 +12,7 @@
 # must be a week the member logged nothing. Over final weeks, the engine then
 # records a correction and may cancel a regression (WeeklyEngine, D3).
 class MemberPause < ApplicationRecord
-  RETROACTIVE_DAYS = 14
+  RETROACTIVE_DAYS = HouseholdRules::PAUSE_RETROACTIVE_DAYS
 
   belongs_to :household_member
   belongs_to :declared_by, class_name: "User", optional: true

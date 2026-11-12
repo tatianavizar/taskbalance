@@ -49,6 +49,13 @@ Key relationship: `User → has_many :chores, through: :household` — a user se
 
 **`Week`** (`app/models/week.rb`, not persisted): `Week.containing(time_or_date, time_zone)` gives Monday 00:00 → Sunday 23:59:59 in that zone (`start_at`, `end_at`, `range`, `date_range`), the ISO number (`number`, `label` = "Semaine 41"), `previous`/`next`. `household.current_week` / `week_containing`. Every weekly computation must go through it, never through UTC.
 
+**Lot 10 A (foyer de 3 et plus, règles, accessibilité, légal):**
+- `Balance` (`components_helper#balance`) dessine une barre par membre à partir de 3 (zone en pointillés, repère de la part juste, `aria-label` qui commence par le titre et nomme la zone) ; `splits/_planned_bar` fait pareil. Dès `SplitHelper::SHEET_FROM` (3) personnes, l'assignation passe par `splits/_assign_sheet` + `sheet_controller.js` (`<dialog>`, focus dans la feuille et retour au bouton).
+- `Households::MemberStylesController` (P2) : couleur et lettres ; chez la personne invitée (avant d'avoir rejoint), gardés sur `invitations.color` / `monogram`.
+- I4 : `/regles` (`RulesController`, publique) lit `HouseholdRules` (qui porte aussi `EMPTY_WEEKS_FOR_INQUIRY`, l'échéance de la question d'absence, les heures du bilan et les 14 jours de pause rétroactive : `AbsenceInquiry`, `HouseholdWeek`, `MemberPause` et `WeeklyEngine` les reprennent).
+- Légal : `/cgu` et `/confidentialite` (`LegalController`, brouillons à valider) ; bandeau cookies `components/_cookie_banner` (`CookieNoticesController`, cookie `cookie_notice_seen`).
+- Accessibilité : `test/integration/accessibility_test.rb` audite le balisage de chaque écran (noms, rôles, ids ARIA, dialogues, `aria-invalid`/`describedby`) ; `test/helpers/contrast_test.rb` calcule les contrastes des tokens du thème Tailwind. Lien d'évitement et `main#main` dans le layout ; `#home-live` (`aria-live="polite"`) enveloppe la phrase de l'accueil rafraîchie par Turbo.
+
 **Mail config:** `config/initializers/00_mail.rb` reads SMTP settings (`SMTP_ADDRESS`, `SMTP_PORT`, `SMTP_USER_NAME`, `SMTP_PASSWORD`, `SMTP_DOMAIN`, ...) from the ENV or `credentials.smtp`; sender from `MAIL_FROM` (default `50/50 <bonjour@cinquante.app>`); links use `APP_HOST`.
 
 **`task_id` is nullable — always account for custom chores.** Any code that does `chores.pluck(:task_id)` or `chores.map(&:task)` gets a `nil` for every custom chore. This has already caused a silent data-loss bug and a 500; scope with `where.not(task_id: nil)` when you mean catalogue chores only.

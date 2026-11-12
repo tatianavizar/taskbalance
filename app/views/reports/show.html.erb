@@ -73,7 +73,7 @@
               count: (total.zero? ? t("home.count_none") : t("home.count", count: subject.count(dimension), total: total)),
               name: subject.first_name, share: report.share(subject, dimension),
               others: others.map { |line| { name: line.first_name, share: report.share(line, dimension), balanced: report.in_zone?(line, dimension) } },
-              balanced: report.in_zone?(subject, dimension), fair: report.fair_share %>
+              balanced: report.in_zone?(subject, dimension), fair: report.fair_share, zone: report.zone %>
       <% end %>
     <% end %>
   <% end %>

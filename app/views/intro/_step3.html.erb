@@ -19,4 +19,5 @@
   </span>
   <span><b class="text-[17px]"><%= t("intro.absence.pause_title") %></b><br><span class="text-sm leading-5"><%= t("intro.absence.pause_body") %></span></span>
 </div>
-<p class="m-0 text-[13px] leading-[18px] text-muted"><%= t("intro.absence.note") %></p>
+<p class="m-0 text-[13px] leading-[18px] text-muted"><%= t("intro.absence.note", quota: HouseholdRules::ULTIMATE_UNBALANCED_QUOTA, window: HouseholdRules::ULTIMATE_WINDOW_WEEKS) %></p>
+<%= link_to t("intro.absence.rules_link"), rules_path, class: "link self-start inline-flex items-center min-h-[44px]" %>

@@ -1,0 +1,44 @@
+<%# P6, C14 : à partir de 3 membres, une tâche s'assigne depuis une feuille à cases à cocher.
+    Le bouton de la ligne montre qui porte la tâche (« Tout le foyer » n'est qu'un libellé, D6) ;
+    chaque case reste un champ du formulaire, donc les parts se recalculent comme avec les pastilles. %>
+<% dom = "assign_sheet_#{item.chore_id}" %>
+<% label = assignees_label(item.assignees, participants).presence || t("split.nobody") %>
+<div data-controller="sheet" data-sheet-everyone-value="<%= t("split.everyone") %>" data-sheet-nobody-value="<%= t("split.nobody") %>"
+     data-sheet-one-value="<%= t("split.sheet.confirm_one") %>" data-sheet-other-value="<%= t("split.sheet.confirm_other") %>"
+     data-sheet-total-value="<%= participants.size %>"
+     data-sheet-aria-value="<%= t("split.sheet.open", name: item.name, assignees: "%s") %>">
+  <button type="button" class="assign-button" aria-haspopup="dialog" aria-controls="<%= dom %>"
+          aria-label="<%= t("split.sheet.open", name: item.name, assignees: label) %>"
+          data-action="sheet#open" data-sheet-target="opener">
+    <span data-sheet-target="label"><%= label %></span>
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg>
+  </button>
+  <dialog id="<%= dom %>" class="sheet-dialog" aria-labelledby="<%= dom %>_title" aria-describedby="<%= dom %>_hint" aria-modal="true"
+          data-sheet-target="dialog" data-action="close->sheet#closed click->sheet#backdrop">
+    <div class="sheet">
+      <span class="sheet-grip" aria-hidden="true"></span>
+      <div>
+        <h2 id="<%= dom %>_title" class="m-0 text-[18px] leading-6 font-bold"><%= t("split.sheet.title", name: item.name) %></h2>
+        <p id="<%= dom %>_hint" class="screen-subtitle m-0 mt-0.5"><%= loads_label(item.mental_load, item.execution_load) %> · <%= t("tasks.index.time_required", count: item.time_required.to_i) %> · <%= frequency_label(item.frequency, item.times_per_period) %>. <%= t("split.sheet.several") %></p>
+      </div>
+      <fieldset class="card m-0 min-w-0 !py-1">
+        <legend class="sr-only"><%= t("split.sheet.legend", name: item.name) %></legend>
+        <%= hidden_field_tag "assignments[#{item.chore_id}][]", "", id: nil %>
+        <% participants.each do |participant| %>
+          <% id = "#{dom}_#{participant.key.tr(':', '_')}" %>
+          <label class="sheet-row" for="<%= id %>">
+            <%= avatar(initials: participant.monogram, color: participant.color, size: 30) %>
+            <span class="flex-1 font-semibold"><%= participant.first_name %></span>
+            <%= check_box_tag "assignments[#{item.chore_id}][]", participant.key, item.assignees.include?(participant.key),
+                  id: id, class: "check-input", data: { sheet_target: "box", name: participant.first_name, action: "change->sheet#update" } %>
+            <span class="check-box"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5 9-10"/></svg></span>
+          </label>
+        <% end %>
+      </fieldset>
+      <p class="m-0 text-[13px] leading-[18px] text-muted"><%= t("split.sheet.note", count: SplitHelper::SHEET_FROM) %></p>
+      <button type="button" class="btn btn-primary" data-action="sheet#close" data-sheet-target="confirm">
+        <%= t("split.sheet.confirm", count: item.assignees.size) %>
+      </button>
+    </div>
+  </dialog>
+</div>

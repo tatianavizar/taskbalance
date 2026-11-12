@@ -10,7 +10,7 @@
 <nav aria-label="<%= t("reports.period_label") %>" class="grid grid-cols-2 gap-1 rounded-xl bg-soft-2 p-1">
   <% [ [ :week, t("reports.tabs.week"), week_href ], [ :history, t("reports.tabs.history"), history_href ] ].each do |key, text, href| %>
     <%= link_to text, href, "aria-current": (active == key ? "page" : nil),
-          class: "min-h-[40px] flex items-center justify-center rounded-[9px] font-semibold text-sm no-underline #{active == key ? "bg-ink text-white" : "text-muted"}" %>
+          class: "min-h-[44px] flex items-center justify-center rounded-[9px] font-semibold text-sm no-underline #{active == key ? "bg-ink text-white" : "text-muted"}" %>
   <% end %>
 </nav>
 
