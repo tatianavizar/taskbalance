@@ -25,7 +25,7 @@ module ApplicationHelper
     when "pages" then action_name == "dashboard" ? :home : nil
     when "chores", "chores/completions", "tasks" then :tasks
     when "reports" then :report
-    when "households", "household_members", "households/chores_setup", "households/liking_sessions" then :household
+    when "households", "households/invitations", "households/chores_setup", "households/liking_sessions" then :household
     end
   end
 

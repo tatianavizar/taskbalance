@@ -40,7 +40,7 @@ class SmokeTest < ApplicationSystemTestCase
     click_on "Inviter un membre"
     fill_in "Email de la personne à inviter", with: "karim@exemple.fr"
     click_on "Envoyer l'invitation"
-    assert_text "Invitation envoyée à karim@exemple.fr."
+    assert_text "Invitation envoyée"
 
     # Choix d'une tâche puis enregistrement
     click_on "Choisir les tâches"

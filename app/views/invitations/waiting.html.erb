@@ -1,0 +1,36 @@
+<%# B12: the invitee has an account and waits for the setup. Lot 2 replaces this screen with B10, B11 and B14 once the manager has finished: until then the same screen stands in. %>
+<% provide :chrome, "none" %>
+<% provide :title, t("invitations.waiting.title", inviter: invitation_inviter_name(@invitation)) %>
+<div class="flex items-center gap-2.5 min-h-[44px]">
+  <%= logo %><span class="font-bold"><%= t("invitations.waiting.welcome", name: current_user.first_name) %></span>
+</div>
+
+<h1 class="screen-title"><%= t("invitations.waiting.title", inviter: invitation_inviter_name(@invitation)) %></h1>
+<p class="m-0"><%= t("invitations.waiting.body") %></p>
+
+<%= card do %>
+  <div class="text-[13px] font-bold mb-1"><%= t("invitations.waiting.setup_of", household: @household.name) %></div>
+  <% steps = [
+       [ t("invitations.waiting.step_household"), true ],
+       [ t("invitations.waiting.step_invitation"), true ],
+       [ t("invitations.waiting.step_tasks"), @setup_ready ],
+       [ t("invitations.waiting.step_split"), false ]
+     ] %>
+  <ul class="list-none m-0 p-0">
+    <% steps.each do |label, done| %>
+      <li class="flex items-center gap-2.5 min-h-[36px] text-sm">
+        <span class="flex-none w-5 h-5 rounded-full box-border <%= done ? "" : "border-2 border-dashed border-muted" %>"
+              style="<%= "background:var(--color-ink)" if done %>" aria-hidden="true"></span>
+        <span><%= label %> <span class="sr-only"><%= done ? t("invitations.waiting.done") : t("invitations.waiting.todo") %></span></span>
+      </li>
+    <% end %>
+  </ul>
+<% end %>
+
+<%= callout do %><%= t("invitations.waiting.notice") %><% end %>
+
+<%= sticky_cta do %>
+  <%= link_to t("invitations.waiting.ok"), dashboard_path, class: "btn btn-primary" %>
+  <%= button_to t("invitations.waiting.decline"), decline_invitation_path(@invitation.token),
+        class: "w-full bg-transparent border-0 font-semibold text-sm min-h-[44px] cursor-pointer", form_class: "contents" %>
+<% end %>
