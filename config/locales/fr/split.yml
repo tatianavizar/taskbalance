@@ -96,6 +96,7 @@ fr:
       saved_outside: "Répartition hors de la zone %{min}–%{max} % : %{shares}. L'écart réel de la semaine sera reporté."
       saved_outside_waived: "Répartition hors de la zone %{min}–%{max} % : %{shares}. L'écart de cette semaine ne sera pas reporté."
       waive: "Valider sans reporter l'écart de cette semaine"
+      waived_notice: "L'écart de cette semaine ne sera pas reporté, à la demande de %{name}."
     gap:
       title: "Écart reporté"
       carried_self: "Vous avez porté %{percent} de plus que votre part."

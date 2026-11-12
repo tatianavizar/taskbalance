@@ -84,7 +84,7 @@ module SplitGap
 
       household.household_weeks.final.where(week_start: start..).order(:week_start).each do |household_week|
         plan = household.week_plans.find_by(week_start: household_week.week_start)
-        if household.gap_carry_over_enabled && (plan.nil? || plan.carry_gap)
+        if household.gap_carry_over_enabled && (plan.nil? || plan.gap_carried?)
           week_gaps(household_week).each do |user_id, gap|
             next if gap.abs < 0.0005
 

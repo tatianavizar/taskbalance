@@ -38,6 +38,10 @@
   <% end %>
 </div>
 
+<% if @plan&.gap_waiver_valid? %>
+  <%= callout do %><p class="m-0 text-sm" role="status"><%= t("split.zone.waived_notice", name: @plan.gap_waived_by.first_name) %></p><% end %>
+<% end %>
+
 <% if @split.items.empty? %>
   <%= callout do %><p class="m-0"><%= t("split.empty") %></p><% end %>
   <%= link_to t("split.tasks_link"), household_chores_setup_path(@household), class: "btn btn-primary" %>
