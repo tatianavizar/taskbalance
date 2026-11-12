@@ -34,7 +34,8 @@ module BackOffice
       "admin.password_reset" => "Mot de passe réinitialisé (console)",
       "admin.two_factor_reset" => "Double authentification réinitialisée (console)",
       "two_factor.enrolment_failed" => "Code d'enrôlement refusé",
-      "user.account_deleted" => "Compte supprimé"
+      "user.account_deleted" => "Compte supprimé",
+      "user.sign_in_unlocked" => "Compte débloqué"
     }.freeze
 
     ROLES = { "manager" => "Gestionnaire", "member" => "Membre" }.freeze
@@ -47,6 +48,17 @@ module BackOffice
     def activity_week(household)
       at = household[:last_activity_at]
       at ? Week.containing(at, household.time_zone).label.downcase : "—"
+    end
+
+    # The sign-in lockout of an account (SignInLockout), for the team only.
+    def sign_in_lock(user)
+      if user.sign_in_hard_locked?
+        "Bloquée depuis le #{I18n.l(user.sign_in_hard_locked_at, format: :long)} (3e blocage : à débloquer ici)"
+      elsif user.sign_in_temporarily_locked?
+        "Bloquée jusqu'au #{I18n.l(user.sign_in_unlocks_at, format: :long)}"
+      else
+        "Ouverte"
+      end
     end
 
     def household_state(state) = HOUSEHOLD_STATES.fetch(state.to_s, [ state.to_s, "pill-soft" ])

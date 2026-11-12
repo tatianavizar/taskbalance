@@ -45,7 +45,7 @@ CREATE TABLE public.absence_answers (
     corrected_at timestamp(6) without time zone,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT absence_answers_answer_values CHECK (((answer)::text = ANY ((ARRAY['yes'::character varying, 'no'::character varying])::text[])))
+    CONSTRAINT absence_answers_answer_values CHECK (((answer)::text = ANY (ARRAY[('yes'::character varying)::text, ('no'::character varying)::text])))
 );
 
 
@@ -343,7 +343,7 @@ CREATE TABLE public.chore_preferences (
     choice character varying NOT NULL,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT chore_preferences_choice CHECK (((choice)::text = ANY ((ARRAY['like'::character varying, 'neutral'::character varying, 'dislike'::character varying])::text[])))
+    CONSTRAINT chore_preferences_choice CHECK (((choice)::text = ANY (ARRAY[('like'::character varying)::text, ('neutral'::character varying)::text, ('dislike'::character varying)::text])))
 );
 
 
@@ -789,7 +789,7 @@ CREATE TABLE public.split_gap_entries (
     amount numeric(8,3) NOT NULL,
     reset_by_id bigint,
     created_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT split_gap_entries_kind CHECK (((kind)::text = ANY ((ARRAY['week'::character varying, 'reset'::character varying])::text[])))
+    CONSTRAINT split_gap_entries_kind CHECK (((kind)::text = ANY (ARRAY[('week'::character varying)::text, ('reset'::character varying)::text])))
 );
 
 
@@ -825,7 +825,7 @@ CREATE TABLE public.split_setting_changes (
     applied_at timestamp(6) without time zone,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT split_setting_changes_status CHECK (((status)::text = ANY ((ARRAY['pending'::character varying, 'applied'::character varying, 'withdrawn'::character varying])::text[])))
+    CONSTRAINT split_setting_changes_status CHECK (((status)::text = ANY (ARRAY[('pending'::character varying)::text, ('applied'::character varying)::text, ('withdrawn'::character varying)::text])))
 );
 
 
@@ -863,7 +863,7 @@ CREATE TABLE public.task_handovers (
     responded_at timestamp(6) without time zone,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT task_handovers_status CHECK (((status)::text = ANY ((ARRAY['pending'::character varying, 'accepted'::character varying, 'refused'::character varying, 'cancelled'::character varying])::text[]))),
+    CONSTRAINT task_handovers_status CHECK (((status)::text = ANY (ARRAY[('pending'::character varying)::text, ('accepted'::character varying)::text, ('refused'::character varying)::text, ('cancelled'::character varying)::text]))),
     CONSTRAINT task_handovers_two_people CHECK ((from_user_id <> to_user_id))
 );
 
@@ -948,7 +948,12 @@ CREATE TABLE public.users (
     confirmed_at timestamp(6) without time zone,
     confirmation_sent_at timestamp(6) without time zone,
     unconfirmed_email character varying,
-    deleted_at timestamp(6) without time zone
+    deleted_at timestamp(6) without time zone,
+    failed_sign_ins_at timestamp(6) without time zone[] DEFAULT '{}'::timestamp without time zone[] NOT NULL,
+    sign_in_locked_at timestamp(6) without time zone,
+    sign_in_lockouts_count integer DEFAULT 0 NOT NULL,
+    sign_in_hard_locked_at timestamp(6) without time zone,
+    email_changes_requested_at timestamp(6) without time zone[] DEFAULT '{}'::timestamp without time zone[] NOT NULL
 );
 
 
@@ -1029,8 +1034,8 @@ CREATE TABLE public.week_plans (
     targets jsonb DEFAULT '{}'::jsonb NOT NULL,
     carry_gap boolean DEFAULT true NOT NULL,
     gap_waived_by_id bigint,
-    CONSTRAINT week_plans_kind CHECK (((kind)::text = ANY ((ARRAY['starting'::character varying, 'weekly'::character varying])::text[]))),
-    CONSTRAINT week_plans_status CHECK (((status)::text = ANY ((ARRAY['awaiting_proposal'::character varying, 'proposed'::character varying, 'validated'::character varying])::text[])))
+    CONSTRAINT week_plans_kind CHECK (((kind)::text = ANY (ARRAY[('starting'::character varying)::text, ('weekly'::character varying)::text]))),
+    CONSTRAINT week_plans_status CHECK (((status)::text = ANY (ARRAY[('awaiting_proposal'::character varying)::text, ('proposed'::character varying)::text, ('validated'::character varying)::text])))
 );
 
 
@@ -1974,7 +1979,7 @@ CREATE UNIQUE INDEX index_split_setting_changes_one_pending ON public.split_sett
 -- Name: index_task_handovers_live; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE UNIQUE INDEX index_task_handovers_live ON public.task_handovers USING btree (chore_id, week_start, from_user_id) WHERE ((status)::text = ANY ((ARRAY['pending'::character varying, 'accepted'::character varying])::text[]));
+CREATE UNIQUE INDEX index_task_handovers_live ON public.task_handovers USING btree (chore_id, week_start, from_user_id) WHERE ((status)::text = ANY (ARRAY[('pending'::character varying)::text, ('accepted'::character varying)::text]));
 
 
 --
@@ -2557,6 +2562,7 @@ ALTER TABLE ONLY public.week_plans
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20261113100000'),
 ('20261113092400'),
 ('20261113092300'),
 ('20261113092200'),

@@ -70,6 +70,7 @@ fr:
         hint: "Un lien de confirmation part à la nouvelle adresse. L'adresse actuelle reste active tant que la nouvelle n'est pas confirmée."
         new_email: "Nouvel email"
         submit: "Envoyer le lien de confirmation"
+        limit_reached: "L'email de ce compte a déjà été changé %{max} fois en 24 heures. Prochain changement possible le %{day} à %{hour}."
       edit_password:
         title: "Changer de mot de passe"
         hint: "Les autres appareils seront déconnectés."

@@ -1,17 +1,16 @@
 class Users::SessionsController < Devise::SessionsController
-  # Password guessing: attempts are counted per connection and per address,
-  # whether the account exists or not and whether the password is right or
-  # not. Over the limit, the answer is the failed sign-in screen itself: an
-  # attacker cannot tell a throttled attempt from a wrong password, nor a known
-  # address from an unknown one.
+  # Password guessing, two defences (decision of 2026-11-13):
+  #   - per connection: 30 attempts per 15 minutes, whatever the address and
+  #     whether the password is right or not;
+  #   - per account: the lockout of SignInLockout (4 wrong passwords in 2 h
+  #     lock it for 2 h, the 3rd lock waits for the team).
+  # Either way the answer is the failed sign-in screen itself: an attacker
+  # cannot tell a throttled attempt or a locked account from a wrong password,
+  # nor a known address from an unknown one (Devise paranoid).
   ATTEMPTS_PER_IP = 30
-  ATTEMPTS_PER_EMAIL = 10
   ATTEMPTS_WITHIN = 15.minutes
 
   rate_limit to: ATTEMPTS_PER_IP, within: ATTEMPTS_WITHIN, only: :create, name: "sign-in-ip",
-             with: -> { render_failed_sign_in }
-  rate_limit to: ATTEMPTS_PER_EMAIL, within: ATTEMPTS_WITHIN, only: :create, name: "sign-in-email",
-             by: -> { params.dig(:user, :email).to_s.strip.downcase },
              with: -> { render_failed_sign_in }
 
   # A5: Devise re-renders the sign-in form with a flash alert after a failed

@@ -21,6 +21,7 @@ class AdminAction < ApplicationRecord
     invitation.resent invitation.cancelled
     household.unblocked
     user.email_confirmed user.email_change_confirmed user.account_deleted
+    user.sign_in_unlocked
   ].freeze
 
   belongs_to :admin_user, optional: true

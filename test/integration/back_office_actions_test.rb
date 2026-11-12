@@ -148,12 +148,87 @@ class BackOfficeActionsTest < ActionDispatch::IntegrationTest
     assert_match(/n'est pas bloqué/, flash[:alert])
   end
 
-  test "the unblock event is not delivered as a notification" do
+  # The block of a regression: Bob's empty weeks, unanswered.
+  def block_for_bob!
+    block!(@household)
+    @household.absence_inquiries.create!(household_member: household_members(:bob_in_smith), first_week_start: Date.new(2026, 10, 19),
+                                         last_week_start: Date.new(2026, 10, 26), deadline_at: @household.blocked_at, status: "regressed")
+  end
+
+  test "only the member behind the block is told, without naming the team" do
+    block_for_bob!
+    assert_enqueued_with(job: NotificationsDispatchJob, args: [ @household.id ]) do
+      post unblock_admin_household_path(@household)
+    end
+    assert_equal [ users(:bob).id ], @household.engine_events.find_by!(name: "household.admin_unblocked").payload["user_ids"]
+
+    Notifications::Dispatcher.deliver_pending(@household)
+    notifications = Notification.where(household: @household, kind: "alert_block_lifted")
+    assert_equal [ users(:bob).id ], notifications.pluck(:user_id)
+
+    message = notifications.first.message
+    assert_equal "La progression du foyer est débloquée", message.title
+    assert_includes message.lines, "Le foyer reste au niveau 2."
+    text = [ message.subject, message.title, *message.lines ].join(" ")
+    assert_no_match(/équipe|admin|support|50\/50/i, text)
+
+    assert_no_difference "Notification.count" do
+      Notifications::Dispatcher.deliver_pending(@household)
+    end
+  end
+
+  test "a block with nobody behind it (no regression found) tells nobody" do
     block!(@household)
     post unblock_admin_household_path(@household)
     assert_no_difference "Notification.count" do
       Notifications::Dispatcher.deliver_pending(@household)
     end
+  end
+
+  # ---- Unlock an account ----------------------------------------------------
+
+  def lock_alice!(hard: false)
+    @alice.update_columns(sign_in_locked_at: 10.minutes.ago, sign_in_lockouts_count: hard ? 3 : 1,
+                          sign_in_hard_locked_at: (10.minutes.ago if hard))
+  end
+
+  test "the user page says the sign-in is locked and offers the unlock" do
+    lock_alice!(hard: true)
+    get admin_user_path(@alice)
+    assert_text "3e blocage"
+    assert_select "a", text: "Débloquer le compte"
+
+    get "/admin/users", params: { scope: "connexion_bloquee" }
+    assert_text "alice@test.com"
+    assert_no_match(/bob@test.com/, response.body)
+  end
+
+  test "the team unlocks a permanently locked account: counters reset, logged" do
+    lock_alice!(hard: true)
+    post unlock_account_admin_user_path(@alice)
+    assert_redirected_to admin_user_path(@alice)
+    assert_match(/Compte débloqué/, flash[:notice])
+
+    @alice.reload
+    assert_not @alice.sign_in_locked?
+    assert_equal 0, @alice.sign_in_lockouts_count
+    assert_equal "user.sign_in_unlocked", last_entry.action
+    assert_equal [ "User", @alice.id ], [ last_entry.record_type, last_entry.record_id ]
+    assert_equal true, last_entry.detail["hard_lock"]
+
+    @alice.update!(password: "password123")
+    delete destroy_admin_user_session_path
+    post user_session_path, params: { user: { email: @alice.email, password: "password123" } }
+    assert_redirected_to dashboard_path
+  end
+
+  test "an account that is not locked is left alone" do
+    assert_no_difference "AdminAction.count" do
+      post unlock_account_admin_user_path(@alice)
+    end
+    assert_match(/n'est pas bloquée/, flash[:alert])
+    get admin_user_path(@alice)
+    assert_select "a", text: "Débloquer le compte", count: 0
   end
 
   # ---- Confirm email --------------------------------------------------------

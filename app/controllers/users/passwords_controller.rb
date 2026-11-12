@@ -23,12 +23,30 @@ class Users::PasswordsController < Devise::PasswordsController
     super
   end
 
+  # Devise's update, except for a locked account (SignInLockout): the new
+  # password is saved, but the reset neither lifts the lock nor opens a
+  # session while it lasts. The person holds the inbox (the link came there),
+  # so the screen may say the account is locked.
   def update
-    super do |user|
+    self.resource = resource_class.reset_password_by_token(resource_params)
+
+    if resource.errors.any?
       # Re-rendered with errors: an expired token shows the "expired link" state
       # again, a valid one keeps the form (and the account email) on screen.
-      inspect_reset_token(params.dig(:user, :reset_password_token)) if user.errors.any?
+      inspect_reset_token(params.dig(:user, :reset_password_token))
+      set_minimum_password_length
+      return respond_with(resource)
     end
+
+    if resource.sign_in_locked?
+      set_flash_message!(:notice, :updated_but_locked)
+      return respond_with(resource, location: new_session_path(resource_name))
+    end
+
+    set_flash_message!(:notice, resource.active_for_authentication? ? :updated : :updated_not_active)
+    resource.after_database_authentication
+    sign_in(resource_name, resource)
+    respond_with resource, location: after_resetting_password_path_for(resource)
   end
 
   # A7: "check your emails". The same screen for a known and an unknown

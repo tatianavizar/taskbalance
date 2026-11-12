@@ -36,6 +36,7 @@ class BackOfficeDataTest < ActionDispatch::IntegrationTest
     assert_empty paths.select { |_, path| path.end_with?("/new", "/edit", "/batch_action") }
     writes = paths.select { |verb, _| %w[POST PUT PATCH DELETE].include?(verb) }.map(&:last)
     allowed = %w[/admin/users/:id/confirm_current_email /admin/users/:id/confirm_pending_email /admin/users/:id/delete_account
+                 /admin/users/:id/unlock_account
                  /admin/households/:id/unblock
                  /admin/invitations/:id/resend /admin/invitations/:id/cancel
                  /admin/login /admin/logout /admin/two_factor /admin]
