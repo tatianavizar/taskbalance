@@ -1,0 +1,9 @@
+<%# E5 : la progression est débloquée. Le message de réussite ne nomme personne. %>
+<div class="callout" id="alert-unblocked">
+  <h2 class="m-0 text-xl leading-[26px] font-semibold"><%= t("alerts.unblocked.title") %></h2>
+  <p class="mt-1.5 mb-0 text-sm leading-5">
+    <%= t("alerts.unblocked.body") %>
+    <% if balanced %><%= t("alerts.unblocked.balanced") %><% end %>
+  </p>
+  <%= link_to t("alerts.unblocked.link"), report_path(semaine: week_start), class: "font-bold inline-flex items-center min-h-[44px]" %>
+</div>

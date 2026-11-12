@@ -17,6 +17,9 @@
     <% if home.status %><p class="screen-subtitle mt-1"><%= t("home.status_note.#{home.status}") %></p><% end %>
   </div>
 
+  <%# E3, E4, E5, E8, E11, E13, E15, D13 : les alertes du foyer. %>
+  <%= render "alerts/cards", alerts: @alerts %>
+
   <%= render "households/setup_card", household: current_household %>
 
   <%# D12 : arrivée en cours de semaine. %>

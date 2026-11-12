@@ -1,0 +1,77 @@
+<%# E2 : les 4 semaines jusqu'à celle choisie. Chaque semaine se lit dans son instantané (la semaine en cours dans WeeklyStats). %>
+<% provide :title, t("reports.show.title") %>
+<% reports = @reports %>
+<% first = reports.first.week %>
+<% last = reports.last.week %>
+<% zone_report = reports.last %>
+<% zone = zone_report.zone %>
+<% plot_height = 160 %>
+<% prev_href = (report_history_path(jusqu_a: @previous_week.monday) if @previous_week) %>
+<% next_href = (report_history_path(jusqu_a: @next_week.monday) if @next_week) %>
+
+<%= render "reports/header", active: :history, week_href: report_path(semaine: last.monday), history_href: report_history_path(jusqu_a: last.monday),
+      prev_href: prev_href, next_href: next_href,
+      label: t("reports.history.range", from: first.number, to: last.number), sub: "#{l(first.monday, format: :short)} – #{l(last.sunday, format: :short)}" %>
+
+<%= render "alerts/cards", alerts: @alerts if @alerts %>
+
+<p class="m-0 text-[13px] leading-[18px] text-muted"><%= t("reports.history.subtitle", name: current_user.first_name) %></p>
+
+<%# Une barre par semaine : la part de la personne qui regarde, dans la charge mentale. %>
+<section class="card" aria-labelledby="history-chart-title" id="history-chart">
+  <b id="history-chart-title" class="text-sm"><%= t("reports.history.chart_title") %></b>
+  <% summary = reports.map { |r| (line = r.line_for(current_user)) && line.mental_share ? "#{r.week.label} : #{line.mental_share} %" : "#{r.week.label} : —" }.to_sentence %>
+  <div class="relative mt-6 mb-1.5 ml-7 tabular" style="height:<%= plot_height %>px" role="img"
+       aria-label="<%= t("reports.history.chart_aria", summary: summary, zone: ("#{zone.begin} à #{zone.end} %" if zone)) %>">
+    <% if zone %>
+      <div class="absolute left-0 right-0" style="bottom:<%= zone.begin * plot_height / 100 %>px;height:<%= (zone.end - zone.begin) * plot_height / 100 %>px;background:var(--color-track)"></div>
+      <% [ 0, zone.begin, zone.end, 100 ].uniq.each do |mark| %>
+        <span class="absolute text-[11px] text-muted" style="left:-28px;bottom:<%= mark * plot_height / 100 - 8 %>px"><%= mark %></span>
+        <div class="absolute left-0 right-0" style="bottom:<%= mark * plot_height / 100 %>px;border-top:<%= mark.zero? ? "2px solid var(--color-ink)" : "1px dashed var(--color-line)" %>"></div>
+      <% end %>
+    <% end %>
+    <div class="absolute inset-0 grid items-end gap-[18px] px-1.5" style="grid-template-columns:repeat(<%= reports.size %>,minmax(0,1fr))">
+      <% reports.each do |report| %>
+        <% line = report.line_for(current_user) %>
+        <% share = line&.mental_share %>
+        <% if share && !report.neutral? %>
+          <div class="relative rounded-t" style="height:<%= share.clamp(0, 100) * plot_height / 100 %>px;background:<%= report.balanced? ? "var(--color-balanced)" : "var(--color-self)" %>">
+            <b class="absolute left-0 right-0 text-center text-[13px]" style="top:-20px"><%= share %> %</b>
+          </div>
+        <% else %>
+          <div class="relative"><b class="absolute left-0 right-0 text-center text-[13px] text-muted" style="bottom:2px">—</b></div>
+        <% end %>
+      <% end %>
+    </div>
+  </div>
+  <div class="grid ml-7 px-1.5 text-xs text-muted text-center" style="grid-template-columns:repeat(<%= reports.size %>,minmax(0,1fr));column-gap:18px">
+    <% reports.each do |report| %><span><%= t("alerts.first_empty.short_week", number: report.week.number) %></span><% end %>
+  </div>
+  <p class="mt-2 mb-0 text-xs leading-4 text-muted"><%= t("reports.history.legend", min: (zone&.begin), max: (zone&.end)) %></p>
+</section>
+
+<%# Le détail, semaine par semaine. Un bilan définitif ne change plus ; un bilan provisoire le peut. %>
+<div class="card tabular" style="padding:6px 14px" id="history-table">
+  <div class="grid items-center text-xs text-muted min-h-[28px]" style="grid-template-columns:44px repeat(3,minmax(0,1fr)) 112px;gap:4px">
+    <span></span><span class="text-right"><%= t("reports.history.mental") %></span><span class="text-right"><%= t("reports.history.execution") %></span><span class="text-right"><%= t("reports.history.time") %></span><span></span>
+  </div>
+  <% reports.reverse_each do |report| %>
+    <% line = report.line_for(current_user) %>
+    <% measured = line && !report.neutral? %>
+    <div class="grid items-center text-sm min-h-[40px] border-t border-divider" style="grid-template-columns:44px repeat(3,minmax(0,1fr)) 112px;gap:4px" id="history-week-<%= report.week.monday.iso8601 %>">
+      <%= link_to t("alerts.first_empty.short_week", number: report.week.number), report_path(semaine: report.week.monday), class: "font-bold no-underline", "aria-label": t("reports.history.open_week", week: report.week.label) %>
+      <% %i[mental execution].each do |dimension| %>
+        <span class="text-right">
+          <% value = line&.share(dimension) %>
+          <% if value.nil? %>—<% elsif measured && !line.in_zone(dimension) %><span class="rounded-md bg-ink text-white px-1.5"><%= value %> %</span><% else %><%= value %> %<% end %>
+        </span>
+      <% end %>
+      <span class="text-right"><%= line && report.minutes_share(line) ? "#{report.minutes_share(line)} %" : "—" %></span>
+      <% label_key = report.corrected? ? "corrected" : report.outcome %>
+      <span class="justify-self-end"><%= status_pill t("reports.outcome_short.#{label_key}"), tone: { "balanced" => :soft, "unbalanced" => :ink, "neutral" => :outline, "corrected" => :outline }.fetch(label_key.to_s) %></span>
+    </div>
+  <% end %>
+</div>
+
+<%= level_progress level: @household.level, done: @household.balanced_weeks_count,
+      total: (@household.ultimate_level? ? nil : Progression.threshold(@household.level + 1)), href: levels_path %>

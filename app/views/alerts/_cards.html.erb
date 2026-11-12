@@ -1,0 +1,5 @@
+<%# Les alertes du foyer (E3, E4, E5, E8, E11, E13, E15, D13), sur l'accueil et dans l'onglet Bilan.
+    Les mêmes faits pour tous les membres (D8) ; seule la formulation change (« vous » ou le prénom). %>
+<% alerts.all.each do |alert| %>
+  <%= render "alerts/#{alert.kind}", **alert.data %>
+<% end %>

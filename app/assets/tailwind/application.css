@@ -116,6 +116,10 @@
   .alert-box { background: var(--color-ink); color: #fff; border-radius: 14px; padding: 12px 14px; font-size: 14px; line-height: 20px; }
   .alert-box a { color: #fff; }
 
+  /* Large ink block for an alert that asks for a decision (E3, E4, E13). */
+  .alert-panel { background: var(--color-ink); color: #fff; border-radius: 20px; padding: 18px; }
+  .alert-panel a { color: var(--color-mint); font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; min-height: 44px; }
+
   .callout { background: var(--color-mint); border-radius: 18px; padding: 16px 18px; }
 
   .card { background: var(--color-surface); border: 1px solid var(--color-line); border-radius: 16px; padding: 12px 16px; }

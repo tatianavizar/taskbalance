@@ -52,6 +52,8 @@
           subtitle: (validation_status(plan) if plan) %>
     <%= list_row title: t("split_settings.title"), href: household_split_settings_path(@household) %>
     <%= list_row title: t("preferences.title"), href: household_preferences_path(@household) %>
+    <%= list_row title: t("pauses.declare_row"), href: new_member_pause_path %>
+    <%= list_row title: t("pauses.index.title"), href: member_pauses_path %>
     <%= list_row title: t("households.show.rename"), href: edit_household_path(@household) %>
     <%= list_row title: t("auth.account.title"), href: account_path %>
   </div>

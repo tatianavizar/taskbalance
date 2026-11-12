@@ -29,9 +29,43 @@ module WeekHelper
     l(date, format: "%A %-d %b").upcase_first
   end
 
+  # 3 -> « 3 », the ultimate level -> « ultime »: « Niveau 3 atteint », « Niveau ultime atteint ».
+  def level_name(level)
+    level == Progression::ULTIMATE ? t("levels.ultimate_word") : level.to_s
+  end
+
   # « 2 nov – 8 nov » for a Week.
   def week_range_label(week)
     "#{l(week.monday, format: :short)} – #{l(week.sunday, format: :short)}"
+  end
+
+  # « mercredi 17 fév à 20:00 », in the household zone.
+  def moment_label(time, zone)
+    local = time.in_time_zone(zone)
+    t("week.moment", day: l(local.to_date, format: "%A %-d %b"), hour: l(local, format: :hour))
+  end
+
+  # « lundi 19 oct à 3:00 »: the closing of a report, hour without a leading zero.
+  def closing_label(time, zone)
+    local = time.in_time_zone(zone)
+    t("week.moment", day: l(local.to_date, format: "%A %-d %b"), hour: local.strftime("%-H:%M"))
+  end
+
+  # « Du 1er au 14 fév » for a pause; « Depuis le 1er fév » while it has no end.
+  def pause_range_label(pause)
+    if pause.ends_on
+      t("pauses.range", from: l(pause.starts_on, format: :short), to: l(pause.ends_on, format: :short))
+    else
+      t("pauses.open", from: l(pause.starts_on, format: :short))
+    end
+  end
+
+  # « jour 4 sur 14 », or « jour 4 » for a pause with no end.
+  def pause_day_label(pause, today)
+    day = (today - pause.starts_on).to_i + 1
+    return t("pauses.day_open", day: day) unless pause.ends_on
+
+    t("pauses.day", day: [ day, 1 ].max, total: (pause.ends_on - pause.starts_on).to_i + 1)
   end
 
   def hour_label(time, zone)

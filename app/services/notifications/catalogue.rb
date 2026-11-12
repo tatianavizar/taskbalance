@@ -8,8 +8,11 @@ module Notifications
   #               "Répartition du lundi".
   #   cap         "report" or "alert": at most one of each per person and per
   #               week, all channels together (D9). nil: not capped.
-  #   target      the route a tap opens (`<target>_path`), for the e-mail
-  #               button, the feed and, in lot 8b, the push payload.
+  #   target      the route a tap opens (`<target>_path`, plus `path_options`),
+  #               for the e-mail button, the feed and, in lot 8b, the push
+  #               payload. Every target is a route of lot 5b's screens: the
+  #               report (E1, E14), the home (alerts E3, E4, E5, D13), the
+  #               absence question (E11, P5) and the pauses (F10).
   Entry = Data.define(:kind, :event_type, :cap, :target)
 
   module Catalogue
@@ -25,12 +28,19 @@ module Notifications
       Entry.new("monday_split",     "monday_split",     nil,      :chores),
       Entry.new("gap_reset",        "monday_split",     nil,      :chores),
       Entry.new("household_ready",  "monday_split",     nil,      :dashboard), # B12 « Prêt »
-      Entry.new("absence_question", "absence_question", nil,      :dashboard),
-      Entry.new("absence_outcome",  "absence_question", nil,      :dashboard),
-      Entry.new("pause_declared",   "absence_question", nil,      :dashboard),
+      Entry.new("absence_question", "absence_question", nil,      :absence_inquiries), # E11, P5, H5
+      Entry.new("absence_outcome",  "absence_question", nil,      :member_pauses),     # F10
+      Entry.new("pause_declared",   "absence_question", nil,      :member_pauses),     # F10
       # Lot 7, F3. No F4 row of its own: follows "alert", never capped.
       Entry.new("household_deleted", "alert",           nil,      :dashboard)
     ].index_by(&:kind).freeze
+
+    # The route options a notification adds to its target: the report opens on
+    # the week it is about (E14), not on the week in progress.
+    def self.path_options(notification)
+      week_start = notification.facts["week_start"] if notification.kind == "weekly_report"
+      week_start ? { semaine: week_start } : {}
+    end
 
     def self.fetch(kind) = ENTRIES.fetch(kind.to_s)
     def self.kinds = ENTRIES.keys

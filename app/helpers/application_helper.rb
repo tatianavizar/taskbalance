@@ -24,9 +24,11 @@ module ApplicationHelper
     case controller_path
     when "pages" then action_name == "dashboard" ? :home : nil
     when "chores", "chores/completions", "tasks" then :tasks
-    when "reports" then :report
+    when "reports", "levels" then :report
+    when "absence_inquiries" then :home
     when "households", "households/invitations", "households/chores_setup", "households/preferences",
-         "households/setups", "households/splits", "households/split_settings", "households/departures" then :household
+         "households/setups", "households/splits", "households/split_settings", "households/departures",
+         "member_pauses" then :household
     end
   end
 

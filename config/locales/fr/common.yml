@@ -26,10 +26,6 @@ fr:
       other: "<b>%{count} champs à corriger</b> avant de continuer."
   app:
     name: "50/50"
-  reports:
-    show:
-      title: "Bilan"
-      empty: "Le premier bilan arrive lundi, une fois la semaine close."
   errors:
     back_home: "Retour à l'accueil"
     code: "Erreur %{code}"

@@ -1,0 +1,32 @@
+<%# E3 : la première semaine sans saisie d'un membre. D13 : la même alerte sur l'accueil de la personne concernée. %>
+<% name = member.user.first_name %>
+<section class="flex flex-col gap-3" aria-labelledby="alert-empty-<%= member.id %>" id="alert-first-empty-<%= member.id %>">
+  <div class="alert-panel">
+    <h2 id="alert-empty-<%= member.id %>" class="m-0 text-lg leading-6 font-bold">
+      <% if viewer_concerned %>
+        <%= t("alerts.first_empty.title_self", week: week.number) %>
+      <% else %>
+        <%= t("alerts.first_empty.title_others", name: name, week: week.number) %>
+      <% end %>
+    </h2>
+    <p class="mt-2 mb-0 text-sm leading-5">
+      <%= t("alerts.first_empty.dates", from: l(from, format: :short), to: l(to, format: :short)) %>
+      <% if viewer_concerned %><%= t("alerts.first_empty.question_self") %><% end %>
+    </p>
+    <% if viewer_concerned %>
+      <%= link_to t("alerts.pause_link"), new_member_pause_path(du: from, au: to) %>
+    <% end %>
+  </div>
+  <div class="card tabular">
+    <b class="text-sm"><%= viewer_concerned ? t("alerts.first_empty.tally_self") : t("alerts.first_empty.tally_others", name: name) %></b>
+    <ul class="mt-1.5 mb-0 p-0 list-none">
+      <% tally.each do |row| %>
+        <li class="flex justify-between items-center min-h-[32px] text-sm border-t border-divider first:border-t-0">
+          <span><b><%= t("alerts.first_empty.short_week", number: row[:week].number) %></b> <span class="text-xs text-muted"><%= week_range_label(row[:week]) %></span></span>
+          <b><%= row[:count] %></b>
+        </li>
+      <% end %>
+    </ul>
+    <p class="mt-2 mb-0 text-[13px] leading-[18px]"><%= t("alerts.first_empty.others", count: others_names.size, names: others_names.to_sentence, number: others_count, week: week.number) %></p>
+  </div>
+</section>

@@ -15,7 +15,8 @@ class NotificationMailer < ApplicationMailer
     @event_type = notification.event_type
     @unsubscribe_url = unsubscribe_url(Notifications::Unsubscribe.token_for(@user, @event_type))
     @settings_url = account_url
-    @cta_url = public_send("#{Notifications::Catalogue.fetch(notification.kind).target}_url")
+    @cta_url = public_send("#{Notifications::Catalogue.fetch(notification.kind).target}_url",
+                           **Notifications::Catalogue.path_options(notification))
 
     headers["List-Unsubscribe"] = "<#{@unsubscribe_url}>"
     headers["List-Unsubscribe-Post"] = "List-Unsubscribe=One-Click"

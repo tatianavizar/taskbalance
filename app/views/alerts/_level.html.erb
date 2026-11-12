@@ -1,0 +1,8 @@
+<%# E8 : un niveau atteint. E13 : le niveau ultime perdu. D3 : une descente annulée. Reset à l'arrivée ou au départ d'un membre. %>
+<% key = change.reason %>
+<% good = %w[reached ultimate_regained regression_cancelled].include?(key) %>
+<%= tag.section class: (good ? "callout" : "alert-panel"), id: "alert-level", "aria-labelledby": "alert-level-title" do %>
+  <h2 id="alert-level-title" class="m-0 text-lg leading-6 font-bold"><%= t("alerts.level.#{key}.title", level: level_name(change.to_level)) %></h2>
+  <p class="mt-1.5 mb-0 text-sm leading-5"><%= t("alerts.level.#{key}.body", level: level_name(change.to_level), count: change.balanced_weeks_count_after, quota: HouseholdRules::ULTIMATE_UNBALANCED_QUOTA) %></p>
+  <%= link_to t("alerts.level.link"), levels_path, class: "font-bold inline-flex items-center min-h-[44px]" %>
+<% end %>

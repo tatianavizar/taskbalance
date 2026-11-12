@@ -1,0 +1,19 @@
+<%# F10, « Modifier les dates » : seule la fin se déplace, jamais dans le passé. Le début et les semaines déjà closes ne bougent pas. %>
+<% provide :chrome, "none" %>
+<% provide :title, t("pauses.edit.title") %>
+<div class="flex">
+  <%= back_button member_pauses_path, label: t("common.close") %>
+</div>
+<div>
+  <h1 class="screen-title"><%= t("pauses.edit.title") %></h1>
+  <p class="screen-subtitle"><%= t("pauses.edit.subtitle", from: l(@pause.starts_on, format: :day_month)) %></p>
+</div>
+
+<%= form_with model: @pause, url: member_pause_path(@pause), method: :patch, html: { class: "flex flex-col gap-5 flex-1" } do |f| %>
+  <%= f.error_summary %>
+  <%= f.field :ends_on, as: :date, label: t("pauses.new.to"), hint: t("pauses.edit.hint") %>
+  <%= sticky_cta do %>
+    <%= f.submit t("pauses.edit.submit") %>
+    <%= link_to t("common.cancel"), member_pauses_path, class: "btn btn-secondary" %>
+  <% end %>
+<% end %>
