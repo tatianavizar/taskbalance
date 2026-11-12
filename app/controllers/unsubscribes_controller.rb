@@ -1,10 +1,13 @@
 # One-click unsubscribe (D9, RFC 8058), no sign-in: the signed token in the
 # link of every notification email names the person and the event type.
 #
-#   GET  /desinscription/:token            the link in the email body: switches
-#                                          the type off and says so, with an undo
-#   POST /desinscription/:token            List-Unsubscribe=One-Click, sent by
-#                                          the mail client itself
+#   GET  /desinscription/:token            the link in the email body: changes
+#                                          NOTHING (mail scanners and link
+#                                          previewers prefetch GET links); shows
+#                                          the event type and one button
+#   POST /desinscription/:token            the button of that page, or the mail
+#                                          client's List-Unsubscribe=One-Click:
+#                                          switches the type off
 #   POST /desinscription/:token/reactiver  the undo
 #
 # It switches one event type off and back on, nothing else. It inherits from
@@ -15,20 +18,23 @@
 class UnsubscribesController < ActionController::Base
   layout "application"
   helper :all
+  # The one-click POST of a mail client carries no CSRF token. The button of
+  # the page does, but it is checked like the one-click: the token in the URL
+  # is the credential, and the action only switches one type off.
   skip_forgery_protection only: :create
   before_action :resolve_token
 
   def show
-    return render_invalid unless @user
-
-    NotificationPreference.set(@user, @event_type, false)
+    render_invalid unless @user
   end
 
   def create
-    return head :not_found unless @user
+    unless @user
+      return one_click? ? head(:not_found) : render_invalid
+    end
 
     NotificationPreference.set(@user, @event_type, false)
-    head :ok
+    one_click? ? head(:ok) : render(:done)
   end
 
   def resubscribe
@@ -38,6 +44,10 @@ class UnsubscribesController < ActionController::Base
   end
 
   private
+
+  def one_click?
+    params["List-Unsubscribe"] == "One-Click"
+  end
 
   def resolve_token
     @token = params[:token]
