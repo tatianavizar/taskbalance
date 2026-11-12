@@ -329,3 +329,14 @@
 - **Tri :** liste blanche par ressource ; tout le reste retombe sur l'ordre par défaut.
 - **Dernière activité d'un foyer :** semaine ISO, seulement pour deux membres ou plus, non triable.
 - **Journal :** connexions, refus, blocages et commandes console y figurent ; il est en ajout seul dans Postgres (trigger), donc `db/structure.sql`. Un compte admin se désactive, il ne se supprime pas. Session : 30 min d'inactivité, 8 h au total.
+
+## 2026-11-13 · Revue de sécurité complète : correctifs appliqués
+- **Périmètre :** quatre revues (comptes et accès, données du foyer, moteur/notifications/vie privée, back-office), 27 constats, aucun critique ; tous corrigés avec un test de non-régression.
+- **Choix faits en corrigeant (à confirmer si besoin) :**
+  - Connexion limitée à 30 essais par connexion et 10 par adresse sur 15 minutes ; au-delà, l'écran « mot de passe incorrect » habituel, pour ne rien révéler.
+  - Mot de passe : 8 caractères minimum pour un nouveau mot de passe (les anciens restent valables).
+  - Polices Unbounded et Figtree servies par l'app (plus d'appel à Google Fonts).
+  - Politique de sécurité du contenu (CSP) active ; les attributs `style` en ligne restent autorisés (largeurs des barres).
+  - Chaque visite pose le cookie de session (nécessaire, exempté de consentement).
+  - Schéma de base enregistré en `db/structure.sql` (triggers du journal admin).
+- **À faire au déploiement :** `APP_HOST` (et `APP_EXTRA_HOSTS`) dans l'environnement de production, base `cache` créée, clés de chiffrement Active Record (`bin/rails db:encryption:init`).
