@@ -29,7 +29,8 @@ class ViewsRenderTest < ActionDispatch::IntegrationTest
     sign_in users(:alice)
     chore = chores(:smith_cooking)
 
-    [ dashboard_path, report_path, tasks_path, chores_path, household_path(@household),
+    [ dashboard_path, report_path, report_history_path, levels_path, member_pauses_path, new_member_pause_path,
+      absence_inquiries_path, tasks_path, chores_path, household_path(@household),
       edit_household_path(@household), new_household_invitation_path(@household),
       new_chore_path(household_id: @household.id), edit_chore_path(chore), edit_chore_path(chores(:smith_custom)),
       new_chore_log_path(chore_id: chore.id), chore_path(chore), chore_logs_path, household_chores_setup_path(@household),

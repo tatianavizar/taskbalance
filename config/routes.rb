@@ -47,7 +47,23 @@ Rails.application.routes.draw do
   post "desinscription/:token/reactiver" => "unsubscribes#resubscribe", as: :resubscribe
 
   get "dashboard" => "pages#dashboard", as: :dashboard
+  # Bilan (E1, E7, E10, E14), les 4 semaines (E2) et les niveaux (E8, E9, E13).
   get "bilan" => "reports#show", as: :report
+  get "bilan/historique" => "reports#history", as: :report_history
+  get "niveaux" => "levels#show", as: :levels
+
+  # La question d'absence (E11, P5) : réponses et corrections, jusqu'au mercredi 20:00.
+  resources :absence_inquiries, path: "absences", only: [ :index, :show ] do
+    member do
+      post :answer
+      patch :correct
+    end
+  end
+
+  # Pauses : déclarer la sienne (F6) ou celle d'un membre absent (F8, ?pour=), la liste (F10).
+  resources :member_pauses, path: "pauses", only: [ :index, :new, :create, :edit, :update ] do
+    post :stop, on: :member
+  end
 
   # Pages d'erreur (config.exceptions_app = routes)
   match "/404", to: "errors#not_found", via: :all

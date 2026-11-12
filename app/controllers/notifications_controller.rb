@@ -13,7 +13,7 @@ class NotificationsController < ApplicationController
     notification = Notification.where(user_id: current_user.id).feed.find(params[:id])
     notification.read!
     target = Notifications::Catalogue.fetch(notification.kind).target
-    redirect_to public_send("#{target}_path")
+    redirect_to public_send("#{target}_path", **Notifications::Catalogue.path_options(notification))
   end
 
   def read_all

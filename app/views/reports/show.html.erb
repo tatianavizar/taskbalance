@@ -1,9 +1,150 @@
+<%# E1 : le bilan de la semaine, provisoire ou définitif. E7 : semaine neutre. E10 : semaine corrigée par une pause (D3).
+    E14 : semaine équilibrée. La semaine en cours se lit dans WeeklyStats, les semaines passées dans leur instantané. %>
 <% provide :title, t("reports.show.title") %>
-<h1 class="screen-title"><%= t("reports.show.title") %></h1>
-<%= callout do %>
-  <p class="m-0"><%= t("reports.show.empty") %></p>
-<% end %>
+<% report = @report %>
+<% zone = @household.zone %>
+<% week = @week %>
+<% prev_href = (report_path(semaine: @previous_week.monday) if @previous_week) %>
+<% next_href = (report_path(semaine: @next_week.monday) if @next_week) %>
 
-<div class="list-stack">
-  <%= list_row title: t("chore_logs.index.title"), subtitle: t("chore_logs.index.link_hint"), href: chore_logs_path %>
-</div>
+<%= render "reports/header", active: :week, week_href: report_path(semaine: week.monday), history_href: report_history_path(jusqu_a: week.monday),
+      prev_href: prev_href, next_href: next_href, label: week.label, sub: week_range_label(week) %>
+
+<%= render "alerts/cards", alerts: @alerts if @alerts %>
+
+<% if @first_report %>
+  <%= callout do %><p class="m-0"><%= t("reports.show.empty") %></p><% end %>
+<% else %>
+  <p class="m-0 -mt-1 text-[13px] leading-[18px] text-muted" id="report-status">
+    <% if report.final? %>
+      <%= t("reports.status.final", moment: closing_label(report.final_at, zone)) %>
+    <% else %>
+      <%= t("reports.status.provisional", moment: closing_label(report.final_at, zone)) %>
+    <% end %>
+  </p>
+
+  <%# --- Le résultat ---------------------------------------------------------- %>
+  <% pending = report.provisional? ? "_pending" : "" %>
+  <% if report.corrected? %>
+    <% declared_on = report.corrections.map(&:declared_at).max.in_time_zone(zone).to_date %>
+    <div class="rounded-[18px] border border-dashed border-muted p-4" id="report-outcome">
+      <h2 class="m-0 text-lg leading-6 font-semibold"><%= t("reports.corrected.title", date: l(declared_on, format: :short)) %></h2>
+      <p class="mt-1.5 mb-0 text-sm leading-5"><%= t("reports.corrected.body") %></p>
+      <p class="mt-2 mb-0 text-[13px] leading-[18px] text-muted"><%= t("reports.corrected.original", outcome: t("reports.outcome.#{report.original_outcome}")) %></p>
+    </div>
+  <% elsif report.neutral? %>
+    <% reason = report.neutral_reason %>
+    <% variant = (reason.in?(%i[no_mental_logs no_execution_logs]) && report.silent?) ? :silent : reason %>
+    <div class="rounded-[18px] border border-dashed border-muted p-4" id="report-outcome">
+      <h2 class="m-0 text-lg leading-6 font-semibold"><%= t("reports.neutral.#{variant}.title") %></h2>
+      <p class="mt-1.5 mb-0 text-sm leading-5"><%= t("reports.neutral.#{variant}.body", from: l(week.monday, format: :short), to: l(week.sunday, format: :short)) %></p>
+    </div>
+  <% elsif report.balanced? %>
+    <div class="callout" id="report-outcome">
+      <h2 class="m-0 text-xl leading-[26px] font-semibold"><%= t("reports.balanced.title#{pending}") %></h2>
+      <p class="mt-1.5 mb-0 text-sm leading-5"><%= t("reports.balanced.body", min: report.zone.begin, max: report.zone.end) %></p>
+    </div>
+  <% else %>
+    <% headline = report.headline %>
+    <div class="callout" id="report-outcome">
+      <h2 class="m-0 text-xl leading-[26px] font-semibold"><%= t("reports.unbalanced.title#{pending}") %></h2>
+      <% if headline %>
+        <p class="mt-1.5 mb-0"><b><%= t("reports.headline.#{headline.kind}.#{headline.dimension}", name: headline.member.first_name, share: headline.share) %></b></p>
+        <% if headline.kind == :above %>
+          <% shift = report.shift_to_zone(headline.member, headline.dimension) %>
+          <% rest = report.active_lines.reject { |line| line.user_id == headline.member.user_id } %>
+          <p class="mt-1.5 mb-0 text-sm leading-5 tabular">
+            <%= t("reports.shift.#{headline.dimension}", count: shift, carried: headline.member.count(headline.dimension),
+                  name: headline.member.first_name, to: (rest.one? ? t("reports.shift.to_name", name: rest.first.first_name) : t("reports.shift.to_others"))) %>
+          </p>
+        <% end %>
+      <% end %>
+    </div>
+  <% end %>
+
+  <%# --- Les deux charges ---------------------------------------------------------- %>
+  <% unless report.neutral? && report.lines.empty? %>
+    <% subject = @viewer_line || report.lines.first %>
+    <% if subject %>
+      <% others = report.lines.reject { |line| line.user_id == subject.user_id } %>
+      <% %i[mental execution].each do |dimension| %>
+        <% total = report.total(dimension) %>
+        <%= balance title: t("home.dimension.#{dimension}"),
+              count: (total.zero? ? t("home.count_none") : t("home.count", count: subject.count(dimension), total: total)),
+              name: subject.first_name, share: report.share(subject, dimension),
+              others: others.map { |line| { name: line.first_name, share: report.share(line, dimension), balanced: report.in_zone?(line, dimension) } },
+              balanced: report.in_zone?(subject, dimension), fair: report.fair_share %>
+      <% end %>
+    <% end %>
+  <% end %>
+
+  <%# --- À retenir pour lundi (E1) ------------------------------------------------- %>
+  <% lesson = report.lesson %>
+  <% if lesson && week.monday >= @household.current_week.previous.monday %>
+    <% carrier = lesson.carrier.first_name %>
+    <% receiver = lesson.others.one? ? t("reports.shift.to_name", name: lesson.others.first.first_name) : t("reports.shift.to_others") %>
+    <section class="rounded-2xl border-2 border-ink bg-surface px-4 py-3.5" aria-labelledby="lesson-title" id="report-lesson">
+      <b id="lesson-title"><%= t("reports.lesson.title") %></b>
+      <p class="mt-1.5 mb-0 text-sm leading-5 tabular">
+        <%= t("reports.lesson.#{lesson.in_zone}_in_zone",
+              in_share: lesson.carrier.share(lesson.in_zone), off_share: lesson.carrier.share(lesson.off), carrier: carrier) %>
+        <%= t("reports.lesson.#{lesson.off}_apart") %>
+      </p>
+      <p class="mt-1.5 mb-0 text-sm leading-5 tabular"><b><%= t("reports.lesson.monday.#{lesson.off}", count: lesson.shift, carrier: carrier, to: receiver) %></b></p>
+    </section>
+  <% end %>
+
+  <%# --- Pauses de la semaine (E10) ------------------------------------------------- %>
+  <% if report.pauses.any? %>
+    <section class="card" aria-labelledby="pauses-title" id="report-pauses">
+      <b id="pauses-title"><%= t("reports.pauses.title") %></b>
+      <ul class="mt-2 mb-0 p-0 list-none flex flex-col gap-2 text-sm leading-5 tabular">
+        <% report.pauses.each do |pause| %>
+          <% declarer = report.declarer_name(pause) %>
+          <li>
+            <b><%= pause.first_name %></b><br>
+            <span class="text-muted">
+              <%= pause.ends_on ? t("reports.pauses.range", from: l(pause.starts_on, format: :short), to: l(pause.ends_on, format: :short)) : t("reports.pauses.open", from: l(pause.starts_on, format: :short)) %>
+              <% if declarer && pause.declared_by_id != pause.user_id %> · <%= t("reports.pauses.declared_by", name: declarer) %><% end %>
+            </span>
+          </li>
+        <% end %>
+      </ul>
+      <p class="mt-2 mb-0 text-[13px] leading-[18px] text-muted"><%= t("reports.pauses.private") %></p>
+    </section>
+  <% end %>
+
+  <%# --- Le temps passé ------------------------------------------------------------- %>
+  <% if report.minutes_total.positive? %>
+    <section class="card" aria-labelledby="time-title" id="report-time">
+      <div class="flex justify-between text-[13px]">
+        <b id="time-title"><%= t("reports.time.title") %></b>
+        <span class="text-muted"><%= t("reports.time.total", time: minutes_label(report.minutes_total)) %></span>
+      </div>
+      <ul class="mt-2 mb-0 p-0 list-none flex flex-col gap-2 tabular">
+        <% report.active_lines.each do |line| %>
+          <% share = report.minutes_share(line) %>
+          <li>
+            <div class="flex justify-between items-baseline">
+              <span><b class="text-lg"><%= minutes_label(line.minutes) %></b> <span class="text-muted"><%= line.first_name %><%= " · #{share} %" if share %></span></span>
+            </div>
+            <div class="mt-1 h-2 rounded bg-track" aria-hidden="true"><div class="h-2 rounded" style="width:<%= share.to_i.clamp(0, 100) %>%;background:var(--color-others)"></div></div>
+          </li>
+        <% end %>
+      </ul>
+    </section>
+  <% end %>
+
+  <%# --- Progression du foyer ---------------------------------------------------------- %>
+  <% if @current %>
+    <%= level_progress level: @household.level, done: @household.balanced_weeks_count,
+          total: (@household.ultimate_level? ? nil : Progression.threshold(@household.level + 1)), href: levels_path %>
+  <% else %>
+    <% report.level_changes.each do |change| %>
+      <%= link_to levels_path, class: "card block no-underline", id: "report-level-#{change.id}" do %>
+        <b><%= t("reports.level_change.#{change.reason}", level: level_name(change.to_level)) %></b>
+        <span class="block text-[13px] leading-[18px] text-muted"><%= t("reports.level_change.weeks", count: change.balanced_weeks_count_after) %></span>
+      <% end %>
+    <% end %>
+  <% end %>
+<% end %>

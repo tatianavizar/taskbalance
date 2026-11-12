@@ -165,6 +165,7 @@ fr:
               member_logged_that_week: "%{week} contient des enregistrements de cette personne : la pause ne peut pas la couvrir."
             ends_on:
               before_start: La fin de la pause doit venir après son début.
+              in_the_past: La fin de la pause ne peut pas être dans le passé.
         household_week:
           attributes:
             week_start:

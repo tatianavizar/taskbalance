@@ -16,7 +16,8 @@ class NotificationMailer < ApplicationMailer
     @transactional = Notifications::Catalogue.transactional?(notification.kind)
     @unsubscribe_url = unsubscribe_url(Notifications::Unsubscribe.token_for(@user, @event_type)) unless @transactional
     @settings_url = account_url
-    @cta_url = public_send("#{Notifications::Catalogue.fetch(notification.kind).target}_url")
+    @cta_url = public_send("#{Notifications::Catalogue.fetch(notification.kind).target}_url",
+                           **Notifications::Catalogue.path_options(notification))
 
     unless @transactional
       headers["List-Unsubscribe"] = "<#{@unsubscribe_url}>"
