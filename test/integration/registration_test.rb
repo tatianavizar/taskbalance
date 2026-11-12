@@ -129,7 +129,7 @@ class RegistrationTest < ActionDispatch::IntegrationTest
     assert_redirected_to new_user_registration_path
 
     Rails.cache.clear
-    10.times { |i| reset!; sign_up(email: "user#{i}@test.com") }
+    9.times { |i| reset!; sign_up(email: "user#{i}@test.com") }
     reset!
     assert_no_difference "User.count" do
       sign_up(email: "one-more@test.com")
@@ -137,11 +137,19 @@ class RegistrationTest < ActionDispatch::IntegrationTest
     assert_redirected_to new_user_registration_path
   end
 
-  test "the account can be edited with a first name" do
+  test "Devise's account update is closed: the account screen replaces it" do
     users(:alice).update!(password: "password123")
     sign_in users(:alice)
-    put user_registration_path, params: { user: { first_name: "Alicia", current_password: "password123" } }
-    assert_equal "Alicia", users(:alice).reload.first_name
+
+    assert_no_emails do
+      put user_registration_path, params: { user: { first_name: "Alicia", email: "victim@test.com", current_password: "password123" } }
+      assert_redirected_to account_path
+      patch user_registration_path, params: { user: { email: "victim@test.com", current_password: "password123" } }
+      assert_redirected_to account_path
+    end
+    alice = users(:alice).reload
+    assert_equal "Alice", alice.first_name
+    assert_nil alice.unconfirmed_email
   end
 
   test "DELETE /users without the password and the confirmation changes nothing (F5)" do

@@ -20,6 +20,11 @@
 #                 without the detail of the leaver's tasks.
 #   absence       any inquiry about the leaver goes with their membership
 #                 (cancelled: there is nobody left to ask about).
+#   notifications the leaver's ones about this household that are not due yet
+#                 (the report or alerts written at 03:00, sent at 08:00) are
+#                 withdrawn; the mailer checks membership again at sending.
+#   live streams  the leaver's Action Cable connections are dropped: on
+#                 reconnecting they can no longer subscribe to this household.
 #   manager       the oldest remaining member takes over.
 #   progression   reset by HouseholdMember's after_destroy (membership change);
 #                 not repeated here.
@@ -53,6 +58,7 @@ class HouseholdDeparture
       drop_preferences!
       detach_logs!
       membership.absence_inquiries.delete_all
+      Notification.suppress_for_departure!(user_id: user_id, household_id: household.id)
 
       was_manager = membership.manager?
       membership.destroy!
@@ -68,6 +74,7 @@ class HouseholdDeparture
       end
     end
     membership.user&.association(:household_membership)&.reset
+    disconnect_live_streams!
     successor
   end
 
@@ -106,6 +113,11 @@ class HouseholdDeparture
 
   def detach_logs!
     ChoreLog.where(user_id: user_id, household_id: household.id).update_all(household_id: nil, chore_id: nil)
+  end
+
+  def disconnect_live_streams!
+    user = membership.user
+    ActionCable.server.remote_connections.where(current_user: user).disconnect(reconnect: true) if user
   end
 
   def close_empty_household!

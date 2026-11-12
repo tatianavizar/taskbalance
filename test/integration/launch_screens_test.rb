@@ -96,7 +96,8 @@ class LaunchScreensTest < ActionDispatch::IntegrationTest
     assert_includes text, "strictement nécessaires"
     assert_includes text, "[À COMPLÉTER : nom, adresse et pays de l'hébergeur]"
     assert_includes text, "confirmation, mot de passe oublié, invitations"
-    assert_includes text, "Google Fonts"
+    assert_includes text, "Les polices de caractères sont servies par l'appli elle-même"
+    assert_not_includes text, "Google Fonts"
     assert_no_match(/\p{L}·\p{L}/, response.body)
   end
 
@@ -142,8 +143,10 @@ class LaunchScreensTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to root_path
     assert_equal "1", cookies[:cookie_notice_seen]
-    assert_match(/cookie_notice_seen=1;.*httponly/i, response.headers["Set-Cookie"])
-    assert_match(/samesite=lax/i, response.headers["Set-Cookie"])
+    # The session cookie (CSP nonce) may be set alongside it.
+    notice_cookie = Array(response.headers["Set-Cookie"]).flat_map { |c| c.split("\n") }.find { |c| c.start_with?("cookie_notice_seen=") }
+    assert_match(/cookie_notice_seen=1;.*httponly/i, notice_cookie)
+    assert_match(/samesite=lax/i, notice_cookie)
     follow_redirect!
     assert_select "#cookie-banner", 0
     get terms_path

@@ -102,6 +102,37 @@ class AccountDeletionTest < ActiveSupport::TestCase
     assert_equal "Ancien membre", facts.dig("assigned_by", "first_name")
   end
 
+  def invitation!(household, email:, first_name:, state:, invitee: nil, expires_at: 7.days.from_now)
+    Invitation.new(household: household, email: email, first_name: first_name, state: state, invitee: invitee,
+                   token: SecureRandom.hex(16), expires_at: expires_at, last_sent_at: Time.current, created_at: Time.current)
+              .tap { |invitation| invitation.save!(validate: false) }
+  end
+
+  test "every invitation that named them is anonymised, whatever its state" do
+    other, (zoe, _) = build_household("Zoé")
+    old_email = @ann.email
+    accepted = invitation!(@household, email: "ann.old@test.com", first_name: "Ann", state: "accepted", invitee: @ann)
+    pending = invitation!(other, email: old_email, first_name: "Annie", state: "pending")
+    overdue = invitation!(other, email: "ann.other@test.com", first_name: "Ann", state: "pending", invitee: @ann, expires_at: 1.day.ago)
+    declined = invitation!(other, email: old_email, first_name: "Ann", state: "declined")
+    zoes = invitation!(other, email: "max@test.com", first_name: "Max", state: "pending")
+
+    assert delete_ann.save
+    @ann.reload
+
+    [ accepted, pending, overdue, declined ].each(&:reload).each do |invitation|
+      assert_equal @ann.email, invitation.email
+      assert_equal "Ancien membre", invitation.first_name
+    end
+    assert_predicate pending, :cancelled?
+    assert_predicate overdue, :expired?
+    assert_predicate accepted, :accepted?
+    assert_not Invitation.where("email = ? OR first_name IN (?)", old_email, %w[Ann Annie]).exists?
+    assert_equal [ "max@test.com", "Max" ], [ zoes.reload.email, zoes.first_name ]
+    assert_predicate zoes, :pending?
+    assert_equal "Zoé", zoe.reload.first_name
+  end
+
   test "the last member deleting their account deletes the household too" do
     household, users = build_household("Solo")
     solo = users.first

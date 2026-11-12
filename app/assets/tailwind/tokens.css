@@ -1,3 +1,5 @@
+@import "./fonts.css";
+
 /* 50/50 design system — values from docs/design-system.md, used as-is. */
 @theme static {
   --font-display: "Unbounded", ui-sans-serif, system-ui, sans-serif;

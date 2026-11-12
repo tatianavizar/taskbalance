@@ -1,4 +1,5 @@
 require "active_support/core_ext/integer/time"
+require_relative "../app_hosts"
 
 Rails.application.configure do
   # Settings specified here will take precedence over those in config/application.rb.
@@ -46,8 +47,10 @@ Rails.application.configure do
   # Don't log any deprecations.
   config.active_support.report_deprecations = false
 
-  # Replace the default in-process memory cache store with a durable alternative.
-  # config.cache_store = :mem_cache_store
+  # Shared, durable cache (Solid Cache, the `cache` database of
+  # config/database.yml and config/cache.yml): the rate-limit counters live
+  # here, so they survive a deploy and are the same for every Puma worker.
+  config.cache_store = :solid_cache_store
 
   # Replace the default in-process and non-durable queuing backend for Active Job.
   # Solid Queue runs the weekly engine (config/recurring.yml), on the queue
@@ -65,7 +68,7 @@ Rails.application.configure do
   config.action_mailer.raise_delivery_errors = true
   config.action_mailer.delivery_method = :smtp
   config.action_mailer.default_url_options = {
-    host: ENV.fetch("APP_HOST") { Rails.application.credentials.dig(:app_host) || "cinquante.app" },
+    host: AppHosts.primary(ENV, Rails.application.credentials),
     protocol: "https"
   }
 
@@ -79,12 +82,8 @@ Rails.application.configure do
   # Only use :id for inspections in production.
   config.active_record.attributes_for_inspect = [ :id ]
 
-  # Enable DNS rebinding protection and other `Host` header attacks.
-  # config.hosts = [
-  #   "example.com",     # Allow requests from example.com
-  #   /.*\.example\.com/ # Allow requests from subdomains like `www.example.com`
-  # ]
-  #
-  # Skip DNS rebinding protection for the default health check endpoint.
-  # config.host_authorization = { exclude: ->(request) { request.path == "/up" } }
+  # DNS rebinding and Host header protection: APP_HOST plus APP_EXTRA_HOSTS
+  # (config/app_hosts.rb). The /up health check is exempt.
+  config.hosts = AppHosts.all(ENV, Rails.application.credentials)
+  config.host_authorization = { exclude: AppHosts::HEALTH_CHECK }
 end

@@ -5,8 +5,9 @@ class Users::ConfirmationsController < Devise::ConfirmationsController
   # Devise skips authenticate_user! inside its own controllers unless forced.
   before_action -> { authenticate_user!(force: true) }, only: :pending
 
-  # Resending the confirmation sends a mail: same limits as password reset.
-  rate_limit to: 5, within: 1.hour, only: :create, name: "confirmation-ip",
+  # Resending the confirmation sends a mail: same limits as password reset
+  # (9 per connection, 3 per address, per hour; decision of 2026-11-08).
+  rate_limit to: 9, within: 1.hour, only: :create, name: "confirmation-ip",
              with: -> { rate_limited_redirect }
   rate_limit to: 3, within: 1.hour, only: :create, name: "confirmation-email",
              by: -> { params.dig(:user, :email).to_s.strip.downcase },

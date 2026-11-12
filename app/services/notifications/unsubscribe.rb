@@ -15,12 +15,13 @@ module Notifications
     end
 
     # [user, event_type], or nil when the token is forged, damaged, from
-    # elsewhere, or names a person or a type that does not exist.
+    # elsewhere, or names a person (or a deleted account) or a type that does
+    # not exist.
     def self.resolve(token)
       user_id, event_type = verifier.verified(token.to_s, purpose: PURPOSE)
       return unless user_id.is_a?(Integer) && NotificationPreference::EVENT_TYPES.include?(event_type)
 
-      user = User.find_by(id: user_id)
+      user = User.find_by(id: user_id, deleted_at: nil)
       [ user, event_type ] if user
     end
 

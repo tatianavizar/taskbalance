@@ -99,6 +99,7 @@ class InvitationFlowTest < ActionDispatch::IntegrationTest
     normalise = lambda do |invitation, body|
       body.gsub(invitation.token, "TOKEN").gsub(invitation.email, "EMAIL")
           .gsub(/<meta name="csrf-token"[^>]*>/, "").gsub(/<input[^>]*authenticity_token[^>]*>/, "")
+          .gsub(/nonce="[^"]*"|<meta name="csp-nonce"[^>]*>/, "") # per-session CSP nonce
     end
 
     get invitation_path(existing.token)
@@ -341,6 +342,7 @@ class InvitationFlowTest < ActionDispatch::IntegrationTest
     normalise = lambda do |invitation, body|
       body.gsub(invitation.token, "TOKEN").gsub(invitation.email, "EMAIL")
           .gsub(/<meta name="csrf-token"[^>]*>/, "").gsub(/<input[^>]*authenticity_token[^>]*>/, "")
+          .gsub(/nonce="[^"]*"|<meta name="csp-nonce"[^>]*>/, "") # per-session CSP nonce
     end
 
     sign_up_from_invitation(@invitation, password: "x", password_confirmation: "x")

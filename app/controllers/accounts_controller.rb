@@ -5,6 +5,15 @@
 class AccountsController < ApplicationController
   before_action :authenticate_user!
 
+  # A new address gets a confirmation mail: 3 changes per hour per person, and
+  # 3 per hour towards the same address, so nobody can flood an inbox.
+  EMAIL_CHANGES_PER_HOUR = 3
+  rate_limit to: EMAIL_CHANGES_PER_HOUR, within: 1.hour, only: :update_email, name: "email-change-user",
+             by: -> { current_user.id }, with: -> { email_change_rate_limited }
+  rate_limit to: EMAIL_CHANGES_PER_HOUR, within: 1.hour, only: :update_email, name: "email-change-address",
+             by: -> { params.dig(:user, :email).to_s.strip.downcase.presence || "user-#{current_user.id}" },
+             with: -> { email_change_rate_limited }
+
   def show
   end
 
@@ -69,5 +78,11 @@ class AccountsController < ApplicationController
       current_user.clean_up_passwords
       render :edit_password, status: :unprocessable_entity
     end
+  end
+
+  private
+
+  def email_change_rate_limited
+    redirect_to edit_email_path, alert: t("devise.failure.rate_limited")
   end
 end
