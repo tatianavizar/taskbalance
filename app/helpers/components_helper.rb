@@ -16,8 +16,9 @@ module ComponentsHelper
     render "components/back_button", path: path, label: label
   end
 
-  def app_header(name)
-    render "components/app_header", name: name
+  # `unread` : nombre de notifications non lues ; nil masque la cloche.
+  def app_header(name, unread: nil)
+    render "components/app_header", name: name, unread: unread
   end
 
   def tab_bar(active: active_tab)

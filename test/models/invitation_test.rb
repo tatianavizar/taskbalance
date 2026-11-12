@@ -300,9 +300,9 @@ class InvitationTest < ActiveSupport::TestCase
     end
   end
 
-  test "three resends at most, then the limit" do
+  test "three emails in total, so two resends at most, then the limit" do
     invitation = @household.invitations.create!(email: "new@test.com")
-    3.times do |i|
+    2.times do |i|
       travel_to(Time.current + ((i + 1) * 20).minutes) { assert_equal [ :ok ], invitation.resend! }
     end
 
@@ -310,25 +310,24 @@ class InvitationTest < ActiveSupport::TestCase
       assert_equal [ :limit ], invitation.resend!
       assert_equal [ :limit ], invitation.resend_allowance
     end
-    assert_equal 3, invitation.reload.resend_count
+    assert_equal 2, invitation.reload.resend_count
   end
 
   test "cancelling and inviting again does not reset the resend counter (counted per email and household)" do
     invitation = @household.invitations.create!(email: "new@test.com")
     travel_to(20.minutes.from_now) { invitation.resend! }
-    travel_to(40.minutes.from_now) { invitation.resend! }
     invitation.cancel!
 
     travel_to 1.hour.from_now do
-      assert_equal 2, Invitation.resends_used(household_id: @household.id, email: "new@test.com")
+      assert_equal 1, Invitation.resends_used(household_id: @household.id, email: "new@test.com")
       again = invite("new@test.com")
       assert again.persisted?
       assert_equal 1, again.resend_count, "inviting again counts as a send after the first"
-      assert_equal 3, Invitation.resends_used(household_id: @household.id, email: "NEW@test.com")
+      assert_equal 2, Invitation.resends_used(household_id: @household.id, email: "NEW@test.com")
+      again.cancel!
     end
 
     travel_to 2.hours.from_now do
-      Invitation.find_by!(email: "new@test.com", state: "pending").cancel!
       limited = invite("new@test.com")
       assert limited.errors.of_kind?(:email, :resend_limit)
     end
@@ -347,12 +346,22 @@ class InvitationTest < ActiveSupport::TestCase
   end
 
   test "the counter is per household: another household starts from zero" do
-    @household.invitations.create!(email: "new@test.com", resend_count: 3)
+    @household.invitations.create!(email: "new@test.com", resend_count: 2)
 
     other = Invitation.invite(household: households(:jones_home), email: "new@test.com", inviter: users(:carol))
 
     assert_predicate other, :persisted?
     assert_equal 0, other.resend_count
+  end
+
+  test "only the person who sent the invitation may resend it" do
+    invitation = Invitation.invite(household: @household, email: "new@test.com", inviter: @alice)
+
+    assert invitation.resendable_by?(@alice)
+    assert_not invitation.resendable_by?(users(:bob))
+    assert_not invitation.resendable_by?(nil)
+    invitation.update_columns(inviter_id: nil)
+    assert_not invitation.resendable_by?(@alice), "an invitation without a sender is resent by no member"
   end
 
   test "a closed invitation cannot be resent" do

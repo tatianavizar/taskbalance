@@ -1,0 +1,7 @@
+<% provide :chrome, "none" %>
+<% provide :title, t("notifications.unsubscribe.invalid_title") %>
+<h1 class="screen-title"><%= t("notifications.unsubscribe.invalid_title") %></h1>
+<%= callout do %>
+  <p class="m-0"><%= t("notifications.unsubscribe.invalid_body") %></p>
+<% end %>
+<%= link_to t("notifications.unsubscribe.settings"), account_path, class: "block text-center font-semibold py-3" %>
