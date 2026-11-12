@@ -31,6 +31,11 @@ class AccountsController < ApplicationController
     redirect_to account_path, notice: t("notifications.account.saved")
   end
 
+  # F5: the form posts to DELETE /users (Users::RegistrationsController#destroy).
+  def delete_account
+    @deletion = AccountDeletion.new(current_user)
+  end
+
   def edit_email
   end
 

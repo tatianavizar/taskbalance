@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_11_13_090800) do
+ActiveRecord::Schema[8.0].define(version: 2026_11_13_091000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -343,6 +343,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_11_13_090800) do
     t.datetime "confirmed_at"
     t.datetime "confirmation_sent_at"
     t.string "unconfirmed_email"
+    t.datetime "deleted_at"
     t.index ["confirmation_token"], name: "index_users_on_confirmation_token", unique: true
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
@@ -418,7 +419,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_11_13_090800) do
   add_foreign_key "member_pauses", "household_members", on_delete: :cascade
   add_foreign_key "member_pauses", "users", column: "declared_by_id", on_delete: :nullify
   add_foreign_key "notification_preferences", "users", on_delete: :cascade
-  add_foreign_key "notifications", "households", on_delete: :cascade
+  add_foreign_key "notifications", "households", on_delete: :nullify
   add_foreign_key "notifications", "users", on_delete: :cascade
   add_foreign_key "recurring_chores", "households"
   add_foreign_key "recurring_chores", "tasks"

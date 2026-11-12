@@ -246,7 +246,7 @@ Solid Queue is installed but `config/recurring.yml` is empty and no job exists.
 
 **Screens:** B3–B8.
 
-### 3.3 Leave a household — high, M
+### 3.3 Leave a household — high, M — done (lot 7)
 `household_members` has routes but no destroy action, so nobody can leave.
 
 **Fix:**
@@ -266,7 +266,7 @@ Solid Queue is installed but `config/recurring.yml` is empty and no job exists.
 
 **Screens:** C1, C2.
 
-### 3.5 Delete a household: manager only — high, S
+### 3.5 Delete a household: manager only — high, S — done (lot 7)
 **Fix:**
 - Only the manager can delete, after typing the household name.
 - Other members are emailed.
@@ -274,7 +274,7 @@ Solid Queue is installed but `config/recurring.yml` is empty and no job exists.
 
 **Screen:** F3.
 
-### 3.6 Delete an account — high, M
+### 3.6 Delete an account — high, M — done (lot 7; leaves the household instead of refusing a manager, see CLAUDE.md "Departures")
 Today, destroying any user who has a membership, a log or an assigned chore raises a foreign-key error (500): `chore_logs.user_id`, `household_members.user_id` and `chores.assigned_to_id` have no delete rule.
 
 **Fix:**

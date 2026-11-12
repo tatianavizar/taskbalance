@@ -218,5 +218,10 @@ module Notifications
       title = m("title", household: facts["household_name"])
       { subject: title, title: title, lines: [ m("line") ] }
     end
+
+    def household_deleted
+      title = m("title", name: facts.dig("deleted_by", "first_name"), household: facts["household_name"])
+      { subject: title, title: title, lines: [ m("journal"), m("next") ] }
+    end
   end
 end

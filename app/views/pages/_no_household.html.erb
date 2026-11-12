@@ -1,4 +1,5 @@
-<%# F7: an account that is in no household. Nothing is shared; the journal stays theirs. %>
+<%# F7: an account that is in no household. Nothing is shared; the journal stays theirs.
+    F11 (?departed=1, after leaving or deleting a household): « un autre foyer ». %>
 <% provide :chrome, "none" %>
 <% provide :title, t("auth.no_household.title") %>
 <div class="flex items-center gap-2.5 min-h-[44px]">
@@ -28,7 +29,7 @@
   <% end %>
 <% end %>
 
-<p class="m-0 text-[13px] leading-[18px] text-muted"><%= t("auth.no_household.invitation") %></p>
+<p class="m-0 text-[13px] leading-[18px] text-muted"><%= params[:departed].present? ? t("auth.no_household.invitation_after_departure") : t("auth.no_household.invitation") %></p>
 
 <%= sticky_cta do %>
   <%= link_to t("auth.no_household.create"), new_household_path, class: "btn btn-primary" %>

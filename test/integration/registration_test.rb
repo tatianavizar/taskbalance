@@ -144,12 +144,14 @@ class RegistrationTest < ActionDispatch::IntegrationTest
     assert_equal "Alicia", users(:alice).reload.first_name
   end
 
-  test "DELETE /users is closed until account deletion (lot 7) exists" do
+  test "DELETE /users without the password and the confirmation changes nothing (F5)" do
     sign_in users(:alice)
 
     assert_no_difference "User.count" do
       delete user_registration_path
     end
-    assert_response :not_found
+    assert_response :unprocessable_entity
+    assert_not users(:alice).reload.deleted?
+    assert_equal "Alice", users(:alice).first_name
   end
 end

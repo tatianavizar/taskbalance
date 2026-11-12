@@ -26,6 +26,16 @@ class User < ApplicationRecord
   validates :first_name, presence: true, length: { maximum: FIRST_NAME_MAX_LENGTH }
   validates :email, presence: true, uniqueness: true, format: { with: URI::MailTo::EMAIL_REGEXP }
 
+  # Lot 7, F5: an account deleted by its owner is anonymised (AccountDeletion)
+  # and can never sign in again.
+  def deleted?
+    deleted_at.present?
+  end
+
+  def active_for_authentication?
+    super && !deleted?
+  end
+
   # Sessions last one week whether or not the person ticked a box: the
   # persistent cookie is always issued at sign-in (see config/initializers/devise.rb
   # `remember_for`). Devise reads this accessor in its after_set_user hook.

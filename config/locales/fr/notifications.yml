@@ -24,7 +24,7 @@ fr:
     event_hints:
       weekly_report: "Un par semaine, le dimanche à 20:00."
       task_assigned: "Quand un autre membre vous assigne une tâche."
-      alert: "Semaine sans saisie, blocage, déblocage. Une par semaine au plus."
+      alert: "Semaine sans saisie, blocage, déblocage : une par semaine au plus. Aussi : suppression du foyer."
       monday_split: "Aussi : remise à zéro de l'écart, foyer prêt."
       absence_question: "Aussi : pauses déclarées et leur suite."
 
@@ -196,3 +196,8 @@ fr:
       household_ready:
         title: "C'est prêt : %{household} a choisi ses tâches."
         line: "Vos préférences et la répartition vous attendent."
+
+      household_deleted:
+        title: "%{name} a supprimé le foyer « %{household} »."
+        journal: "Votre journal vous suit : vos enregistrements restent dans votre compte."
+        next: "Pour continuer, créez un foyer ou ouvrez une nouvelle invitation."

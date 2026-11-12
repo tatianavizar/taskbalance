@@ -46,21 +46,12 @@ class HouseholdMember < ApplicationRecord
     reload
   end
 
-  # The person leaves the household. If they were its manager, the oldest
-  # remaining member takes over. Their ChoreLogs are not touched (they belong
-  # to the individual). Returns the new manager's membership, or nil.
+  # The person leaves the household (F2): chores handed over, week plans
+  # updated, logs detached but kept, manager role passed to the oldest
+  # remaining member; the last one out deletes the household. All the rules
+  # are in HouseholdDeparture. Returns the new manager's membership, or nil.
   def leave!
-    successor = nil
-    transaction do
-      was_manager = manager?
-      household_id_was = household_id
-      destroy!
-      if was_manager
-        successor = self.class.where(household_id: household_id_was).order(:created_at, :id).first
-        successor&.manager!
-      end
-    end
-    successor
+    HouseholdDeparture.call(self)
   end
 
   # Recomputes the automatic monograms of a household: the first-name initial,
