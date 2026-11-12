@@ -28,7 +28,8 @@ Validated by the product owner on 2026-11-08 unless marked *(default)*.
   | 4 | 10 | +4 |
   | Ultimate | 15 | +5 |
 
-- **Keeping the ultimate level:** it holds while more than 85 % of the final weeks are balanced, counted from the week the household **first reached** the ultimate level, over 52 weeks at most (decision 2026-11-12). Neutral weeks are excluded. Below 85 %, the household goes back to level 4, and it gets the ultimate level back automatically as soon as the ratio is above 85 % again.
+- **Keeping the ultimate level:** it holds while the household has **at most 7 unbalanced weeks in the last 52 weeks** of the window (decision 2026-11-12, replaces the 85 % ratio). Neutral weeks, including weeks neutralised by a retroactive pause, don't count. The window starts when the ultimate level is reached, 52 weeks at most, and restarts at each new reach after a regression (not when the level comes back after exceeding the quota). Above 7, the household goes back to level 4, and gets the ultimate level back as soon as the count is 7 or less again. Margin shown: 7 − unbalanced weeks in the window.
+- **Membership change:** a member arriving or leaving resets the level, the balanced-weeks counter and the ultimate window to zero (decision 2026-11-12). Report history stays.
 - **Non-logging:**
   - A member with **zero logs for 2 consecutive weeks** makes the household regress one level, and its progression is blocked.
   - Each member is warned after the first week at zero (E3).
