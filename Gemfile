@@ -70,3 +70,10 @@ gem "devise"
 gem "devise-i18n"
 gem "rails-i18n", "~> 8.0"
 gem "enumerations"
+
+# Back office (lot 9): ActiveAdmin 4 runs on Tailwind and importmap, no Sprockets or Sass.
+# Ransack 6 needs Rails 8.1: stay on 4.x.
+gem "activeadmin", "4.0.0.beta23"
+gem "ransack", "~> 4.4"
+gem "devise-two-factor", "~> 6.4"
+gem "rotp", "~> 6.4"

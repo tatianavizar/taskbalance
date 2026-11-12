@@ -10,10 +10,14 @@
 # Only a pending invitation can still be used. One pending invitation per
 # email and household (partial unique index); closed rows stay as history.
 class Invitation < ApplicationRecord
+  include BackOfficeSearchable
+
   VALIDITY = 14.days
   # D12: three emails in total, the first send included, so two resends.
   MAX_RESENDS = 2
   MIN_RESEND_GAP = 15.minutes
+
+  self.ransackable_attribute_names = %w[first_name email state created_at last_sent_at expires_at resend_count]
 
   belongs_to :household
   belongs_to :invitee, class_name: "User", optional: true
@@ -208,10 +212,13 @@ class Invitation < ApplicationRecord
 
   # Same token, expiry reset, new email. Returns [:ok], the refusal
   # ([:wait, seconds] or [:limit]), or [:closed] when no longer pending.
-  # Who may resend: only the person who sent it (product decision). An admin
-  # back office can reuse or extend this one method later.
-  def resendable_by?(user)
-    user.present? && inviter_id.present? && inviter_id == user.id
+  # Who may resend: only the person who sent it, and the 50/50 team from the
+  # back office (an AdminUser). Same limits and same email either way: see
+  # `resend!`.
+  def resendable_by?(actor)
+    return true if actor.is_a?(AdminUser)
+
+    actor.present? && inviter_id.present? && inviter_id == actor.id
   end
 
   def resend!

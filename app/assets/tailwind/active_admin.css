@@ -1,0 +1,152 @@
+/* Back-office stylesheet (ActiveAdmin 4), in the 50/50 art direction.
+
+   This file is NOT an input of tailwindcss-rails: `bin/rails tailwindcss:build`
+   (and `active_admin:css`) wrap it in a generated entry point, tmp/active_admin/input.css, that
+   adds what depends on the machine (the ActiveAdmin gem's path):
+
+     @import "tailwindcss";
+     @import ".../app/assets/tailwind/tokens.css";   <- the shared 50/50 tokens
+     @plugin ".../tmp/active_admin/plugin.js";       <- the gem's plugin.js, made loadable
+     @source ".../activeadmin/app/views" ...
+     @import ".../app/assets/tailwind/active_admin.css";  <- this file
+
+   See lib/tasks/active_admin_assets.rake. The palette below is only a mapping
+   onto the shared tokens (tokens.css): no colour value is written twice. */
+
+/* ActiveAdmin's views are written with Tailwind's gray / blue / red / green
+   scales. They are redefined from the 50/50 tokens so every one of its
+   components follows the art direction without copying a single view. */
+@theme {
+  --color-white: var(--color-surface);
+
+  --color-gray-50: var(--color-bg);
+  --color-gray-100: var(--color-soft-2);
+  --color-gray-200: var(--color-line);
+  --color-gray-300: var(--color-field);
+  --color-gray-400: var(--color-others);
+  --color-gray-500: var(--color-muted);
+  --color-gray-600: var(--color-muted);
+  --color-gray-700: var(--color-ink);
+  --color-gray-800: var(--color-ink);
+  --color-gray-900: var(--color-ink);
+  --color-gray-950: var(--color-ink);
+
+  /* Primary actions are ink, like the app's buttons. */
+  --color-blue-50: var(--color-soft-2);
+  --color-blue-100: var(--color-soft);
+  --color-blue-200: var(--color-mint);
+  --color-blue-300: var(--color-track);
+  --color-blue-400: var(--color-muted);
+  --color-blue-500: var(--color-ink);
+  --color-blue-600: var(--color-ink);
+  --color-blue-700: var(--color-balanced);
+  --color-blue-800: var(--color-balanced);
+  --color-blue-900: var(--color-ink);
+
+  /* Alerts are ink, never red or yellow (design-system.md). */
+  --color-red-50: var(--color-soft-2);
+  --color-red-100: var(--color-soft);
+  --color-red-300: var(--color-track);
+  --color-red-400: var(--color-ink);
+  --color-red-500: var(--color-ink);
+  --color-red-600: var(--color-ink);
+  --color-red-700: var(--color-ink);
+  --color-red-800: var(--color-ink);
+  --color-green-50: var(--color-mint);
+  --color-green-100: var(--color-mint);
+  --color-green-400: var(--color-balanced);
+  --color-green-500: var(--color-balanced);
+  --color-green-600: var(--color-balanced);
+  --color-green-700: var(--color-balanced);
+  --color-green-800: var(--color-balanced);
+  --color-yellow-50: var(--color-soft-2);
+  --color-yellow-100: var(--color-soft);
+  --color-yellow-400: var(--color-ink);
+  --color-yellow-500: var(--color-ink);
+  --color-yellow-600: var(--color-ink);
+  --color-yellow-700: var(--color-ink);
+  --color-yellow-800: var(--color-ink);
+
+  --radius-sm: 8px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 18px;
+}
+
+/* The 50/50 design is light only: `dark:` never applies, the toggle is hidden. */
+@custom-variant dark (&:where([data-never-dark], [data-never-dark] *));
+
+@layer base {
+  html {
+    background: var(--color-bg);
+  }
+
+  body {
+    background: var(--color-bg);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-variant-numeric: tabular-nums;
+  }
+
+  h1, h2, h3, .font-display {
+    font-family: var(--font-display);
+    letter-spacing: -0.02em;
+  }
+
+  :focus-visible {
+    outline: 3px solid var(--color-ink);
+    outline-offset: 2px;
+  }
+
+  .dark-mode-toggle {
+    display: none;
+  }
+}
+
+@layer components {
+  /* Pills for states, the app's .pill vocabulary. */
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    border-radius: 999px;
+    padding: 2px 10px;
+    font-size: 12px;
+    line-height: 18px;
+    font-weight: 600;
+  }
+  .pill-soft { background: var(--color-soft); color: var(--color-ink); }
+  .pill-ink { background: var(--color-ink); color: #fff; }
+  .pill-outline { border: 1px dashed var(--color-muted); color: var(--color-muted); }
+  .pill-mint { background: var(--color-mint); color: var(--color-ink); }
+
+  /* A figure and its label (dashboard). */
+  .stat-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-line);
+    border-radius: 16px;
+    padding: 16px 18px;
+  }
+  .stat-figure {
+    font-family: var(--font-display);
+    font-size: 32px;
+    line-height: 38px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+  .stat-label {
+    color: var(--color-muted);
+    font-size: 14px;
+    line-height: 20px;
+  }
+
+  /* The sign-in cards (Devise pages). */
+  .admin-auth-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-line);
+    border-radius: 18px;
+    padding: 24px;
+    width: 100%;
+    max-width: 420px;
+  }
+}

@@ -23,6 +23,9 @@ module TaskBalance
     # Common ones are `templates`, `generators`, or `middleware`, for example.
     config.autoload_lib(ignore: %w[assets tasks])
 
+    # SQL dump: db/structure.sql keeps the trigger that makes admin_actions append-only.
+    config.active_record.schema_format = :sql
+
     config.i18n.load_path += Dir[Rails.root.join("config/locales/**/*.{rb,yml}")]
     config.i18n.default_locale = :fr
     config.i18n.available_locales = [:fr, :en]

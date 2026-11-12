@@ -1,0 +1,29 @@
+fr:
+  back_office:
+    sessions:
+      otp_label: "Code de l'application d'authentification"
+      otp_hint: "Six chiffres. À la toute première connexion, laisser vide : le code se configure à l'étape suivante."
+      code_required: "Connectez-vous avec votre code d'authentification."
+    two_factor:
+      title: "Double authentification"
+      intro: "L'accès au back-office demande un mot de passe et un code à usage unique. À configurer une seule fois, avant d'aller plus loin."
+      link_required: "L'enrôlement se fait avec le lien à usage unique remis par l'équipe technique (valable 30 minutes). Ouvrez ce lien dans ce navigateur, puis revenez ici. S'il a expiré, demandez-en un nouveau."
+      step_app: "1. Ouvrir une application d'authentification (1Password, Authy, Google Authenticator…)."
+      step_secret: "2. Y ajouter ce compte avec la clé suivante (saisie manuelle, type « basé sur le temps »)."
+      account_label: "Compte :"
+      open_in_app: "ouvrir dans l'application"
+      step_code: "3. Saisir le code à six chiffres que l'application affiche."
+      code_label: "Code"
+      submit: "Activer"
+      enrolled: "Double authentification activée. Elle sera demandée à chaque connexion."
+      wrong_code: "Ce code n'est pas bon. Vérifiez l'heure de votre téléphone, attendez le code suivant et réessayez."
+      rate_limited: "Trop d'essais. Patientez quelques minutes."
+  devise:
+    failure:
+      admin_user:
+        invalid: "Email, mot de passe ou code incorrect."
+        not_found_in_database: "Email, mot de passe ou code incorrect."
+        locked: "Compte bloqué après trop d'essais. Réessayez dans 30 minutes."
+        last_attempt: "Il vous reste une tentative avant le blocage du compte."
+        timeout: "Session expirée. Reconnectez-vous."
+        unauthenticated: "Connectez-vous pour accéder au back-office."

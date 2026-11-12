@@ -1,0 +1,13 @@
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<%= csrf_meta_tags %>
+<%= csp_meta_tag %>
+<link rel="icon" href="/icon.png" type="image/png">
+<% unless Rails.env.test? %>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;700;800&family=Figtree:wght@400;500;600;700&display=swap">
+<% end %>
+<%= stylesheet_link_tag "active_admin" %>
+<%# The 50/50 design is light only: no dark-mode script (ActiveAdmin's default one adds `.dark`). %>
+<%= javascript_importmap_tags "active_admin", importmap: ActiveAdmin.importmap %>
