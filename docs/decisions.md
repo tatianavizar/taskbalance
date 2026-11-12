@@ -189,3 +189,13 @@
 - **Personne n'enregistre :** la semaine est « silencieuse ». Elle ne compte pas dans les séries vides individuelles ; trois semaines silencieuses mettent le foyer en sommeil.
 - **Semaine d'arrivée :** neutre pour tout le foyer.
 - **Rejeté :** arrondir les parts avant de vérifier la zone (cela avantage la personne qui en fait le moins).
+
+## 2026-11-12 · D3 : pause déclarée après coup sur une semaine définitive
+- **Décidé par :** la porteuse du projet.
+- **Règle :** le bilan définitif stocké n'est jamais réécrit. Une correction liée à la pause s'affiche par-dessus (« Neutre · pause déclarée le … ») et la régression qu'avait causée la semaine est annulée (niveau et compteur restaurés, blocage levé). Fenêtre : celle des pauses rétroactives (14 jours, ou les semaines d'une question d'absence ou d'une régression jusqu'au bilan définitif suivant).
+- **Repose sur :** E10, F8.
+
+## 2026-11-12 · D5 : marge affichée au niveau ultime
+- **Décidé par :** la porteuse du projet.
+- **Règle :** « il vous reste N semaines » : N est le nombre de semaines déséquilibrées consécutives que le foyer peut encore avoir avant de passer à 85 % ou moins, obtenu en simulant les semaines à venir comme déséquilibrées dans la fenêtre (depuis la première obtention du niveau ultime, 52 semaines au plus).
+- **Repose sur :** E9.
