@@ -39,7 +39,7 @@
 
   <p style="margin:18px 0 0;font-size:12px;line-height:17px;color:#55625b">
     <%= @message.footer_note %><br>
-    <a href="<%= @unsubscribe_url %>" style="color:#0f1a14"><%= t("notifications.footer.unsubscribe", type: t("notifications.event_types.#{@event_type}")) %></a>
-    · <a href="<%= @settings_url %>" style="color:#0f1a14"><%= t("notifications.footer.manage") %></a>
+    <% if @unsubscribe_url %><a href="<%= @unsubscribe_url %>" style="color:#0f1a14"><%= t("notifications.footer.unsubscribe", type: t("notifications.event_types.#{@event_type}")) %></a>
+    · <% end %><a href="<%= @settings_url %>" style="color:#0f1a14"><%= t("notifications.footer.manage") %></a>
   </p>
 </div>

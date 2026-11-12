@@ -292,3 +292,11 @@
 - **« Valider sans reporter l'écart » :** proposé seulement à la personne au-dessus de la zone (D4).
 - **Remise à zéro à trois ou plus :** la personne qui la fait renonce à son seul surplus, rendu aux autres au prorata de ce qui leur est dû.
 - **Arrivée ou départ :** l'écart n'est pas remis à zéro ; la personne qui arrive part de 0.
+
+## 2026-11-13 · Lot 7 et écart : confirmations
+- **Décidé par :** la porteuse du projet.
+- **Écart reporté :** il reste jusqu'à ce que de vraies semaines le compensent (ou une remise à zéro) ; il ne s'efface pas tout seul.
+- **Gestionnaire qui supprime son compte :** elle ou il quitte d'abord le foyer, la gestion passe à la personne la plus ancienne (au lieu du refus de F5).
+- **Dernier membre qui part :** le foyer est supprimé.
+- **Départ :** les enregistrements sont détachés du foyer et des tâches ; ils restent à leur auteur.
+- **« Votre foyer a été supprimé » :** message transactionnel, envoyé quels que soient les réglages, sans lien de désinscription.

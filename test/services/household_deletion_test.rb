@@ -61,6 +61,17 @@ class HouseholdDeletionTest < ActiveSupport::TestCase
     assert_not Notification.exists?(user: @ann, kind: "household_deleted")
   end
 
+  test "the notice is transactional: sent even with alerts off, without unsubscribe" do
+    NotificationPreference.create!(user: @ben, event_type: "alert", enabled: false)
+    assert deletion.save
+
+    notification = Notification.find_by!(user: @ben, kind: "household_deleted")
+    assert_nil notification.suppressed_reason
+    mail = NotificationMailer.notify(notification)
+    assert_nil mail.header["List-Unsubscribe"]
+    assert_no_match "/desinscription/", mail.body.encoded
+  end
+
   test "another household is untouched" do
     other, (zoe, _) = build_household("Zoé")
     assert deletion.save

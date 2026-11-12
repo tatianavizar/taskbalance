@@ -13,12 +13,15 @@ class NotificationMailer < ApplicationMailer
     @message = notification.message
     @user = notification.user
     @event_type = notification.event_type
-    @unsubscribe_url = unsubscribe_url(Notifications::Unsubscribe.token_for(@user, @event_type))
+    @transactional = Notifications::Catalogue.transactional?(notification.kind)
+    @unsubscribe_url = unsubscribe_url(Notifications::Unsubscribe.token_for(@user, @event_type)) unless @transactional
     @settings_url = account_url
     @cta_url = public_send("#{Notifications::Catalogue.fetch(notification.kind).target}_url")
 
-    headers["List-Unsubscribe"] = "<#{@unsubscribe_url}>"
-    headers["List-Unsubscribe-Post"] = "List-Unsubscribe=One-Click"
+    unless @transactional
+      headers["List-Unsubscribe"] = "<#{@unsubscribe_url}>"
+      headers["List-Unsubscribe-Post"] = "List-Unsubscribe=One-Click"
+    end
     headers["Auto-Submitted"] = "auto-generated"
 
     mail(to: @user.email, subject: @message.subject)

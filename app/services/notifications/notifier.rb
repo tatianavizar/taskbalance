@@ -59,7 +59,9 @@ module Notifications
     end
 
     def suppression(user)
-      return "preference" unless NotificationPreference.enabled?(user, event.event_type)
+      unless Catalogue.transactional?(event.kind) || NotificationPreference.enabled?(user, event.event_type)
+        return "preference"
+      end
       return "stale" if @now > event.deliver_at + Event::STALE_AFTER
 
       nil

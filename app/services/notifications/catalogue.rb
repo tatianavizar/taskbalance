@@ -28,9 +28,15 @@ module Notifications
       Entry.new("absence_question", "absence_question", nil,      :dashboard),
       Entry.new("absence_outcome",  "absence_question", nil,      :dashboard),
       Entry.new("pause_declared",   "absence_question", nil,      :dashboard),
-      # Lot 7, F3. No F4 row of its own: follows "alert", never capped.
+      # Lot 7, F3. Transactional (decision 2026-11-13): sent whatever the
+      # preferences, never capped, no unsubscribe link.
       Entry.new("household_deleted", "alert",           nil,      :dashboard)
     ].index_by(&:kind).freeze
+
+    # Account-level messages: they ignore preferences and carry no unsubscribe.
+    TRANSACTIONAL = %w[household_deleted].freeze
+
+    def self.transactional?(kind) = TRANSACTIONAL.include?(kind.to_s)
 
     def self.fetch(kind) = ENTRIES.fetch(kind.to_s)
     def self.kinds = ENTRIES.keys

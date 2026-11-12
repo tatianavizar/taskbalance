@@ -18,5 +18,5 @@
 
 --
 <%= @message.footer_note %>
-<%= t("notifications.footer.unsubscribe", type: t("notifications.event_types.#{@event_type}")) %> : <%= @unsubscribe_url %>
-<%= t("notifications.footer.manage") %> : <%= @settings_url %>
+<% if @unsubscribe_url %><%= t("notifications.footer.unsubscribe", type: t("notifications.event_types.#{@event_type}")) %> : <%= @unsubscribe_url %>
+<% end %><%= t("notifications.footer.manage") %> : <%= @settings_url %>
