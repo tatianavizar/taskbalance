@@ -33,7 +33,16 @@ Rails.application.routes.draw do
     patch "email", action: :update_email
     get "mot-de-passe", action: :edit_password, as: :edit_password
     patch "mot-de-passe", action: :update_password
+    patch "notifications", action: :update_notifications, as: :account_notifications
   end
+
+  # Fil de notifications (H) et désinscription en un clic depuis un email (D9).
+  get "notifications" => "notifications#index", as: :notifications
+  patch "notifications/lecture" => "notifications#read_all", as: :read_all_notifications
+  get "notifications/:id" => "notifications#show", as: :notification, constraints: { id: /\d+/ }
+  get "desinscription/:token" => "unsubscribes#show", as: :unsubscribe
+  post "desinscription/:token" => "unsubscribes#create"
+  post "desinscription/:token/reactiver" => "unsubscribes#resubscribe", as: :resubscribe
 
   get "dashboard" => "pages#dashboard", as: :dashboard
   get "bilan" => "reports#show", as: :report
