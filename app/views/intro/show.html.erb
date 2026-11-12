@@ -7,7 +7,7 @@
     <%= link_to t("intro.skip"), @exit_path, class: "font-bold" unless @last %>
   </div>
 
-  <%= render "intro/step#{@step}" %>
+  <%= render({ 1 => "intro/step1", 2 => "intro/step2", 3 => "intro/step3" }.fetch(@step)) %>
 
   <div class="mt-auto pb-2">
     <%= link_to t(@last ? (user_signed_in? ? "intro.done" : "intro.continue") : "intro.next"), @next_path,
