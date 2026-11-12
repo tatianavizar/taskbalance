@@ -10,6 +10,10 @@ ActiveAdmin.register AdminAction do
   filter :admin_email, label: "Par"
   filter :created_at, label: "Le"
 
+  controller do
+    sortable_by :created_at, :admin_email, :action
+  end
+
   index title: "Journal", download_links: false do
     column("Le", :created_at)
     column("Par", :admin_email)

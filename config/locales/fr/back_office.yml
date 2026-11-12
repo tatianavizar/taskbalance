@@ -7,6 +7,7 @@ fr:
     two_factor:
       title: "Double authentification"
       intro: "L'accès au back-office demande un mot de passe et un code à usage unique. À configurer une seule fois, avant d'aller plus loin."
+      link_required: "L'enrôlement se fait avec le lien à usage unique remis par l'équipe technique (valable 30 minutes). Ouvrez ce lien dans ce navigateur, puis revenez ici. S'il a expiré, demandez-en un nouveau."
       step_app: "1. Ouvrir une application d'authentification (1Password, Authy, Google Authenticator…)."
       step_secret: "2. Y ajouter ce compte avec la clé suivante (saisie manuelle, type « basé sur le temps »)."
       account_label: "Compte :"

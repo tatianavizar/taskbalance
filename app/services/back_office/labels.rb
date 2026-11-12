@@ -25,13 +25,29 @@ module BackOffice
       "invitation.resent" => "Invitation renvoyée",
       "invitation.cancelled" => "Invitation annulée",
       "household.unblocked" => "Foyer débloqué",
-      "user.email_confirmed" => "Email confirmé",
+      "user.email_confirmed" => "Email actuel confirmé",
+      "user.email_change_confirmed" => "Changement d'email confirmé",
+      "admin.signed_in" => "Connexion",
+      "admin.sign_in_failed" => "Connexion refusée",
+      "admin.locked" => "Compte bloqué après trop d'essais",
+      "admin.bootstrapped" => "Compte créé (console)",
+      "admin.password_reset" => "Mot de passe réinitialisé (console)",
+      "admin.two_factor_reset" => "Double authentification réinitialisée (console)",
+      "two_factor.enrolment_failed" => "Code d'enrôlement refusé",
       "user.account_deleted" => "Compte supprimé"
     }.freeze
 
     ROLES = { "manager" => "Gestionnaire", "member" => "Membre" }.freeze
 
     module_function
+
+    # « semaine 45 »: the ISO week of the household's last log, in its own
+    # zone, for a household of two or more (the query leaves it nil below).
+    # Never the day: nothing a single person did on a given date.
+    def activity_week(household)
+      at = household[:last_activity_at]
+      at ? Week.containing(at, household.time_zone).label.downcase : "—"
+    end
 
     def household_state(state) = HOUSEHOLD_STATES.fetch(state.to_s, [ state.to_s, "pill-soft" ])
     def invitation_state(state) = INVITATION_STATES.fetch(state.to_s, [ state.to_s, "pill-soft" ])

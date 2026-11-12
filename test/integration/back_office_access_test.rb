@@ -61,8 +61,7 @@ class BackOfficeAccessTest < ActionDispatch::IntegrationTest
   test "a password-only session opened before enrolment does not carry over once the account is enrolled" do
     admin = create_admin(enrolled: false)
     sign_in_admin(admin, otp: "") # session A: password only
-    admin.ensure_otp_secret!
-    admin.update!(otp_required_for_login: true) # enrolled elsewhere meanwhile
+    admin.update!(otp_secret: AdminUser.generate_otp_secret, otp_required_for_login: true) # enrolled elsewhere meanwhile
     get "/admin/users"
     assert_redirected_to "/admin/login"
     get "/admin/users"
@@ -71,6 +70,7 @@ class BackOfficeAccessTest < ActionDispatch::IntegrationTest
 
   test "a new admin without the second factor sees nothing but the enrolment page" do
     admin = create_admin(enrolled: false)
+    open_enrolment_link(admin)
     sign_in_admin(admin, otp: "")
     assert_redirected_to "/admin"
     follow_redirect!
@@ -88,6 +88,7 @@ class BackOfficeAccessTest < ActionDispatch::IntegrationTest
 
   test "enrolment: the first code turns the second factor on and opens the back office" do
     admin = create_admin(enrolled: false)
+    open_enrolment_link(admin)
     sign_in_admin(admin, otp: "")
     get "/admin/two_factor"
 
@@ -109,10 +110,7 @@ class BackOfficeAccessTest < ActionDispatch::IntegrationTest
   end
 
   test "after enrolment the next sign-in needs a code" do
-    admin = create_admin(enrolled: false)
-    sign_in_admin(admin, otp: "")
-    get "/admin/two_factor"
-    post "/admin/two_factor", params: { code: otp_code(admin) }
+    admin = enrol_admin!
     delete destroy_admin_user_session_path
 
     sign_in_admin(admin, otp: "")

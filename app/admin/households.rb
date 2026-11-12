@@ -17,14 +17,19 @@ ActiveAdmin.register Household do
   filter :blocked_at, label: "Bloqué depuis", as: :date_range
 
   controller do
+    sortable_by :name, :time_zone, :level, :state, :blocked_at, :created_at
+
     # Counts and one date per household, in the same query. The last activity
-    # is the date of the household's latest log, nothing more of it.
+    # is the date of the household's latest log, nothing more of it, and only
+    # for a household of two or more: with one member it would be that
+    # person's own activity. It is shown as an ISO week.
     def scoped_collection
       super.select(
         "households.*",
         "(SELECT COUNT(*) FROM household_members WHERE household_members.household_id = households.id) AS member_count",
         "(SELECT COUNT(*) FROM household_weeks WHERE household_weeks.household_id = households.id AND household_weeks.status = 'final') AS final_weeks_count",
-        "(SELECT MAX(chore_logs.completed_at) FROM chore_logs WHERE chore_logs.household_id = households.id) AS last_activity_at"
+        "(CASE WHEN (SELECT COUNT(*) FROM household_members WHERE household_members.household_id = households.id) >= 2 " \
+        "THEN (SELECT MAX(chore_logs.completed_at) FROM chore_logs WHERE chore_logs.household_id = households.id) END) AS last_activity_at"
       )
     end
   end
@@ -40,7 +45,7 @@ ActiveAdmin.register Household do
     end
     column("Bloqué depuis", :blocked_at)
     column("Semaines finales", sortable: false) { |household| household[:final_weeks_count] }
-    column("Dernière activité", sortable: false) { |household| household[:last_activity_at] ? l(household[:last_activity_at].to_date, format: :long) : "—" }
+    column("Dernière activité", sortable: false) { |household| BackOffice::Labels.activity_week(household) }
     actions defaults: false do |household|
       item "Voir", admin_household_path(household)
     end
@@ -59,7 +64,7 @@ ActiveAdmin.register Household do
       end
       row("Bloqué depuis") { |household| household.blocked_at ? l(household.blocked_at, format: :long) : "—" }
       row("Semaines finales") { |household| household[:final_weeks_count] }
-      row("Dernière activité") { |household| household[:last_activity_at] ? l(household[:last_activity_at].to_date, format: :long) : "—" }
+      row("Dernière activité") { |household| BackOffice::Labels.activity_week(household) }
       row("Créé le") { |household| l(household.created_at, format: :long) }
     end
 

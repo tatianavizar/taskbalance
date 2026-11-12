@@ -25,6 +25,8 @@ Rails.application.routes.draw do
   )
   scope "admin", module: "back_office", as: "back_office" do
     resource :two_factor, only: [ :show, :create ]
+    # The one-time link printed by `admin:bootstrap` / `admin:reset_two_factor`.
+    get "two_factor/link/:token", to: "two_factors#redeem", as: :two_factor_link, constraints: { token: /[^\/]+/ }
   end
   ActiveAdmin.routes(self)
 

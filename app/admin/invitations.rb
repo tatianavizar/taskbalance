@@ -17,6 +17,8 @@ ActiveAdmin.register Invitation do
   filter :created_at, label: "Envoyée le"
 
   controller do
+    sortable_by :first_name, :email, :state, :created_at, :last_sent_at, :expires_at, :resend_count
+
     def scoped_collection
       super.includes(:household)
     end

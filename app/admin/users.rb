@@ -18,6 +18,8 @@ ActiveAdmin.register User do
   filter :deleted_at, label: "Supprimé le", as: :date_range
 
   controller do
+    sortable_by :first_name, :email, :confirmed_at, :created_at, :deleted_at
+
     def scoped_collection
       super.includes(household_membership: :household)
     end
@@ -53,13 +55,26 @@ ActiveAdmin.register User do
     end
   end
 
-  action_item :confirm_email, only: :show, if: -> { !resource.deleted? && (resource.confirmed_at.nil? || resource.unconfirmed_email.present?) } do
-    link_to "Confirmer l'email", confirm_email_admin_user_path(resource), method: :post,
-            data: { confirm: "Confirmer l'email #{resource.email} sans que la personne clique sur le lien ?" }
+  # Two separate actions: the address people sign in with, and the address
+  # they asked to change to. Each dialog names the address it acts on, and the
+  # action refuses when that address is no longer the one on file.
+  action_item :confirm_current_email, only: :show, if: -> { !resource.deleted? && resource.confirmed_at.nil? } do
+    link_to "Confirmer l'adresse actuelle", confirm_current_email_admin_user_path(resource, email: resource.email), method: :post,
+            data: { confirm: "Confirmer l'adresse actuelle #{resource.email} ?" }
   end
 
-  member_action :confirm_email, method: :post do
-    result = BackOffice::Actions.confirm_user_email(current_admin_user, resource)
+  action_item :confirm_pending_email, only: :show, if: -> { !resource.deleted? && resource.unconfirmed_email.present? } do
+    link_to "Confirmer le changement vers #{resource.unconfirmed_email}", confirm_pending_email_admin_user_path(resource, email: resource.unconfirmed_email), method: :post,
+            data: { confirm: "Remplacer l'adresse de connexion #{resource.email} par #{resource.unconfirmed_email} ? La personne se connectera avec la nouvelle." }
+  end
+
+  member_action :confirm_current_email, method: :post do
+    result = BackOffice::Actions.confirm_current_email(current_admin_user, resource, expected: params[:email])
+    redirect_to admin_user_path(resource), (result.ok? ? { notice: result.message } : { alert: result.message })
+  end
+
+  member_action :confirm_pending_email, method: :post do
+    result = BackOffice::Actions.confirm_pending_email(current_admin_user, resource, expected: params[:email])
     redirect_to admin_user_path(resource), (result.ok? ? { notice: result.message } : { alert: result.message })
   end
 

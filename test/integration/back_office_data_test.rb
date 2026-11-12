@@ -35,7 +35,7 @@ class BackOfficeDataTest < ActionDispatch::IntegrationTest
                  .map { |r| [ r.verb, r.path.spec.to_s.sub("(.:format)", "") ] }
     assert_empty paths.select { |_, path| path.end_with?("/new", "/edit", "/batch_action") }
     writes = paths.select { |verb, _| %w[POST PUT PATCH DELETE].include?(verb) }.map(&:last)
-    allowed = %w[/admin/users/:id/confirm_email /admin/users/:id/delete_account
+    allowed = %w[/admin/users/:id/confirm_current_email /admin/users/:id/confirm_pending_email /admin/users/:id/delete_account
                  /admin/households/:id/unblock
                  /admin/invitations/:id/resend /admin/invitations/:id/cancel
                  /admin/login /admin/logout /admin/two_factor /admin]
@@ -116,7 +116,8 @@ class BackOfficeDataTest < ActionDispatch::IntegrationTest
     assert_includes cells, "2"
     assert_includes cells, "Bloqué"
     assert_includes cells, "1"
-    assert_includes cells.join(" "), "5 novembre 2026"
+    assert_includes cells, "semaine 45"
+    assert_not_includes cells.join(" "), "5 novembre", "the day of a log is never shown"
 
     get "/admin/households/#{@household.id}"
     assert_response :success

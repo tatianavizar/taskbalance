@@ -1,0 +1,7 @@
+<div class="admin-auth-card space-y-4">
+  <h2 class="text-xl font-bold"><%= site_title %></h2>
+  <% set_page_title t("back_office.two_factor.title") %>
+  <h3 class="text-lg font-bold"><%= t("back_office.two_factor.title") %></h3>
+  <p class="text-sm" data-test-link-required><%= t("back_office.two_factor.link_required") %></p>
+  <p class="text-sm"><%= link_to t("active_admin.logout"), destroy_admin_user_session_path, data: { turbo_method: :delete, method: :delete }, class: "underline" %></p>
+</div>

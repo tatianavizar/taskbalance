@@ -50,14 +50,42 @@ module BackOffice
         end
       end
 
-      def confirm_user_email(admin, user)
+      # The address the person signs in with, still unconfirmed. Never touches a
+      # pending change of address (`confirm` would swap it in). `expected` is the
+      # address the dialog showed: refused when it is no longer the one on file.
+      def confirm_current_email(admin, user, expected:)
         return failure("Ce compte est supprimé.") if user.deleted?
+        return failure("L'adresse a changé depuis l'affichage de la page : rechargez.") unless same_email?(user.email, expected)
+        return failure("L'adresse actuelle est déjà confirmée.") if user.confirmed_at
 
         AdminAction.transaction do
-          return failure("L'email est déjà confirmé.") unless user.confirm
+          user.update_columns(confirmed_at: Time.current, confirmation_token: nil)
+          AdminAction.record!(admin: admin, action: "user.email_confirmed", record: user,
+                              email_digest: AdminAction.digest(user.email))
+          success("Adresse actuelle confirmée.")
+        end
+      end
 
-          AdminAction.record!(admin: admin, action: "user.email_confirmed", record: user)
-          success("Email confirmé.")
+      # The change of address the person asked for: it replaces the sign-in
+      # email. The audit row keeps keyed digests of the old and the new address.
+      def confirm_pending_email(admin, user, expected:)
+        return failure("Ce compte est supprimé.") if user.deleted?
+        return failure("Aucun changement d'adresse en attente.") if user.unconfirmed_email.blank?
+        return failure("Le changement en attente n'est plus celui affiché : rechargez.") unless same_email?(user.unconfirmed_email, expected)
+
+        AdminAction.transaction do
+          before = user.email
+          pending = user.unconfirmed_email
+          # Not Devise's `confirm`: it refuses a link older than 24 h, which is
+          # beside the point when the team confirms by hand.
+          user.skip_reconfirmation!
+          unless user.update(email: pending, unconfirmed_email: nil, confirmed_at: Time.current, confirmation_token: nil)
+            return failure("Ce changement n'a pas pu être confirmé : #{user.errors.full_messages.to_sentence}")
+          end
+
+          AdminAction.record!(admin: admin, action: "user.email_change_confirmed", record: user,
+                              from_digest: AdminAction.digest(before), to_digest: AdminAction.digest(pending))
+          success("Changement d'adresse confirmé : la personne se connecte désormais avec la nouvelle.")
         end
       end
 
@@ -76,6 +104,10 @@ module BackOffice
       end
 
       private
+
+      def same_email?(one, other)
+        one.to_s.strip.casecmp?(other.to_s.strip)
+      end
 
       def success(message) = Result.new(ok: true, message: message)
       def failure(message) = Result.new(ok: false, message: message)

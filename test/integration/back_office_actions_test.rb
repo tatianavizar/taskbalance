@@ -158,22 +158,74 @@ class BackOfficeActionsTest < ActionDispatch::IntegrationTest
 
   # ---- Confirm email --------------------------------------------------------
 
-  test "the team confirms an email, and it is logged" do
+  test "the team confirms the current address; the audit row has a digest, not the address" do
     dana = users(:dana)
     assert_nil dana.confirmed_at
-    post confirm_email_admin_user_path(dana)
+    post confirm_current_email_admin_user_path(dana), params: { email: dana.email }
     assert_redirected_to admin_user_path(dana)
-    assert_equal "Email confirmé.", flash[:notice]
+    assert_equal "Adresse actuelle confirmée.", flash[:notice]
     assert_not_nil dana.reload.confirmed_at
     assert_equal "user.email_confirmed", last_entry.action
     assert_equal [ "User", dana.id ], [ last_entry.record_type, last_entry.record_id ]
+    assert_equal AdminAction.digest("dana@test.com"), last_entry.detail["email_digest"]
+    assert_no_match(/dana@test/, last_entry.detail.to_json)
   end
 
-  test "an email already confirmed is not logged again" do
+  test "confirming the current address never swaps in a pending one" do
+    dana = users(:dana)
+    dana.update_columns(unconfirmed_email: "dana.new@test.com")
+    post confirm_current_email_admin_user_path(dana), params: { email: dana.email }
+    dana.reload
+    assert_equal "dana@test.com", dana.email
+    assert_equal "dana.new@test.com", dana.unconfirmed_email
+    assert_not_nil dana.confirmed_at
+  end
+
+  test "the team confirms a pending change of address, named in the dialog, with old and new digests" do
+    alice = @alice
+    alice.update_columns(unconfirmed_email: "alice.new@test.com")
+
+    get admin_user_path(alice)
+    assert_select "a", text: "Confirmer le changement vers alice.new@test.com"
+    assert_select "a", text: "Confirmer l'adresse actuelle", count: 0
+
+    post confirm_pending_email_admin_user_path(alice), params: { email: "alice.new@test.com" }
+    assert_match(/Changement d'adresse confirmé/, flash[:notice])
+    alice.reload
+    assert_equal "alice.new@test.com", alice.email
+    assert_nil alice.unconfirmed_email
+    assert_equal "user.email_change_confirmed", last_entry.action
+    assert_equal AdminAction.digest("alice@test.com"), last_entry.detail["from_digest"]
+    assert_equal AdminAction.digest("alice.new@test.com"), last_entry.detail["to_digest"]
+    assert_no_match(/alice/, last_entry.detail.to_json)
+  end
+
+  test "an action acts only on the address the page showed" do
+    alice = @alice
+    alice.update_columns(unconfirmed_email: "alice.other@test.com")
     assert_no_difference "AdminAction.count" do
-      post confirm_email_admin_user_path(@alice)
+      post confirm_pending_email_admin_user_path(alice), params: { email: "alice.shown@test.com" }
     end
-    assert_match(/déjà confirmé/, flash[:alert])
+    assert_match(/plus celui affiché/, flash[:alert])
+    assert_equal "alice@test.com", alice.reload.email
+
+    assert_no_difference "AdminAction.count" do
+      post confirm_pending_email_admin_user_path(alice)
+    end
+    dana = users(:dana)
+    assert_no_difference "AdminAction.count" do
+      post confirm_current_email_admin_user_path(dana), params: { email: "stale@test.com" }
+    end
+    assert_nil dana.reload.confirmed_at
+  end
+
+  test "an address already confirmed is not logged again; no pending change, nothing to confirm" do
+    assert_no_difference "AdminAction.count" do
+      post confirm_current_email_admin_user_path(@alice), params: { email: @alice.email }
+      assert_match(/déjà confirmée/, flash[:alert])
+      post confirm_pending_email_admin_user_path(@alice), params: { email: "x@test.com" }
+      assert_match(/Aucun changement/, flash[:alert])
+    end
   end
 
   # ---- Delete an account ----------------------------------------------------
@@ -244,7 +296,7 @@ class BackOfficeActionsTest < ActionDispatch::IntegrationTest
     post resend_admin_invitation_path(invitation)
     post cancel_admin_invitation_path(invitation)
     post unblock_admin_household_path(@household)
-    post confirm_email_admin_user_path(users(:dana))
+    post confirm_current_email_admin_user_path(users(:dana)), params: { email: "dana@test.com" }
     post delete_account_admin_user_path(users(:bob)), params: { typed_email: "bob@test.com" }
 
     assert_equal 0, invitation.reload.resend_count
@@ -252,7 +304,7 @@ class BackOfficeActionsTest < ActionDispatch::IntegrationTest
     assert_predicate @household.reload, :blocked?
     assert_nil users(:dana).reload.confirmed_at
     assert_not users(:bob).reload.deleted?
-    assert_equal 0, AdminAction.where.not(action: "two_factor.enrolled").count
+    assert_equal 0, AdminAction.where("action ~ ?", "^(invitation|household|user)\\.").count
   end
 
   test "an app user cannot run any action" do
@@ -284,12 +336,17 @@ class BackOfficeActionsTest < ActionDispatch::IntegrationTest
     assert_not_includes Rails.application.routes.routes.map { |r| r.path.spec.to_s }.grep(%r{admin_actions}).join, "edit"
   end
 
-  test "a row of the journal outlives the admin account" do
+  test "an admin with journal rows is deactivated, not destroyed" do
     invitation = invite
     post cancel_admin_invitation_path(invitation)
     entry = last_entry
-    @admin.destroy!
-    assert_nil entry.reload.admin_user_id
-    assert_equal "team@cinquante.test", entry.admin_email
+    assert_raises(ActiveRecord::DeleteRestrictionError) { @admin.destroy }
+    assert_equal @admin.id, entry.reload.admin_user_id
+
+    @admin.deactivate!
+    get "/admin/users"
+    assert_redirected_to "/admin/login"
+    sign_in_admin(@admin)
+    assert_response :unprocessable_entity
   end
 end
