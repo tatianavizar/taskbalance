@@ -35,10 +35,12 @@ class MemberPauseTest < ActiveSupport::TestCase
     end
   end
 
-  test "the weeks of an absence inquiry stay eligible beyond 14 days" do
+  test "the weeks of an absence inquiry stay eligible beyond 14 days, until the next final report" do
     @household.absence_inquiries.create!(household_member: @bob_membership, first_week_start: Date.new(2026, 9, 28),
                                          last_week_start: Date.new(2026, 10, 5), deadline_at: paris(2026, 10, 14, 20))
-    travel_to(paris(2026, 10, 20, 9)) { assert declare(Date.new(2026, 9, 28)).valid? }
+    # Window end: the final report of the week of 12 Oct, Monday 19 Oct 03:00.
+    travel_to(paris(2026, 10, 19, 2, 59)) { assert declare(Date.new(2026, 9, 28)).valid? }
+    travel_to(paris(2026, 10, 19, 3, 0)) { assert_not declare(Date.new(2026, 9, 28)).valid? }
   end
 
   test "a retroactive pause cannot cover a closed week where the member logged" do

@@ -15,7 +15,9 @@ class AbsenceInquiry < ApplicationRecord
   belongs_to :household
   belongs_to :household_member
 
-  enum :status, { pending: "pending", paused: "paused", regressed: "regressed" }, validate: true
+  # cancelled: the regression applied at the deadline was undone by a pause
+  # declared afterwards, within the window (D3).
+  enum :status, { pending: "pending", paused: "paused", regressed: "regressed", cancelled: "cancelled" }, validate: true
 
   validates :first_week_start, :last_week_start, :deadline_at, presence: true
 
@@ -25,6 +27,21 @@ class AbsenceInquiry < ApplicationRecord
   def self.deadline_for(last_week)
     day = last_week.next.monday + DEADLINE_WDAY_OFFSET
     last_week.time_zone.local(day.year, day.month, day.day, DEADLINE_HOUR)
+  end
+
+  # The inquiry's weeks stay open to a retroactive pause (and the regression
+  # to cancellation) until the next final report after the deadline: the
+  # Monday 03:00 closing the week after `last_week_start` (D3).
+  def correction_window_end
+    HouseholdWeek.final_at(Week.new(last_week_start, household.zone).next)
+  end
+
+  def correction_window_open?(now = Time.current)
+    now < correction_window_end
+  end
+
+  def covers_week?(week)
+    week.monday.between?(first_week_start, last_week_start)
   end
 
   def weeks

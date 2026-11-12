@@ -15,6 +15,8 @@ class HouseholdWeek < ApplicationRecord
 
   belongs_to :household
   has_many :level_changes, dependent: nil # nullified by the foreign key
+  # D3: corrections laid over the report; the report itself never changes.
+  has_many :week_corrections, dependent: nil # deleted by the foreign key
 
   enum :status, { provisional: "provisional", final: "final" }, validate: true
   enum :outcome, { balanced: "balanced", unbalanced: "unbalanced", neutral: "neutral" }, validate: true
@@ -26,6 +28,7 @@ class HouseholdWeek < ApplicationRecord
   validate :week_start_is_a_monday
 
   scope :chronological, -> { order(:week_start) }
+  scope :uncorrected, -> { where.not(id: WeekCorrection.select(:household_week_id)) }
 
   def self.provisional_at(week)
     week.time_zone.local(week.sunday.year, week.sunday.month, week.sunday.day, PROVISIONAL_HOUR)
@@ -39,6 +42,19 @@ class HouseholdWeek < ApplicationRecord
   # A final report is never rewritten (docs/backend-backlog.md, product rules).
   def readonly?
     super || (persisted? && status_in_database == "final")
+  end
+
+  def corrected?
+    week_corrections.any?
+  end
+
+  # What screens show: neutral once a retroactive pause corrected the week.
+  def effective_outcome
+    corrected? ? "neutral" : outcome
+  end
+
+  def effective_neutral_reason
+    corrected? ? WeekCorrection::NEUTRAL_REASON : neutral_reason
   end
 
   def week

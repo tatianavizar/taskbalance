@@ -34,15 +34,49 @@ module Progression
     [ household.ultimate_reached_on, cap ].compact.max
   end
 
-  # Share of balanced weeks among the final, non-neutral weeks of that window.
+  # Final weeks that count in the ultimate ratio: not neutral, and not made
+  # neutral by a retroactive pause (WeekCorrection, D3).
+  def counted_weeks(household)
+    household.household_weeks.final.where.not(outcome: "neutral").uncorrected
+  end
+
+  # Share of balanced weeks among the counted weeks of that window.
   # nil when the window holds no such week.
   def ultimate_ratio(household, week)
-    weeks = household.household_weeks.final.where.not(outcome: "neutral")
-      .where(week_start: ultimate_window_start(household, week)..week.monday)
+    weeks = counted_weeks(household).where(week_start: ultimate_window_start(household, week)..week.monday)
     total = weeks.count
     return nil if total.zero?
 
     weeks.balanced.count.to_r / total
+  end
+
+  # D5 (decision 2026-11-12), « il vous reste N semaines »: how many
+  # consecutive unbalanced weeks, from the week after the last final report,
+  # the household can still have while keeping the ratio strictly above the
+  # keep rate. Simulated week by week in the window (from ultimate_reached_on,
+  # capped at ULTIMATE_WINDOW_WEEKS, so the oldest weeks drop out as it
+  # slides; neutral and corrected weeks excluded). nil when the household is
+  # not at the ultimate level.
+  def ultimate_margin(household)
+    return nil unless household.level == ULTIMATE
+
+    last_monday = household.household_weeks.final.maximum(:week_start)
+    return nil if last_monday.nil?
+
+    outcomes = counted_weeks(household).pluck(:week_start, :outcome).to_h
+    margin = 0
+    (1..(HouseholdRules::ULTIMATE_WINDOW_WEEKS + 1)).each do |k|
+      monday = last_monday + (7 * k)
+      start = ultimate_window_start(household, Week.new(monday, household.zone))
+      window = outcomes.select { |day, _| day >= start && day <= monday }
+      balanced = window.count { |_, outcome| outcome == "balanced" }
+      simulated_in_window = (1..k).count { |i| last_monday + (7 * i) >= start }
+      total = window.size + simulated_in_window
+      break unless total.positive? && Rational(balanced, total) > ULTIMATE_MIN_RATIO
+
+      margin = k
+    end
+    margin
   end
 
   # Kept while the ratio is strictly above HouseholdRules::ULTIMATE_KEEP_RATE %.

@@ -66,36 +66,131 @@ class WeeklyEngine
     result
   end
 
+  # What a retroactive pause changed on final weeks (D3).
+  Correction = Struct.new(:corrections, :level_changes) do
+    def initialize(*)
+      super([], [])
+    end
+  end
+
   # Called after a MemberPause is created. A pause that covers a pending
-  # inquiry's weeks resolves it now: no regression.
-  def pause_declared(pause)
+  # inquiry's weeks resolves it now: no regression. A pause over final weeks
+  # goes through retroactive_pause_on_final_weeks (D3).
+  def pause_declared(pause, now: Time.current)
+    correction = Correction.new
     household.with_lock do
       household.absence_inquiries.pending.where(household_member_id: pause.household_member_id).find_each do |inquiry|
         next unless inquiry.weeks.any? { |week| pause.covers?(week) }
 
-        resolve_as_paused(inquiry, Time.current)
+        resolve_as_paused(inquiry, now)
       end
-      refresh_state!
 
       range = (pause.starts_on - 6)..pause.ends_on
       covered_final = household.household_weeks.final.where(week_start: range).select { |hw| pause.covers?(hw.week) }
-      retroactive_pause_on_final_weeks(pause, covered_final) if covered_final.any?
+      correction = retroactive_pause_on_final_weeks(pause, covered_final, now: now) if covered_final.any?
+      refresh_state!
     end
+    correction
   end
 
-  # TODO(D3): a pause declared after the fact over weeks whose report is
-  # already final (E10, F8) — does it make those weeks neutral, and does it
-  # cancel a regression already applied (backlog 2.2b default: "cancelling a
-  # regression restores the previous level and counter value")? That would be
-  # an exception to "a final report is never rewritten", and it is an open
-  # product decision (docs/plan-de-travail.md, D3). Until it is decided this
-  # does nothing: final weeks stay as written, an applied regression stays.
-  # Pending inquiries are not concerned (resolved above, as decided).
-  def retroactive_pause_on_final_weeks(_pause, _final_weeks)
-    :undecided_d3
+  # D3 (decision 2026-11-12): a pause declared after the fact over final weeks.
+  # - The stored reports are never rewritten: a WeekCorrection is laid over
+  #   each covered final week (« Neutre · pause déclarée le … »).
+  # - Only weeks inside the retroactive-pause window are corrected: the last
+  #   14 days, or the weeks of an absence inquiry or regression until the next
+  #   final report after its deadline. Outside it, nothing happens.
+  # - A regression applied because of those weeks is cancelled: level and
+  #   counter restored from the regression's LevelChange, block lifted (unless
+  #   another member's regression still stands), and a regression_cancelled
+  #   LevelChange logged. The inquiry becomes `cancelled`.
+  # - The member's empty-week streak is recomputed from the final reports and
+  #   corrections, so it reads as if the pause had been there.
+  # Idempotent: a second call corrects and cancels nothing more.
+  def retroactive_pause_on_final_weeks(pause, final_weeks, now: Time.current)
+    correction = Correction.new
+    membership = pause.household_member
+    final_weeks.each do |household_week|
+      next unless correctable?(household_week, membership, now)
+
+      record = household_week.week_corrections.find_or_create_by!(user_id: membership.user_id) do |c|
+        c.household = household
+        c.member_pause = pause
+        c.declared_by_id = pause.declared_by_id
+        c.first_name = membership.user.first_name
+        c.declared_at = pause.created_at || now
+      end
+      correction.corrections << record if record.previously_new_record?
+    end
+
+    household.absence_inquiries.regressed.where(household_member: membership).order(:deadline_at).each do |inquiry|
+      next unless inquiry.correction_window_open?(now) && inquiry.weeks.any? { |week| pause.covers?(week) }
+
+      change = cancel_regression!(inquiry, now)
+      correction.level_changes << change if change
+    end
+
+    recompute_streak!(membership)
+    correction
   end
 
   private
+
+  def correctable?(household_week, membership, now)
+    snapshot = household_week.member_snapshot(membership.user_id)
+    return false if snapshot.nil? || snapshot["paused"] || snapshot["logs_count"].to_i.positive?
+
+    week = household_week.week
+    in_last_days = week.sunday >= now.in_time_zone(zone).to_date - MemberPause::RETROACTIVE_DAYS
+    in_last_days || household.absence_inquiries.where(household_member: membership).any? do |inquiry|
+      inquiry.covers_week?(week) && inquiry.correction_window_open?(now)
+    end
+  end
+
+  def cancel_regression!(inquiry, now)
+    inquiry.update!(status: "cancelled", resolved_at: now)
+    return unless household.blocked?
+    # Another member's regression applied during the same block still stands.
+    return if household.absence_inquiries.regressed.where(deadline_at: household.blocked_at..).exists?
+
+    regression = household.level_changes.standing_regressions.chronological.last
+    if regression.nil? || household.level_changes.chronological.last != regression
+      household.update!(state: "active", blocked_at: nil)
+      return
+    end
+
+    change = record_level_change(household.level, regression.from_level, household.balanced_weeks_count,
+                                 regression.balanced_weeks_count_before, :regression_cancelled,
+                                 week_start: regression.week_start, absence_inquiry: inquiry,
+                                 cancelled_level_change: regression)
+    household.update!(level: regression.from_level, balanced_weeks_count: regression.balanced_weeks_count_before,
+                      state: "active", blocked_at: nil)
+    change
+  end
+
+  # The streak as the final reports and corrections tell it: consecutive most
+  # recent final weeks where the member, present and not paused (nor
+  # corrected), logged nothing. Same skips as update_streaks: households under
+  # two members, silent weeks, the member's arrival week.
+  def recompute_streak!(membership)
+    streak = 0
+    household.household_weeks.final.includes(:week_corrections).order(week_start: :desc).each do |household_week|
+      snapshot = household_week.member_snapshot(membership.user_id)
+      break if snapshot.nil?
+
+      members = household_week.members
+      next if members.size < 2
+
+      corrected = household_week.week_corrections.map(&:user_id)
+      paused = ->(m) { m["paused"] || corrected.include?(m["user_id"]) }
+      active = members.reject(&paused)
+      next if active.any? && active.all? { |m| m["logs_count"].to_i.zero? }
+      break if paused.(snapshot) || snapshot["logs_count"].to_i.positive?
+      next if snapshot["arrived"]
+
+      streak += 1
+    end
+    membership.update!(empty_weeks_streak: streak) if membership.empty_weeks_streak != streak
+  end
 
   def zone
     household.zone

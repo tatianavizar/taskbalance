@@ -191,12 +191,18 @@ class WeeklyEngineTest < ActiveSupport::TestCase
     run_engine(household, final_at(week(14)))
     assert_equal 5, household.level
     assert_equal week(14).monday, household.ultimate_reached_on
+    assert_equal 0, Progression.ultimate_margin(household)
+
+    run_engine(household, final_at(week(19)))
+    assert_equal 1, Progression.ultimate_margin(household), "D5: one unbalanced week can be absorbed"
 
     run_engine(household, final_at(week(20)))
     assert_equal 5, household.level, "6/7 = 85.7 % keeps it"
+    assert_equal 0, Progression.ultimate_margin(household)
 
     run_engine(household, final_at(week(21)))
     assert_equal 4, household.level
+    assert_nil Progression.ultimate_margin(household)
     assert household.level_changes.chronological.last.ultimate_lost?
 
     run_engine(household, final_at(week(26)))
@@ -431,25 +437,6 @@ class WeeklyEngineTest < ActiveSupport::TestCase
     assert household.solo?
     assert_equal 0, membership(household, alice).empty_weeks_streak
     assert_equal [ "too_few_active_members" ], household.household_weeks.where.not(week_start: week(-1).monday).distinct.pluck(:neutral_reason)
-  end
-
-  test "TODO(D3) seam: a pause declared after the regression changes no final week and cancels nothing" do
-    household, (alice, bob) = couple
-    two_empty_weeks_for_bob(household, alice, bob)
-    run_engine(household, paris(2026, 10, 28, 21))
-    assert household.blocked?
-    before = household.household_weeks.final.map(&:attributes)
-
-    travel_to(paris(2026, 10, 29, 9)) do
-      pause = MemberPause.declare!(member: membership(household, bob), declared_by: alice,
-                                   starts_on: week(1).monday, ends_on: week(2).sunday)
-      assert_equal :undecided_d3, WeeklyEngine.new(household).retroactive_pause_on_final_weeks(pause, [])
-    end
-
-    household.reload
-    assert household.blocked?
-    assert_equal 0, household.level
-    assert_equal before, household.household_weeks.final.map(&:attributes)
   end
 
   # ---- state on arrivals and departures ------------------------------------
