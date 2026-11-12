@@ -80,6 +80,24 @@ class PlannedSplit
     shares.values.all? { |share| share.average.nil? || share.average.round == fair }
   end
 
+  # Participants whose bar (the average of the two charges, unrounded) is
+  # outside the zone (HouseholdRules.zone). Lot 6 warns without blocking.
+  def outside_zone
+    zone = HouseholdRules.zone(participants.size)
+    return [] if zone.nil?
+
+    participants.select do |participant|
+      average = share_of(participant.key)&.average
+      average && !zone.cover?(average)
+    end
+  end
+
+  # Above the zone: they carry the surplus of this split.
+  def above_zone
+    zone = HouseholdRules.zone(participants.size)
+    outside_zone.select { |participant| share_of(participant.key).average > zone.max }
+  end
+
   def items_by_category
     items.group_by(&:category)
   end

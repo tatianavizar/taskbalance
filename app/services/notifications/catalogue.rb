@@ -20,6 +20,8 @@ module Notifications
       Entry.new("alert_blocked",    "alert",            "alert",  :dashboard), # E4
       Entry.new("alert_unblocked",  "alert",            "alert",  :dashboard), # E5
       Entry.new("task_assigned",    "task_assigned",    nil,      :chores),
+      Entry.new("task_offered",     "task_assigned",    nil,      :chores), # D15
+      Entry.new("task_offer_answered", "task_assigned", nil,      :chores), # D16
       Entry.new("monday_split",     "monday_split",     nil,      :chores),
       Entry.new("gap_reset",        "monday_split",     nil,      :chores),
       Entry.new("household_ready",  "monday_split",     nil,      :dashboard), # B12 « Prêt »
