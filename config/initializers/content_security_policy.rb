@@ -19,8 +19,7 @@
 Rails.application.configure do
   cable_origins =
     if Rails.env.production?
-      app_host = ENV.fetch("APP_HOST") { Rails.application.credentials.dig(:app_host) || "cinquante.app" }
-      [ "wss://#{app_host}" ]
+      AppHosts.all(ENV, Rails.application.credentials).map { |host| "wss://#{host}" } # config/app_hosts.rb
     else
       [ "ws://localhost:*", "ws://127.0.0.1:*" ]
     end
