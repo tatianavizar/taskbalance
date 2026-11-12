@@ -41,6 +41,14 @@ class SplitSettingChange < ApplicationRecord
     applied?
   end
 
+  # Lot 7: a member left; the change applies if everyone still here agreed.
+  def apply_if_complete!
+    return false unless pending?
+
+    apply! if pending_members.empty?
+    applied?
+  end
+
   # Members who have not validated yet, oldest first.
   def pending_members
     approved = approvals.pluck(:user_id)

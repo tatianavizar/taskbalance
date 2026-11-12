@@ -27,7 +27,9 @@ module Notifications
       Entry.new("household_ready",  "monday_split",     nil,      :dashboard), # B12 « Prêt »
       Entry.new("absence_question", "absence_question", nil,      :dashboard),
       Entry.new("absence_outcome",  "absence_question", nil,      :dashboard),
-      Entry.new("pause_declared",   "absence_question", nil,      :dashboard)
+      Entry.new("pause_declared",   "absence_question", nil,      :dashboard),
+      # Lot 7, F3. No F4 row of its own: follows "alert", never capped.
+      Entry.new("household_deleted", "alert",           nil,      :dashboard)
     ].index_by(&:kind).freeze
 
     def self.fetch(kind) = ENTRIES.fetch(kind.to_s)

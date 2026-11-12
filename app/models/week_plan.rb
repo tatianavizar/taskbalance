@@ -181,6 +181,36 @@ class WeekPlan < ApplicationRecord
     save!
   end
 
+  # Lot 7 (F2): a member left. Their key leaves the snapshot; a planned chore
+  # only they carried goes to `replacements` (the remaining members' keys,
+  # as HouseholdDeparture does with the chores themselves), a shared one
+  # keeps its other assignees. Shares are recomputed from the snapshot, not
+  # from the household, so a locked plan still ignores mid-week chore edits
+  # (D14). The leaver's validation goes; the plan validates if everyone left
+  # has validated.
+  def remove_participant!(key, replacements:)
+    return self unless participants.any? { |p| p["key"] == key }
+
+    self.participants = participants.reject { |p| p["key"] == key }
+    keys = participant_list.map(&:key)
+    fallback = replacements & keys
+    fallback = keys if fallback.empty?
+    self.assignments = assignments.map do |item|
+      next item unless item["assignees"].include?(key)
+
+      rest = item["assignees"] - [ key ]
+      item.merge("assignees" => rest.presence || fallback)
+    end
+    self.shares = shares_hash(split)
+    self.provisional = participant_list.any?(&:provisional?)
+    transaction do
+      save!
+      approvals.where(user_id: key.delete_prefix("user:").to_i).delete_all if key.start_with?("user:")
+      validate_if_complete! if proposed?
+    end
+    self
+  end
+
   # --- used by the class methods above ---
 
   def write_snapshot(by:)
@@ -192,7 +222,7 @@ class WeekPlan < ApplicationRecord
     self.provisional = participants.any?(&:provisional?)
     self.participants = participants.map(&:to_h)
     self.assignments = split.items.map(&:to_h)
-    self.shares = split.shares.transform_values { |s| { "mental" => s.mental, "execution" => s.execution, "average" => s.average } }
+    self.shares = shares_hash(split)
   end
 
   # Lot 8a: the members other than the proposer hear that a split waits for
@@ -219,6 +249,10 @@ class WeekPlan < ApplicationRecord
   end
 
   private
+
+  def shares_hash(split)
+    split.shares.transform_values { |s| { "mental" => s.mental, "execution" => s.execution, "average" => s.average } }
+  end
 
   # An invited person in the snapshot may have claimed the invitation since
   # (lot 3): their account is read from the invitation.

@@ -1,0 +1,40 @@
+<%# F5 : supprimer son compte. Mot de passe et case à cocher ; le foyer est quitté d'abord (F2). %>
+<% provide :chrome, "none" %>
+<% provide :title, t("auth.delete_account.title") %>
+<% household = current_user.household %>
+<% logs_count = ChoreLog.where(user_id: current_user.id).count %>
+<%= back_button account_path %>
+<h1 class="screen-title"><%= t("auth.delete_account.title") %></h1>
+
+<%= card do %>
+  <p class="m-0 text-sm leading-5 tabular-nums">
+    <%= @deletion.logs_deleted? ? t("auth.delete_account.logs_deleted", count: logs_count) : t("auth.delete_account.logs_kept", count: logs_count) %>
+    <%= t("auth.delete_account.totals") %>
+  </p>
+<% end %>
+
+<% if household %>
+  <% membership = current_user.household_membership %>
+  <% others = household.household_members.includes(:user).where.not(id: membership.id).order(:created_at, :id).to_a %>
+  <%= callout do %>
+    <p class="m-0 text-sm leading-5">
+      <% if others.empty? %>
+        <%= t("auth.delete_account.household_last", name: household.name) %>
+      <% else %>
+        <%= t("auth.delete_account.household_leave", name: household.name, names: others.map { |m| m.user.first_name }.to_sentence) %>
+        <% if membership.manager? %><%= t("auth.delete_account.household_manager", name: others.first.user.first_name) %><% end %>
+      <% end %>
+    </p>
+  <% end %>
+<% end %>
+
+<%= form_with model: @deletion, scope: :account_deletion, url: user_registration_path, method: :delete,
+      html: { class: "flex flex-col gap-4 flex-1" } do |f| %>
+  <%= f.error_summary %>
+  <%= f.field :current_password, as: :password, label: t("auth.delete_account.password"), autocomplete: "current-password" %>
+  <%= f.checkbox_field :confirmed, label: t("auth.delete_account.confirm_label") %>
+  <%= sticky_cta do %>
+    <%= f.submit t("auth.delete_account.submit"), variant: :outline %>
+    <%= link_to t("common.cancel"), account_path, class: "btn btn-secondary" %>
+  <% end %>
+<% end %>

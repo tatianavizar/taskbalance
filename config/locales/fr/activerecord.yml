@@ -169,3 +169,19 @@ fr:
           attributes:
             week_start:
               not_a_monday: doit être un lundi
+  # Form objects of lot 7 (F3, F5).
+  activemodel:
+    errors:
+      models:
+        household_deletion:
+          attributes:
+            confirmation_name:
+              mismatch: "Ce n'est pas le nom du foyer. Saisissez-le exactement comme il s'affiche."
+            base:
+              not_manager: "Seule la personne qui gère le foyer peut le supprimer."
+        account_deletion:
+          attributes:
+            current_password:
+              invalid: "Mot de passe incorrect."
+            confirmed:
+              accepted: "Cochez la case pour confirmer la suppression."

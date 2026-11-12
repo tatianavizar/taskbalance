@@ -1,6 +1,6 @@
 class HouseholdsController < ApplicationController
   before_action :authenticate_user!
-  before_action :set_household, only: [ :show, :edit, :update, :destroy ]
+  before_action :set_household, only: [ :show, :edit, :update, :delete, :destroy ]
 
   # There is one household per account: no list, only the household itself or
   # the creation screen.
@@ -32,7 +32,9 @@ class HouseholdsController < ApplicationController
     end
   end
 
+  # F1
   def show
+    @members = @household.household_members.includes(:user).order(:created_at, :id).to_a
   end
 
   def edit
@@ -46,9 +48,23 @@ class HouseholdsController < ApplicationController
     end
   end
 
+  # F3: only the manager sees the form.
+  def delete
+    @deletion = HouseholdDeletion.new(@household, by: current_user)
+    redirect_to household_path(@household), alert: t("households.delete.manager_only") unless @deletion.allowed?
+  end
+
+  # F3: manager only, after typing the household's name (backlog 3.5).
   def destroy
-    @household.destroy
-    redirect_to new_household_path, notice: t("households.flash.destroyed")
+    @deletion = HouseholdDeletion.new(@household, by: current_user,
+                                      confirmation_name: params.dig(:household_deletion, :confirmation_name))
+    return redirect_to(household_path(@household), alert: t("households.delete.manager_only")) unless @deletion.allowed?
+
+    if @deletion.save
+      redirect_to dashboard_path(departed: 1), notice: t("households.flash.destroyed", name: @household.name)
+    else
+      render :delete, status: :unprocessable_entity
+    end
   end
 
   private

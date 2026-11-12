@@ -1,0 +1,36 @@
+<%# F2 : ce que quitter le foyer change. Les deux boutons ont le même poids (décision du 2026-11-08). %>
+<% provide :chrome, "none" %>
+<% provide :title, t("households.departure.title", name: @household.name) %>
+<% names = @others.map { |member| member.user.first_name }.to_sentence %>
+<%= back_button household_path(@household) %>
+<h1 class="screen-title"><%= t("households.departure.title", name: @household.name) %></h1>
+
+<%= card do %>
+  <ul class="m-0 p-0 list-none flex flex-col gap-3 text-sm leading-5 tabular-nums">
+    <li>
+      <% if @logs_count.positive? %>
+        <%= t("households.departure.journal_html", count: @logs_count, date: l(@first_log_on, format: :short)) %>
+      <% else %>
+        <%= t("households.departure.journal_empty_html") %>
+      <% end %>
+    </li>
+    <% if @others.any? %>
+      <li><%= t("households.departure.totals") %></li>
+      <% if @chores_count.positive? %>
+        <li><%= t("households.departure.chores", count: @chores_count, names: names) %></li>
+      <% end %>
+      <% if @membership.manager? %>
+        <li><%= t("households.departure.manager", name: @others.first.user.first_name) %></li>
+      <% end %>
+    <% else %>
+      <li><%= t("households.departure.last_member") %></li>
+    <% end %>
+    <li><b><%= t("households.departure.irreversible") %></b></li>
+  </ul>
+<% end %>
+
+<%= sticky_cta do %>
+  <%= button_to t("households.departure.confirm"), household_departure_path(@household), method: :post,
+        class: "btn btn-outline", form: { class: "m-0" } %>
+  <%= link_to t("households.departure.stay"), household_path(@household), class: "btn btn-secondary" %>
+<% end %>

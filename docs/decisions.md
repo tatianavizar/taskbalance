@@ -276,9 +276,11 @@
 - **Règle :** un foyer de moins de deux membres ne reçoit pas de bilan hebdomadaire. Une semaine où personne n'a rien enregistré, dans un foyer de deux membres ou plus, remplace le bilan par un court email qui invite à revenir sur l'app : le fait, une ligne sur ce que fait l'app, un seul bouton. Il prend la place du bilan dans le plafond hebdomadaire et suit le réglage « Bilan de la semaine ».
 - **Note :** l'entrée du 2026-11-08 sur les pratiques manipulatrices excluait toute relance pour enregistrer. Cet email reste hebdomadaire, factuel, sans culpabilisation ni urgence ; il remplace un bilan qui n'aurait rien dit, il ne s'ajoute pas.
 
-## 2026-11-13 · Suppression de compte : les enregistrements partent avec la personne
+## 2026-11-13 · Suppression du compte : le journal est supprimé, les bilans passés restent sans le prénom
 - **Décidé par :** la porteuse du projet.
-- **Règle :** supprimer son compte supprime ses enregistrements : ils lui appartiennent et elle part. Le compte est anonymisé ; dans les bilans passés du foyer, son prénom devient « Ancien membre » et les chiffres agrégés restent.
+- **Règle :** à la suppression d'un compte (F5), les enregistrements de la personne sont supprimés : ils lui appartiennent et elle part. Les bilans passés du foyer gardent leurs chiffres ; le prénom y devient « Ancien membre ». La personne quitte d'abord son foyer (F2) : ses tâches passent aux autres membres et la personne la plus ancienne devient gestionnaire.
+- **Réversible :** `AccountDeletion#dispose_of_logs!` est le seul endroit qui l'applique (`LOGS_ON_DELETION`, `:keep_anonymised` pour garder les enregistrements sur le compte anonymisé).
+- **Écart :** la maquette F5 et le backlog 3.6 refusaient la suppression tant que la personne gère un foyer partagé ; on la fait quitter le foyer à la place.
 
 ## 2026-11-13 · Recalcul des parts en direct
 - **Décidé par :** la porteuse du projet.

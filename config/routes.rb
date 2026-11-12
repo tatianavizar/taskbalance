@@ -34,6 +34,8 @@ Rails.application.routes.draw do
     get "mot-de-passe", action: :edit_password, as: :edit_password
     patch "mot-de-passe", action: :update_password
     patch "notifications", action: :update_notifications, as: :account_notifications
+    # F5 : la suppression elle-même passe par DELETE /users (Users::RegistrationsController#destroy).
+    get "supprimer", action: :delete_account, as: :delete_account
   end
 
   # Fil de notifications (H) et désinscription en un clic depuis un email (D9).
@@ -80,6 +82,10 @@ Rails.application.routes.draw do
   end
 
   resources :households do
+    # F3 : confirmation de la suppression (réservée à la personne qui gère le foyer)
+    get :delete, on: :member
+    # F2 : quitter le foyer
+    resource :departure, only: [ :new, :create ], controller: "households/departures"
     # Invitation, côté foyer (B3, B5, B13, B15)
     resources :invitations, only: [ :new, :create, :show, :destroy ], controller: "households/invitations" do
       member do

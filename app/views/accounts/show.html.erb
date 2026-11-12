@@ -38,6 +38,10 @@
   <%= list_row title: t("auth.account.intro"), href: intro_path(1) %>
 </div>
 
+<div class="list-stack">
+  <%= list_row title: t("auth.delete_account.link"), href: delete_account_path %>
+</div>
+
 <%= sticky_cta do %>
   <%= button_to t("auth.account.log_out"), destroy_user_session_path, method: :delete, class: "btn btn-secondary", form: { class: "m-0" } %>
 <% end %>

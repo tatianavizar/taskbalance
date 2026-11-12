@@ -7,9 +7,9 @@ class HouseholdsControllerTest < ActionDispatch::IntegrationTest
     assert household.chores.exists?
     assert household.household_members.exists?
 
-    delete household_path(household)
+    delete household_path(household), params: { household_deletion: { confirmation_name: household.name } }
 
-    assert_redirected_to new_household_path
+    assert_redirected_to dashboard_path(departed: 1)
     assert_not Household.exists?(household.id)
     assert_equal 0, Chore.where(household_id: household.id).count
     assert_equal 0, HouseholdMember.where(household_id: household.id).count
