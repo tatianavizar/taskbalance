@@ -51,6 +51,7 @@ fr:
       preferences_step: "Étape 1 sur 2"
       join: "Rejoindre le foyer"
       propose_and_join: "Proposer et rejoindre le foyer"
+      decline: "Finalement, ne pas rejoindre ce foyer"
       proposed_heading: "La répartition"
       proposed_subtitle: "Proposée par %{name} le %{date}. Changez ce qui ne vous convient pas : %{name} verra vos modifications."
       propose_heading: "Proposez la répartition"

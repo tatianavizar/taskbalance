@@ -19,9 +19,24 @@
   <% end %>
 </section>
 
+<% invitations = @household.invitations.where(state: %w[pending declined expired]).order(created_at: :desc).limit(10).each(&:expire_if_due!) %>
+<% if invitations.any? %>
+  <section class="flex flex-col gap-3" aria-labelledby="invitations-title">
+    <h2 id="invitations-title" class="text-base font-bold m-0 font-sans"><%= t("households.show.invitations_title") %></h2>
+    <div class="list-stack">
+      <% invitations.each do |invitation| %>
+        <% state = invitation.current_state %>
+        <%= list_row title: invitation.email, href: household_invitation_path(@household, invitation),
+              leading: avatar(initials: invitation.email.first.upcase, pending: true, size: 36),
+              trailing: status_pill(t("invitations.show.pill.#{state}"), tone: (state == "pending" ? :outline : :soft)) %>
+      <% end %>
+    </div>
+  </section>
+<% end %>
+
 <% plan = @household.week_plan_for %>
 <div class="list-stack">
-  <%= list_row title: t("households.show.invite_link"), href: new_household_household_member_path(@household) %>
+  <%= list_row title: t("households.show.invite_link"), href: new_household_invitation_path(@household) %>
   <%= list_row title: t("chores.setup.manage_title"), href: household_chores_setup_path(@household) %>
   <%= list_row title: t("split.title"), href: household_split_path(@household),
         subtitle: (validation_status(plan) if plan) %>

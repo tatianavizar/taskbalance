@@ -33,7 +33,7 @@ fr:
       levels: "Semaines équilibrées pour chaque niveau"
       weeks: "%{count} sem."
       ultimate_short: "Ult."
-      note: "Une semaine non équilibrée ne fait pas reculer : le foyer ne monte pas, c'est tout. L'ultime se garde avec plus de %{rate} % de semaines équilibrées sur l'année."
+      note: "Une semaine déséquilibrée ne fait pas reculer : le foyer ne monte pas, c'est tout. Seule exception, le niveau ultime : au-delà de %{quota} semaines déséquilibrées sur %{window}, le foyer revient au niveau 4."
     absence:
       title_html: "Ce qui fait reculer :<br>ne rien enregistrer"
       zero_tasks: "tâche"

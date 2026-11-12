@@ -16,7 +16,8 @@ class ProgressionTest < ActiveSupport::TestCase
   test "rule numbers come from HouseholdRules" do
     assert_equal HouseholdRules::LEVEL_THRESHOLDS, Progression::THRESHOLDS.values
     assert_equal HouseholdRules::LEVEL_THRESHOLDS.size, Progression::ULTIMATE
-    assert_equal Rational(85, 100), Progression::ULTIMATE_MIN_RATIO
+    assert_equal 7, HouseholdRules::ULTIMATE_UNBALANCED_QUOTA
+    assert_equal 52, HouseholdRules::ULTIMATE_WINDOW_WEEKS
   end
 
   def add_week(household, monday, outcome, status = "final")
@@ -24,47 +25,61 @@ class ProgressionTest < ActiveSupport::TestCase
       neutral_reason: (outcome == "neutral" ? "no_mental_logs" : nil), computed_at: Time.current)
   end
 
-  test "the ultimate ratio counts final non-neutral weeks since the level was first reached" do
+  LAST = Week.containing(Date.new(2027, 10, 4), "Europe/Paris")
+  def ago(n) = LAST.monday - (7 * n)
+
+  # A household at the ultimate level since `reached` weeks ago, with the
+  # given final weeks (weeks ago => outcome).
+  def ultimate_household(weeks, reached: 51, level: Progression::ULTIMATE)
     household, = build_household("Alice", "Bob")
-    last = Week.containing(Date.new(2027, 10, 4), PARIS)
-    ago = ->(n) { last.monday - (7 * n) }
-
-    assert_nil Progression.ultimate_ratio(household, last)
-    assert Progression.keeps_ultimate?(household, last)
-
-    add_week(household, ago.(20), "unbalanced") # before the level was reached
-    household.update!(ultimate_reached_on: ago.(10))
-    add_week(household, ago.(10), "balanced")
-    add_week(household, ago.(9), "neutral")
-    add_week(household, ago.(1), "unbalanced", "provisional")
-    5.times { add_week(household, ago.(_1 + 2), "balanced") }
-    add_week(household, ago.(0), "unbalanced")
-
-    assert_equal ago.(10), Progression.ultimate_window_start(household, last)
-    assert_equal Rational(6, 7), Progression.ultimate_ratio(household, last)
-    assert Progression.keeps_ultimate?(household, last)
+    household.update_columns(level: level, balanced_weeks_count: 20, ultimate_reached_on: ago(reached))
+    weeks.each { |n, outcome| add_week(household, ago(n), outcome) }
+    household
   end
 
-  test "the window is capped at the last 52 weeks" do
-    household, = build_household("Alice", "Bob")
-    last = Week.containing(Date.new(2027, 10, 4), PARIS)
-    ago = ->(n) { last.monday - (7 * n) }
-    household.update!(ultimate_reached_on: ago.(60))
-    add_week(household, ago.(52), "unbalanced") # 53rd week back: outside
-    add_week(household, ago.(51), "balanced")
-    add_week(household, ago.(0), "balanced")
+  def unbalanced(*weeks_ago) = weeks_ago.to_h { [ _1, "unbalanced" ] }
 
-    assert_equal ago.(51), Progression.ultimate_window_start(household, last)
-    assert_equal 1, Progression.ultimate_ratio(household, last)
+  test "quota: 7 unbalanced weeks in the window keep the ultimate level, 8 lose it" do
+    seven = ultimate_household(unbalanced(0, 1, 2, 3, 4, 5, 6).merge(7 => "balanced"))
+    assert_equal 7, Progression.unbalanced_weeks_in_window(seven, LAST)
+    assert Progression.keeps_ultimate?(seven, LAST)
+
+    eight = ultimate_household(unbalanced(0, 1, 2, 3, 4, 5, 6, 30))
+    assert_equal 8, Progression.unbalanced_weeks_in_window(eight, LAST)
+    assert_not Progression.keeps_ultimate?(eight, LAST)
   end
 
-  test "exactly 85 % does not keep the ultimate level" do
-    household, = build_household("Alice", "Bob")
-    last = Week.containing(Date.new(2027, 10, 4), PARIS)
-    household.update!(ultimate_reached_on: last.monday - (7 * 19))
-    20.times { |n| add_week(household, last.monday - (7 * n), n < 3 ? "unbalanced" : "balanced") }
+  test "neutral, provisional and corrected weeks do not count" do
+    household = ultimate_household(unbalanced(0, 1, 2, 3, 4, 5, 6).merge(7 => "neutral", 8 => "unbalanced"))
+    add_week(household, ago(-1), "unbalanced", "provisional")
+    assert_equal 8, Progression.unbalanced_weeks_in_window(household, LAST)
 
-    assert_equal Rational(17, 20), Progression.ultimate_ratio(household, last)
-    assert_not Progression.keeps_ultimate?(household, last)
+    corrected = household.household_weeks.find_by!(week_start: ago(8))
+    household.week_corrections.create!(household_week: corrected, first_name: "Bob", declared_at: Time.current)
+    assert_equal 7, Progression.unbalanced_weeks_in_window(household, LAST)
+    assert Progression.keeps_ultimate?(household, LAST)
+  end
+
+  test "the window starts at the reach, capped at the last 52 weeks" do
+    young = ultimate_household(unbalanced(10, 11, 12, 13, 14, 15, 16, 17, 18), reached: 5)
+    assert_equal ago(5), Progression.ultimate_window_start(young, LAST)
+    assert_equal 0, Progression.unbalanced_weeks_in_window(young, LAST), "weeks before the reach don't count"
+
+    old = ultimate_household(unbalanced(52, 53, 51), reached: 80)
+    assert_equal ago(51), Progression.ultimate_window_start(old, LAST)
+    assert_equal 1, Progression.unbalanced_weeks_in_window(old, LAST), "the 53rd week back is out"
+  end
+
+  test "margin: quota minus the unbalanced weeks, never below 0, nil below the ultimate level" do
+    assert_equal 7, Progression.ultimate_margin(ultimate_household({ 0 => "balanced" }))
+    assert_equal 4, Progression.ultimate_margin(ultimate_household(unbalanced(0, 3, 9)))
+    assert_equal 0, Progression.ultimate_margin(ultimate_household(unbalanced(0, 1, 2, 3, 4, 5, 6)))
+    assert_equal 0, Progression.ultimate_margin(ultimate_household(unbalanced(0, 1, 2, 3, 4, 5, 6, 7, 8)))
+    assert_nil Progression.ultimate_margin(ultimate_household(unbalanced(0), level: 4))
+  end
+
+  test "margin with no final report yet uses the current week" do
+    household = ultimate_household({}, reached: 0)
+    assert_equal 7, Progression.ultimate_margin(household)
   end
 end

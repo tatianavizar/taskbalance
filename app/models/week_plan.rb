@@ -58,6 +58,7 @@ class WeekPlan < ApplicationRecord
       plan.record_approval(by) if by
       plan.validate_if_complete!
     end
+    plan.announce_proposal(by)
     plan
   end
 
@@ -101,14 +102,14 @@ class WeekPlan < ApplicationRecord
   # `user` takes part in this plan (a member, or an invited person with an
   # account).
   def participant?(user)
-    user && participant_list.any? { |p| p.user_id == user.id }
+    user && participant_list.any? { |p| participant_user_id(p) == user.id }
   end
 
   # Participants still expected to validate, in display order. A person
   # invited without an account yet is always pending.
   def pending_participants
     approved = approvals.pluck(:user_id)
-    participant_list.reject { |p| p.user_id && approved.include?(p.user_id) }
+    participant_list.reject { |p| (id = participant_user_id(p)) && approved.include?(id) }
   end
 
   def approved_by?(user)
@@ -123,7 +124,7 @@ class WeekPlan < ApplicationRecord
     raise NotAParticipant unless household.split_participant_for(by)
 
     transaction do
-      household.assign_chores!(assignments)
+      household.assign_chores!(assignments, by: by)
       write_snapshot(by: by)
       save!
       approvals.delete_all
@@ -164,9 +165,9 @@ class WeekPlan < ApplicationRecord
   end
 
   # Lot 3: an invitation became a member account.
+  # The key only names the person: a locked plan is renamed too, its split
+  # does not change.
   def rename_participant!(from_key, to_key)
-    return if locked?
-
     user_id = to_key.split(":").last.to_i
     self.participants = participants.map do |p|
       p["key"] == from_key ? p.merge("key" => to_key, "user_id" => user_id, "provisional" => false) : p
@@ -191,6 +192,19 @@ class WeekPlan < ApplicationRecord
     self.shares = split.shares.transform_values { |s| { "mental" => s.mental, "execution" => s.execution, "average" => s.average } }
   end
 
+  # Lot 8a: the members other than the proposer hear that a split waits for
+  # them (monday_split), with how many tasks each member has this week.
+  def announce_proposal(by)
+    members = household.users.to_a
+    recipients = members.reject { |user| user == by }
+    return if recipients.empty?
+
+    counts = members.to_h do |user|
+      [ user, assignments.count { |item| item["occurrences"].to_i.positive? && item["assignees"].include?("user:#{user.id}") } ]
+    end
+    Notifications::Notifier.call(Notifications::Events::MondaySplit.new(household, week, counts), to: recipients)
+  end
+
   def record_approval(user)
     approvals.find_or_create_by!(user: user)
   end
@@ -202,6 +216,12 @@ class WeekPlan < ApplicationRecord
   end
 
   private
+
+  # An invited person in the snapshot may have claimed the invitation since
+  # (lot 3): their account is read from the invitation.
+  def participant_user_id(participant)
+    participant.user_id || (participant.invitation_id && Invitation.where(id: participant.invitation_id).pick(:invitee_id))
+  end
 
   def week_start_is_a_monday
     errors.add(:week_start, :not_a_monday) if week_start && !week_start.monday?

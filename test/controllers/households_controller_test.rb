@@ -73,12 +73,11 @@ class HouseholdsControllerTest < ActionDispatch::IntegrationTest
     assert_response :not_found
   end
 
-  test "someone cannot join a second household through the members form" do
+  test "someone cannot invite into a household that is not theirs" do
     sign_in users(:carol)
-    assert_no_difference "HouseholdMember.count" do
-      post household_household_members_path(households(:jones_home)),
-           params: { household_member: { email: users(:alice).email } }
+    assert_no_difference "Invitation.count" do
+      post household_invitations_path(households(:smith_home)), params: { invitation: { email: "x@test.com" } }
     end
-    assert_response :unprocessable_entity
+    assert_response :not_found
   end
 end

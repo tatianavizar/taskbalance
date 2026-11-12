@@ -1,0 +1,28 @@
+<% provide :chrome, "none" %>
+<% provide :title, t("notifications.feed.title") %>
+<%= back_button(dashboard_path) %>
+<h1 class="screen-title"><%= t("notifications.feed.title") %></h1>
+
+<% if @notifications.empty? %>
+  <%= callout do %>
+    <p class="m-0 font-semibold"><%= t("notifications.feed.empty_title") %></p>
+    <p class="m-0 mt-1"><%= t("notifications.feed.empty_body") %></p>
+  <% end %>
+<% else %>
+  <% if @notifications.any? { |n| !n.read? } %>
+    <%= button_to t("notifications.feed.mark_all_read"), read_all_notifications_path, method: :patch, class: "btn btn-secondary", form: { class: "m-0" } %>
+  <% end %>
+  <div class="list-stack">
+    <% @notifications.each do |notification| %>
+      <% message = notification.message %>
+      <%= list_row title: message.title,
+            subtitle: [ l(notification.deliver_at.in_time_zone(notification.household&.zone || Time.zone), format: "%-d %b, %H:%M"), message.lines.first ].compact.join(" · "),
+            href: notification_path(notification),
+            trailing: (status_pill(t("notifications.feed.unread"), tone: :ink) unless notification.read?),
+            class: ("font-semibold" unless notification.read?) %>
+      <% if notification.suppressed_reason.present? && t("notifications.feed.not_sent_#{notification.suppressed_reason}", default: "").present? %>
+        <p class="field-hint m-0 -mt-1 px-4"><%= t("notifications.feed.not_sent_#{notification.suppressed_reason}") %></p>
+      <% end %>
+    <% end %>
+  </div>
+<% end %>

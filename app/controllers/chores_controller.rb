@@ -29,6 +29,7 @@ class ChoresController < ApplicationController
     @chore.status = :pending
 
     if @chore.save
+      @chore.notify_assignees(@chore.assignee_keys, by: current_user)
       redirect_to return_path, notice: created_notice
     else
       load_form
@@ -41,7 +42,9 @@ class ChoresController < ApplicationController
   end
 
   def update
+    before = @chore.assignee_keys
     if @chore.update(chore_params)
+      @chore.notify_assignees(@chore.assignee_keys - before, by: current_user)
       redirect_to household_path(@chore.household), notice: t("chores.flash.updated")
     else
       load_form

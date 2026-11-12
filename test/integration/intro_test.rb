@@ -49,7 +49,7 @@ class IntroTest < ActionDispatch::IntegrationTest
 
     assert_match "40 – 60 %", response.body
     assert_match "entre 23 et 43 %", response.body
-    assert_match "85 %", response.body
+    assert_match "#{HouseholdRules::ULTIMATE_UNBALANCED_QUOTA} semaines déséquilibrées sur #{HouseholdRules::ULTIMATE_WINDOW_WEEKS}, le foyer revient au niveau 4", response.body
     HouseholdRules::LEVEL_THRESHOLDS.each { |weeks| assert_match "#{weeks} sem.", response.body }
   end
 

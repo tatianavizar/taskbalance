@@ -10,9 +10,26 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_11_12_200500) do
+ActiveRecord::Schema[8.0].define(version: 2026_11_13_090700) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+
+  create_table "absence_answers", force: :cascade do |t|
+    t.bigint "absence_inquiry_id", null: false
+    t.bigint "household_member_id", null: false
+    t.string "answer", null: false
+    t.datetime "answered_at", null: false
+    t.bigint "member_pause_id"
+    t.string "original_answer"
+    t.datetime "corrected_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["absence_inquiry_id", "household_member_id"], name: "idx_on_absence_inquiry_id_household_member_id_d7a225158d", unique: true
+    t.index ["absence_inquiry_id"], name: "index_absence_answers_on_absence_inquiry_id"
+    t.index ["household_member_id"], name: "index_absence_answers_on_household_member_id"
+    t.index ["member_pause_id"], name: "index_absence_answers_on_member_pause_id"
+    t.check_constraint "answer::text = ANY (ARRAY['yes'::character varying::text, 'no'::character varying::text])", name: "absence_answers_answer_values"
+  end
 
   create_table "absence_inquiries", force: :cascade do |t|
     t.bigint "household_id", null: false
@@ -107,6 +124,21 @@ ActiveRecord::Schema[8.0].define(version: 2026_11_12_200500) do
     t.check_constraint "times_per_period >= 1", name: "chores_times_per_period_positive"
   end
 
+  create_table "engine_events", force: :cascade do |t|
+    t.bigint "household_id", null: false
+    t.string "name", null: false
+    t.string "subject_type"
+    t.bigint "subject_id"
+    t.jsonb "payload", default: {}, null: false
+    t.datetime "occurred_at", null: false
+    t.datetime "delivered_at"
+    t.datetime "created_at", null: false
+    t.index ["household_id", "occurred_at"], name: "index_engine_events_on_household_id_and_occurred_at"
+    t.index ["household_id"], name: "index_engine_events_on_household_id"
+    t.index ["occurred_at"], name: "index_engine_events_undelivered", where: "(delivered_at IS NULL)"
+    t.index ["subject_type", "subject_id"], name: "index_engine_events_on_subject"
+  end
+
   create_table "household_members", force: :cascade do |t|
     t.bigint "user_id", null: false
     t.bigint "household_id", null: false
@@ -166,7 +198,19 @@ ActiveRecord::Schema[8.0].define(version: 2026_11_12_200500) do
     t.bigint "household_id", null: false
     t.string "token", null: false
     t.datetime "created_at", precision: nil, null: false
-    t.index ["email", "household_id"], name: "index_invitations_on_email_and_household_id", unique: true
+    t.string "state", default: "pending", null: false
+    t.datetime "expires_at", null: false
+    t.datetime "last_sent_at", null: false
+    t.integer "resend_count", default: 0, null: false
+    t.datetime "accepted_at"
+    t.datetime "declined_at"
+    t.datetime "cancelled_at"
+    t.bigint "invitee_id"
+    t.bigint "inviter_id"
+    t.index ["email", "household_id"], name: "index_invitations_pending_on_email_and_household_id", unique: true, where: "((state)::text = 'pending'::text)"
+    t.index ["household_id", "email"], name: "index_invitations_on_household_id_and_email"
+    t.index ["invitee_id"], name: "index_invitations_on_invitee_id"
+    t.index ["inviter_id"], name: "index_invitations_on_inviter_id"
     t.index ["token"], name: "index_invitations_on_token", unique: true
   end
 
@@ -200,6 +244,40 @@ ActiveRecord::Schema[8.0].define(version: 2026_11_12_200500) do
     t.index ["household_member_id", "starts_on"], name: "index_member_pauses_on_household_member_id_and_starts_on"
     t.index ["household_member_id"], name: "index_member_pauses_on_household_member_id"
     t.check_constraint "ends_on IS NULL OR ends_on >= starts_on", name: "member_pauses_dates_ordered"
+  end
+
+  create_table "notification_preferences", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.string "event_type", null: false
+    t.boolean "enabled", default: true, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["user_id", "event_type"], name: "index_notification_preferences_on_user_id_and_event_type", unique: true
+    t.index ["user_id"], name: "index_notification_preferences_on_user_id"
+  end
+
+  create_table "notifications", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.bigint "household_id"
+    t.string "kind", null: false
+    t.string "event_type", null: false
+    t.string "cap_class"
+    t.string "dedup_key", null: false
+    t.jsonb "facts", default: {}, null: false
+    t.string "channel"
+    t.string "suppressed_reason"
+    t.date "cap_week_start"
+    t.datetime "deliver_at", null: false
+    t.datetime "dispatched_at"
+    t.datetime "read_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["household_id"], name: "index_notifications_on_household_id"
+    t.index ["user_id", "cap_class", "cap_week_start"], name: "index_notifications_weekly_cap", unique: true, where: "((channel IS NOT NULL) AND (cap_class IS NOT NULL))"
+    t.index ["user_id", "created_at"], name: "index_notifications_on_user_id_and_created_at"
+    t.index ["user_id", "dedup_key"], name: "index_notifications_on_user_id_and_dedup_key", unique: true
+    t.index ["user_id"], name: "index_notifications_on_user_id"
+    t.check_constraint "channel IS NULL OR suppressed_reason IS NULL", name: "notifications_sent_or_suppressed"
   end
 
   create_table "recurring_chores", force: :cascade do |t|
@@ -307,6 +385,9 @@ ActiveRecord::Schema[8.0].define(version: 2026_11_12_200500) do
     t.check_constraint "status::text = ANY (ARRAY['awaiting_proposal'::character varying, 'proposed'::character varying, 'validated'::character varying]::text[])", name: "week_plans_status"
   end
 
+  add_foreign_key "absence_answers", "absence_inquiries", on_delete: :cascade
+  add_foreign_key "absence_answers", "household_members", on_delete: :cascade
+  add_foreign_key "absence_answers", "member_pauses", on_delete: :nullify
   add_foreign_key "absence_inquiries", "household_members", on_delete: :cascade
   add_foreign_key "absence_inquiries", "households", on_delete: :cascade
   add_foreign_key "approvals", "users", on_delete: :cascade
@@ -322,16 +403,22 @@ ActiveRecord::Schema[8.0].define(version: 2026_11_12_200500) do
   add_foreign_key "chores", "recurring_chores"
   add_foreign_key "chores", "tasks", on_delete: :restrict, validate: false
   add_foreign_key "chores", "users", column: "created_by_id", on_delete: :nullify
+  add_foreign_key "engine_events", "households", on_delete: :cascade
   add_foreign_key "household_members", "households"
   add_foreign_key "household_members", "users"
   add_foreign_key "household_weeks", "households", on_delete: :cascade
   add_foreign_key "invitations", "households"
+  add_foreign_key "invitations", "users", column: "invitee_id", on_delete: :nullify
+  add_foreign_key "invitations", "users", column: "inviter_id", on_delete: :nullify
   add_foreign_key "level_changes", "absence_inquiries", on_delete: :nullify
   add_foreign_key "level_changes", "household_weeks", on_delete: :nullify
   add_foreign_key "level_changes", "households", on_delete: :cascade
   add_foreign_key "level_changes", "level_changes", column: "cancelled_level_change_id", on_delete: :nullify
   add_foreign_key "member_pauses", "household_members", on_delete: :cascade
   add_foreign_key "member_pauses", "users", column: "declared_by_id", on_delete: :nullify
+  add_foreign_key "notification_preferences", "users", on_delete: :cascade
+  add_foreign_key "notifications", "households", on_delete: :cascade
+  add_foreign_key "notifications", "users", on_delete: :cascade
   add_foreign_key "recurring_chores", "households"
   add_foreign_key "recurring_chores", "tasks"
   add_foreign_key "recurring_chores", "users", column: "assigned_to_id"

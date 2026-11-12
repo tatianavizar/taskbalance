@@ -5,7 +5,7 @@ en:
       user: "User"
       chore: "Chore"
       task: "Task"
-      liked_task: "Task preference"
+      chore_preference: "Preference"
       chore_log: "Chore log"
     attributes:
       chore:
@@ -18,8 +18,6 @@ en:
         priority: "Priority"
         time_required: "Time required (min)"
         recurring: "Recurring"
-      liked_task:
-        liked: "Liked"
       chore_log:
         mental_load: "Mental load"
         execution_load: "Execution load"
@@ -34,10 +32,6 @@ en:
             base:
               at_least_one_load: "At least one load dimension must be filled in (mental or execution)"
               task_or_name_required: "Enter a chore name"
-        liked_task:
-          attributes:
-            task_id:
-              taken: "You have already rated this task"
         chore_log:
           attributes:
             base:

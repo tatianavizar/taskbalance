@@ -101,3 +101,6 @@
     <% end %>
   <% end %>
 <% end %>
+<% if invitee && current_invitation %>
+  <%= button_to t("split.invitee.decline"), decline_invitation_path(current_invitation.token), class: "btn btn-outline" %>
+<% end %>

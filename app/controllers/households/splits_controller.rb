@@ -34,7 +34,7 @@ module Households
 
       assignments = submitted_assignments
       if params[:commit_action] == "recompute"
-        @household.assign_chores!(assignments)
+        @household.assign_chores!(assignments, by: current_user)
         return redirect_to(household_split_path(@household, mode: "now"))
       end
 
@@ -44,9 +44,11 @@ module Households
       elsif @plan&.proposed?
         @plan.update_assignments!(by: current_user, assignments: assignments)
       else
-        @household.assign_chores!(assignments)
+        @household.assign_chores!(assignments, by: current_user)
         @plan = WeekPlan.propose!(household: @household, by: current_user, kind: starting_kind)
       end
+      return join_household if current_participant.provisional?
+
       @household.complete_setup_step!("split")
       redirect_to dashboard_path, notice: validation_notice
     rescue ActiveRecord::RecordInvalid => e
@@ -87,7 +89,22 @@ module Households
     end
 
     def starting_kind
+      return :starting if @plan&.starting?
+
       @household.setup_done? && @household.starting_plan ? :weekly : :starting
+    end
+
+    # B11 « Rejoindre le foyer », B14 « Proposer et rejoindre le foyer »: the
+    # split is saved with the invited person's validation, then they join
+    # (lot 3's Invitation#accept!, which hands their assignments over).
+    def join_household
+      invitation = current_invitation
+      if invitation&.accept!(current_user)
+        session.delete(:invitation_token)
+        redirect_to household_path(@household), notice: t("invitations.flash.joined")
+      else
+        redirect_to household_split_path(@household), alert: invitation&.errors&.full_messages&.to_sentence
+      end
     end
 
     def load_split

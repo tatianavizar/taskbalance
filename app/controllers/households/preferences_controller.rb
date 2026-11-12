@@ -21,8 +21,13 @@ module Households
       # choice is refused as a whole, nothing is written.
       return head :unprocessable_entity unless ChorePreference.record!(current_user, @household, choices)
 
-      # The invited person goes on to the split (B11, B14).
-      return redirect_to(household_split_path(@household)) if current_participant.provisional?
+      # The invited person goes on to the split (B11, B14). A provisional
+      # split proposed without their preferences is recomputed (C12).
+      if current_participant.provisional?
+        plan = @household.starting_plan
+        plan.recompute! if plan&.proposed? && plan.provisional?
+        return redirect_to(household_split_path(@household))
+      end
 
       redirect_to household_path(@household), notice: t("preferences.flash.saved")
     end

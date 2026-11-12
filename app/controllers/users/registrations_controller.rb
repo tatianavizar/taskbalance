@@ -4,11 +4,16 @@ class Users::RegistrationsController < Devise::RegistrationsController
   rate_limit to: 10, within: 1.hour, only: :create, name: "sign-up-ip",
              with: -> { rate_limited_redirect }
   rate_limit to: 3, within: 1.hour, only: :create, name: "sign-up-email",
-             by: -> { params.dig(:user, :email).to_s.strip.downcase },
+             by: -> { sign_up_rate_limit_key },
              with: -> { rate_limited_redirect }
 
+  # Old invitation links pointed here: the invitation screen (B7) replaces it.
   def new
-    session[:invitation_token] = params[:invitation_token] if params[:invitation_token].present?
+    if params[:invitation_token].present?
+      session[:invitation_token] = params[:invitation_token]
+      return redirect_to(invitation_path(params[:invitation_token]))
+    end
+
     super
   end
 
@@ -25,6 +30,8 @@ class Users::RegistrationsController < Devise::RegistrationsController
 
   def create
     build_resource(sign_up_params)
+    # From the invitation screen the address is the invitation's, whatever was posted.
+    resource.email = form_invitation.email if form_invitation
     skip_confirmation_if_invited(resource)
 
     # Anti-enumeration (A3, A5, A7): an address that already has an account
@@ -49,6 +56,8 @@ class Users::RegistrationsController < Devise::RegistrationsController
     else
       clean_up_passwords resource
       set_minimum_password_length
+      return render_invitation_join if form_invitation
+
       respond_with resource
     end
   end
@@ -59,6 +68,9 @@ class Users::RegistrationsController < Devise::RegistrationsController
   # which never blocks anything (decision of 2026-11-08). An invited address
   # arrives confirmed and goes straight to the app.
   def after_sign_up_path_for(resource)
+    invitation = pending_invitation_of(resource)
+    return invitee_resume_path(invitation) if invitation
+
     resource.confirmed? ? dashboard_path : pending_user_confirmation_path
   end
 
@@ -80,21 +92,41 @@ class Users::RegistrationsController < Devise::RegistrationsController
     user.skip_confirmation!
   end
 
-  def pending_invitation_for(user)
-    return if session[:invitation_token].blank? || user.email.blank?
-
-    invitation = Invitation.find_by(token: session[:invitation_token])
-    invitation if invitation && invitation.email.casecmp?(user.email)
+  def invitation_token
+    params[:invitation_token].presence || session[:invitation_token]
   end
 
+  # The invitation behind the B7 form, when it is still usable.
+  def form_invitation
+    return @form_invitation if defined?(@form_invitation)
+
+    token = params[:invitation_token].presence
+    invitation = Invitation.find_by(token: token.to_s) if token
+    @form_invitation = invitation&.usable? ? invitation : nil
+  end
+
+  def pending_invitation_for(user)
+    return if invitation_token.blank? || user.email.blank?
+
+    invitation = Invitation.find_by(token: invitation_token)
+    invitation if invitation&.usable? && invitation.for?(user)
+  end
+
+  # Signing up through the link records the account as invitee: it does not
+  # join the household. Joining waits for the last step of the setup, where
+  # the person can still decline.
   def redeem_invitation(user)
     invitation = pending_invitation_for(user)
     return unless invitation
 
-    # A new account has no household yet; a failed join must not break sign-up.
-    HouseholdMember.create(user: user, household_id: invitation.household_id)
-    invitation.destroy
+    invitation.claim_for!(user)
     session.delete(:invitation_token)
+  end
+
+  # The address the sign-up really targets: the invitation's when the form
+  # carries a usable token (the posted one is ignored), else the posted one.
+  def sign_up_rate_limit_key
+    (form_invitation&.email || params.dig(:user, :email)).to_s.strip.downcase
   end
 
   def respond_to_known_email(existing)
@@ -105,12 +137,19 @@ class Users::RegistrationsController < Devise::RegistrationsController
     if resource.errors.any?
       clean_up_passwords resource
       set_minimum_password_length
+      # Same screen as a new address would get (no enumeration).
+      return render_invitation_join if form_invitation
+
       return respond_with(resource)
     end
 
     AccountMailer.already_registered(existing).deliver_later
     set_flash_message! :notice, :signed_up_but_unconfirmed
     redirect_to new_user_session_path
+  end
+
+  def render_invitation_join
+    render "invitations/join", locals: { invitation: form_invitation, user: resource }, status: :unprocessable_entity
   end
 
   def rate_limited_redirect

@@ -16,6 +16,8 @@ class Household < ApplicationRecord
   has_many :level_changes, dependent: :delete_all
   has_many :absence_inquiries, dependent: :delete_all
   has_many :week_corrections, dependent: :delete_all
+  # Outbox for lot 8 (EngineEvent): nothing is sent from here.
+  has_many :engine_events, dependent: :delete_all
   has_many :member_pauses, through: :household_members
   # Split (lot 2): week plans and pending changes of the split settings.
   has_many :week_plans, dependent: :delete_all
@@ -68,6 +70,21 @@ class Household < ApplicationRecord
     level == Progression::ULTIMATE
   end
 
+  # A member arrived or left (decision 2026-11-12): the level measures the
+  # balance between these people, so level, balanced-weeks counter and
+  # ultimate window go back to zero. Report history stays. Logs one
+  # membership_changed LevelChange, only when something was not already zero
+  # (a first member, or a solo household gaining its second, logs nothing).
+  def reset_progression_for_membership_change!
+    return if level.zero? && balanced_weeks_count.zero? && ultimate_reached_on.nil?
+
+    transaction do
+      level_changes.create!(from_level: level, to_level: 0, balanced_weeks_count_before: balanced_weeks_count,
+                            balanced_weeks_count_after: 0, reason: :membership_changed, week_start: current_week.monday)
+      update!(level: 0, balanced_weeks_count: 0, ultimate_reached_on: nil)
+    end
+  end
+
   # Called when a member arrives or leaves: the only state transitions that do
   # not wait for a final report. Blocked and setting_up are left alone.
   def refresh_membership_state!
@@ -105,15 +122,21 @@ class Household < ApplicationRecord
     return if index.nil? || index < SETUP_STEPS.index(setup_step)
 
     update!(setup_step: SETUP_STEPS[index + 1] || "done")
+    notify_invitees_ready if setup_done?
+  end
+
+  # The invited person can give their preferences and see the split (B10,
+  # B11, B14) once the set-up is over: tasks chosen and the split proposed,
+  # or « Attendre » chosen. Until then they wait on B12.
+  def setup_ready_for_invitee?
+    setup_done?
   end
 
   # --- Split -------------------------------------------------------------
 
-  # Invitations still waiting for an answer. Lot 3 adds their states; until
-  # then an invitation whose email already belongs to a member is the only
-  # one that is not pending.
+  # Invitations still waiting for an answer: pending and not past their date.
   def pending_invitations
-    invitations.where.not(email: users.select(:email)).order(:id)
+    invitations.live.order(:id)
   end
 
   # The people a split is made for, in display order: members by arrival,
@@ -125,7 +148,8 @@ class Household < ApplicationRecord
 
     free_colors = HouseholdMember::COLORS - members.map(&:color)
     participants + pending_invitations.each_with_index.map do |invitation, index|
-      SplitParticipant.for_invitation(invitation, color: free_colors[index] || HouseholdMember::COLORS.last)
+      SplitParticipant.for_invitation(invitation, color: free_colors[index] || HouseholdMember::COLORS.last,
+                                      user: invitation.invitee)
     end
   end
 
@@ -134,14 +158,16 @@ class Household < ApplicationRecord
   def split_participant_for(user)
     return if user.nil?
 
-    split_participants.find { |p| p.user_id == user.id } || invitee_participant_for(user)
+    split_participants.find { |p| !p.provisional? && p.user_id == user.id } || invitee_participant_for(user)
   end
 
-  # Stub until lot 3 links an invitation to the invited person's account
-  # (invitations.invitee_id): pre-join access to the preferences and the
-  # split goes through here.
-  def invitee_participant_for(_user)
-    nil
+  # Pre-join access (lot 3): the person who claimed a live invitation of this
+  # household, while Invitation#grants_setup_access_to? holds.
+  def invitee_participant_for(user)
+    invitation = invitations.live.find_by(invitee_id: user.id)
+    return unless invitation&.grants_setup_access_to?(user)
+
+    split_participants.find { |p| p.invitation_id == invitation.id }
   end
 
   # The starting split, if the set-up has made one.
@@ -157,14 +183,22 @@ class Household < ApplicationRecord
   # for this household's chores only. Raises ActiveRecord::RecordInvalid
   # (nothing written) when a chore would have no assignee or an assignee is
   # not a participant.
-  def assign_chores!(assignments)
+  #
+  # `by`: the person assigning. Members newly given a chore by someone else
+  # hear about it (task_assigned); a proposal (no `by`) is announced as a
+  # whole instead (monday_split).
+  def assign_chores!(assignments, by: nil)
     assignments = assignments.to_h.transform_keys(&:to_i)
+    added = []
     transaction do
       chores.where(id: assignments.keys).includes(:chore_assignees, :task).find_each do |chore|
+        before = chore.assignee_keys
         chore.assignee_keys = assignments[chore.id]
         chore.save!
+        added << [ chore, chore.assignee_keys - before ]
       end
     end
+    added.each { |chore, keys| chore.notify_assignees(keys, by: by) } if by
   end
 
   # Assigns chores from the proposal (D18). `keep`: chore ids whose
@@ -173,5 +207,14 @@ class Household < ApplicationRecord
     proposal = SplitProposal.for_household(self, keep: keep)
     assign_chores!(proposal.except(*keep))
     proposal
+  end
+
+  private
+
+  # B12 « Prêt »: the people who claimed an invitation and waited.
+  def notify_invitees_ready
+    invitations.live.where.not(invitee_id: nil).includes(:invitee).find_each do |invitation|
+      Notifications::Notifier.call(Notifications::Events::HouseholdReady.new(self, invitation.invitee))
+    end
   end
 end

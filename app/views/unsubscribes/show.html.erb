@@ -1,0 +1,8 @@
+<% provide :chrome, "none" %>
+<% provide :title, t("notifications.unsubscribe.confirm_title") %>
+<h1 class="screen-title"><%= t("notifications.unsubscribe.confirm_title") %></h1>
+<%= callout do %>
+  <p class="m-0"><%= t("notifications.unsubscribe.confirm_body", type: t("notifications.event_types.#{@event_type}")) %></p>
+<% end %>
+<%= button_to t("notifications.unsubscribe.confirm"), unsubscribe_path(@token), method: :post, class: "btn btn-primary", form: { class: "m-0" } %>
+<%= link_to t("notifications.unsubscribe.settings"), account_path, class: "block text-center font-semibold py-3" %>

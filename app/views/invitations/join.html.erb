@@ -1,0 +1,30 @@
+<%# B7: a signed-out visitor opens the link. Signing up here only records the account as invitee: the household is joined at the last step. %>
+<%# Locals: invitation, user (also rendered by Users::RegistrationsController when the form has errors). %>
+<% household = invitation.household %>
+<% provide :chrome, "none" %>
+<% provide :title, t("invitations.join.title", household: household.name) %>
+<div class="flex items-center gap-2.5 min-h-[44px]"><%= logo %><span class="font-bold"><%= t("app.name") %></span></div>
+
+<div>
+  <h1 class="screen-title"><%= t("invitations.join.title", household: household.name) %></h1>
+  <p class="screen-subtitle"><%= t("invitations.join.subtitle", inviter: invitation_inviter_name(invitation), date: invitation_expiry(invitation)) %></p>
+</div>
+
+<%= form_for(user, as: :user, url: user_registration_path,
+      html: { class: "flex flex-col gap-4 flex-1", data: { controller: "time-zone" } }) do |f| %>
+  <%= f.error_summary %>
+  <%= hidden_field_tag :invitation_token, invitation.token %>
+  <%= f.hidden_field :time_zone, data: { time_zone_target: "input" } %>
+  <%= f.field :first_name, autofocus: true, autocomplete: "given-name", hint: t("auth.sign_up.first_name_hint") %>
+  <%= f.field :email, as: :email, readonly: true, style: "background:var(--color-soft)",
+        hint: t("invitations.join.email_hint"), value: invitation.email %>
+  <%= f.field :password, as: :password, autocomplete: "new-password",
+        hint: t("auth.password_hint", count: Devise.password_length.min) %>
+  <p class="m-0 text-[13px] leading-[18px] text-muted"><%= t("invitations.join.last_step") %></p>
+
+  <%= sticky_cta do %>
+    <%= f.submit t("invitations.join.submit") %>
+    <%= link_to t("invitations.join.have_account"), new_user_session_path,
+          class: "text-center font-semibold text-sm min-h-[44px] flex items-center justify-center" %>
+  <% end %>
+<% end %>

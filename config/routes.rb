@@ -33,7 +33,16 @@ Rails.application.routes.draw do
     patch "email", action: :update_email
     get "mot-de-passe", action: :edit_password, as: :edit_password
     patch "mot-de-passe", action: :update_password
+    patch "notifications", action: :update_notifications, as: :account_notifications
   end
+
+  # Fil de notifications (H) et désinscription en un clic depuis un email (D9).
+  get "notifications" => "notifications#index", as: :notifications
+  patch "notifications/lecture" => "notifications#read_all", as: :read_all_notifications
+  get "notifications/:id" => "notifications#show", as: :notification, constraints: { id: /\d+/ }
+  get "desinscription/:token" => "unsubscribes#show", as: :unsubscribe
+  post "desinscription/:token" => "unsubscribes#create"
+  post "desinscription/:token/reactiver" => "unsubscribes#resubscribe", as: :resubscribe
 
   get "dashboard" => "pages#dashboard", as: :dashboard
   get "bilan" => "reports#show", as: :report
@@ -60,8 +69,24 @@ Rails.application.routes.draw do
     resource :completion, only: [ :new, :create ], controller: "chores/completions"
   end
 
+  # Invitation, côté personne invitée (B7 à B9, B12). Le jeton fait office d'identifiant.
+  resources :invitations, only: [ :show ], param: :token do
+    member do
+      post :claim
+      post :accept
+      post :decline
+      get :waiting
+    end
+  end
+
   resources :households do
-    resources :household_members
+    # Invitation, côté foyer (B3, B5, B13, B15)
+    resources :invitations, only: [ :new, :create, :show, :destroy ], controller: "households/invitations" do
+      member do
+        post :resend
+        get :cancel
+      end
+    end
     # Mise en place : reprend à l'étape en cours (« Mise en place 2 sur 4 »)
     resource :setup, only: [ :show, :update ], controller: "households/setups"
     # C1, M1, C2 : tâches du foyer

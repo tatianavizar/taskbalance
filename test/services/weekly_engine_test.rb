@@ -180,33 +180,76 @@ class WeeklyEngineTest < ActiveSupport::TestCase
     assert household.active?
   end
 
-  # The ultimate window runs from the week the level was first reached,
-  # capped at 52 weeks; neutral weeks excluded; kept while strictly above 85 %.
-  test "ultimate level: lost when the ratio since reaching it drops to 85 % or less, regained above, window not restarted" do
+  # Quota (decision 2026-11-12): the ultimate level holds while the window
+  # (from the reach, 52 weeks at most) has at most 7 unbalanced final weeks.
+  test "ultimate level: kept at 7 unbalanced weeks, lost at the 8th, regained when the oldest slides out, window not restarted" do
     household, (alice, bob) = couple
-    (0..19).each { |n| log_balanced_week!(household, [ alice, bob ], week(n)) } # reached at week 14, then 6/6
-    (20..21).each { |n| unbalanced_week!(household, alice, bob, week(n)) }   # 6/7 = 85.7 %, 6/8 = 75 %
-    (22..27).each { |n| log_balanced_week!(household, [ alice, bob ], week(n)) } # ... 11/13 = 84.6 %, 12/14 = 85.7 %
+    (0..14).each { |n| log_balanced_week!(household, [ alice, bob ], week(n)) }  # reached at week 14
+    (15..22).each { |n| unbalanced_week!(household, alice, bob, week(n)) }     # 8 unbalanced
+    (23..67).each { |n| log_balanced_week!(household, [ alice, bob ], week(n)) }
 
     run_engine(household, final_at(week(14)))
     assert_equal 5, household.level
     assert_equal week(14).monday, household.ultimate_reached_on
-
-    run_engine(household, final_at(week(20)))
-    assert_equal 5, household.level, "6/7 = 85.7 % keeps it"
+    assert_equal 7, Progression.ultimate_margin(household)
 
     run_engine(household, final_at(week(21)))
-    assert_equal 4, household.level
+    assert_equal 5, household.level, "7 unbalanced weeks keep it"
+    assert_equal 0, Progression.ultimate_margin(household)
+
+    run_engine(household, final_at(week(22)))
+    assert_equal 4, household.level, "the 8th loses it"
     assert household.level_changes.chronological.last.ultimate_lost?
+    assert_nil Progression.ultimate_margin(household)
 
-    run_engine(household, final_at(week(26)))
-    assert_equal 4, household.level, "11/13 = 84.6 %"
+    run_engine(household, final_at(week(66)))
+    assert_equal 4, household.level, "week 15 is still in the 52-week window"
 
-    run_engine(household, final_at(week(27)))
-    assert_equal 5, household.level
+    run_engine(household, final_at(week(67)))
+    assert_equal 5, household.level, "week 15 left the window: 7 unbalanced weeks"
     assert household.level_changes.chronological.last.ultimate_regained?
     assert_equal week(14).monday, household.ultimate_reached_on, "a regain does not restart the window"
-    assert_equal 26, household.balanced_weeks_count
+    assert_equal 0, Progression.ultimate_margin(household)
+  end
+
+  test "ultimate level: a week neutralised by a retroactive pause leaves the quota" do
+    household, (alice, bob) = couple
+    (0..14).each { |n| log_balanced_week!(household, [ alice, bob ], week(n)) }
+    (15..21).each { |n| unbalanced_week!(household, alice, bob, week(n)) } # 7 unbalanced
+    log!(household, alice, at: mid(week(22)))                              # 8th: Bob logged nothing
+    log_balanced_week!(household, [ alice, bob ], week(23))
+
+    run_engine(household, final_at(week(22)))
+    assert_equal 4, household.level
+
+    travel_to(final_at(week(22)) + 1.day) do
+      MemberPause.declare!(member: membership(household, bob), declared_by: alice,
+                           starts_on: week(22).monday, ends_on: week(22).sunday)
+    end
+    assert_equal 7, Progression.unbalanced_weeks_in_window(household.reload, week(22))
+
+    run_engine(household, final_at(week(23)))
+    assert_equal 5, household.level, "regained at the next final report"
+    assert household.level_changes.chronological.last.ultimate_regained?
+  end
+
+  test "the window restarts at a new reach after a regression for empty weeks" do
+    household, (alice, bob) = couple
+    (0..14).each { |n| log_balanced_week!(household, [ alice, bob ], week(n)) } # reached at week 14
+    log!(household, alice, at: mid(week(15)))
+    log!(household, alice, at: mid(week(16)))                                  # Bob: two empty weeks
+    (17..21).each { |n| log_balanced_week!(household, [ alice, bob ], week(n)) }
+
+    run_engine(household, final_at(week(17)))
+    assert household.level_changes.regressed.exists?
+    assert_equal [ 4, 11 ], [ household.level, household.balanced_weeks_count ], "regressed to 4 (10), then +1"
+
+    run_engine(household, final_at(week(21)))
+    assert_equal [ 5, 15 ], [ household.level, household.balanced_weeks_count ]
+    assert household.level_changes.chronological.last.reached?
+    assert_equal week(21).monday, household.ultimate_reached_on
+    assert_equal 0, Progression.unbalanced_weeks_in_window(household, week(21)), "weeks 15 and 16 are before the new reach"
+    assert_equal 7, Progression.ultimate_margin(household)
   end
 
   test "a household that took 40 weeks to reach the ultimate level does not lose it the next week" do
@@ -216,18 +259,18 @@ class WeeklyEngineTest < ActiveSupport::TestCase
     (0..39).each do |n|
       balanced.include?(n) ? log_balanced_week!(household, [ alice, bob ], week(n)) : unbalanced_week!(household, alice, bob, week(n))
     end
-    log_balanced_week!(household, [ alice, bob ], week(40))
+    unbalanced_week!(household, alice, bob, week(40))
 
     run_engine(household, final_at(week(39)))
     assert_equal [ 5, 15 ], [ household.level, household.balanced_weeks_count ]
     assert_equal week(39).monday, household.ultimate_reached_on
 
     run_engine(household, final_at(week(40)))
-    assert_equal 5, household.level, "2/2 since reaching it; the 25 unbalanced weeks before do not count"
-    assert_empty household.level_changes.where(reason: "ultimate_lost")
+    assert_equal 5, household.level, "1 unbalanced week since the reach; the 25 before do not count"
+    assert_equal 6, Progression.ultimate_margin(household)
   end
 
-  test "regaining the ultimate level by thresholds after a regression keeps the first reach date" do
+  test "reaching the ultimate level again by thresholds restarts the window" do
     household, = couple
     household.update_columns(level: 4, balanced_weeks_count: 14, ultimate_reached_on: week(-30).monday)
     alice, bob = household.users.order(:id).to_a
@@ -235,7 +278,7 @@ class WeeklyEngineTest < ActiveSupport::TestCase
 
     run_engine(household, final_at(week(0)))
     assert_equal 5, household.level
-    assert_equal week(-30).monday, household.ultimate_reached_on
+    assert_equal week(0).monday, household.ultimate_reached_on
   end
 
   # ---- empty weeks, absence inquiry, regression, block ---------------------

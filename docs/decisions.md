@@ -220,3 +220,45 @@
 - **Décidé par :** la porteuse du projet.
 - **Règle :** algorithme simple et prévisible : tâche aimée à qui l'aime, détestée à quelqu'un d'autre, puis équilibrage des occurrences prévues vers la part juste. La proposition reste modifiable.
 - **Repose sur :** C4, C12, B11.
+
+## 2026-11-12 · Niveau ultime : un quota de semaines déséquilibrées
+- **Décidé par :** la porteuse du projet, après simulation des cas limites.
+- **Règle :** le foyer garde le niveau ultime tant qu'il a **7 semaines déséquilibrées au plus sur les 52 dernières semaines** de la fenêtre. Les semaines neutres, y compris celles rendues neutres par une pause déclarée après coup (D3), ne comptent pas. Au-delà, retour au niveau 4 ; le niveau ultime revient dès que le compte repasse à 7.
+- **Fenêtre :** elle part de l'obtention du niveau ultime, 52 semaines au plus. Elle repart de zéro à chaque nouvelle obtention après une régression (deux semaines vides). Elle ne repart pas quand le niveau revient après un dépassement du quota, sinon le quota se contournerait.
+- **Marge affichée (E9) :** « il vous reste N semaines », N = 7 − semaines déséquilibrées dans la fenêtre.
+- **Pourquoi :** à exigence égale (45 sur 52 = 86,5 %), le quota n'a pas la fragilité du ratio au début : avec le ratio, une seule semaine déséquilibrée juste après l'obtention faisait perdre le niveau.
+- **Rejeté :** le ratio de 85 % (avec ou sans grâce de 7 semaines).
+
+## 2026-11-12 · Le niveau repart de zéro quand la composition du foyer change
+- **Décidé par :** la porteuse du projet.
+- **Règle :** l'arrivée ou le départ d'un membre remet le niveau à 0, le compteur de semaines équilibrées à 0 et la fenêtre du niveau ultime à vide. L'historique des bilans reste.
+- **Pourquoi :** le niveau mesure l'équilibre entre ces personnes-là ; une nouvelle personne n'hérite pas du niveau gagné par d'autres.
+
+## 2026-11-12 · D8 : mêmes faits et mêmes chiffres pour tous
+- **Décidé par :** la porteuse du projet.
+- **Règle :** chaque destinataire reçoit les mêmes faits et les mêmes chiffres ; seule la formulation s'adapte (« vous » ou le prénom). Un déséquilibre nomme qui porte le plus.
+- **Repose sur :** H2.
+
+## 2026-11-12 · D9 : l'email est le repli du push, un plafond tous canaux confondus
+- **Décidé par :** la porteuse du projet.
+- **Règle :** un réglage par type d'événement. L'événement part en push quand la personne a un appareil enregistré et les notifications autorisées, sinon par email. Plafond : un bilan et une alerte par semaine et par personne, tous canaux confondus.
+- **Repose sur :** H1, H4.
+
+## 2026-11-13 · Renvoi d'une invitation : la personne qui l'a envoyée
+- **Décidé par :** la porteuse du projet.
+- **Règle :** seule la personne qui a envoyé l'invitation peut la renvoyer, ainsi que l'équipe 50/50 depuis le back-office. L'annulation reste ouverte à tout membre du foyer.
+
+## 2026-11-13 · D12 : 3 envois en tout
+- **Décidé par :** la porteuse du projet.
+- **Règle :** 3 emails au plus par invitation, le premier envoi compris (donc 2 renvois), espacés de 15 minutes au moins, comptés par email et par foyer.
+
+## 2026-11-13 · Pas d'email quand une invitation est déclinée
+- **Décidé par :** la porteuse du projet.
+- **Règle :** la personne qui gère le foyer le voit dans l'app (B13) ; aucun email.
+
+## 2026-11-13 · Back-office ActiveAdmin 4
+- **Décidé par :** la porteuse du projet.
+- **Outil :** ActiveAdmin 4 (Tailwind, importmap ; la 3 demande Sprockets et Sass, retirés). Le Tailwind de l'espace reprend la DA 50/50 (tokens partagés avec l'app).
+- **Accès :** modèle `AdminUser` séparé des comptes de l'app, double authentification obligatoire, pas d'inscription libre.
+- **Ce que voit l'équipe :** comptes, foyers, invitations, et des agrégats par foyer. Jamais le détail des enregistrements ni les préférences : ils appartiennent à leur auteur.
+- **Actions :** renvoyer ou annuler une invitation, débloquer un foyer, confirmer un email ; supprimer un compte arrive avec le lot 7. Chaque action est journalisée.

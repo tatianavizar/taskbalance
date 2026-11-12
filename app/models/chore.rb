@@ -110,6 +110,16 @@ class Chore < ApplicationRecord
     assignee_keys.include?("user:#{user.id}")
   end
 
+  # Tells the members among `keys` (participant keys just added) that `by`
+  # gave them this chore. Nobody is told about assigning a chore to oneself,
+  # and someone not yet in the household is not told.
+  def notify_assignees(keys, by:)
+    user_ids = keys.filter_map { |key| key.delete_prefix("user:").to_i if key.start_with?("user:") }
+    User.where(id: user_ids).where.not(id: by.id).find_each do |user|
+      Notifications::Notifier.call(Notifications::Events::TaskAssigned.new(self, assignee: user, assigned_by: by))
+    end
+  end
+
   # Times the household logged this chore, per author first name, most first.
   def log_counts_by_member
     chore_logs.joins(:user).group("users.first_name").order(Arel.sql("COUNT(*) DESC"), "users.first_name").count

@@ -1,0 +1,49 @@
+<%# B3 (and B4 with errors): invite someone by email. With ?setup=1 it is the "Partenaire" step of the setup. %>
+<% provide :chrome, "none" %>
+<% provide :title, t("invitations.new.title") %>
+<% setup = params[:setup].present? %>
+<div class="flex items-center gap-2.5">
+  <%= back_button(setup ? new_household_path : household_path(@household)) %>
+  <% if setup %>
+    <%= logo %>
+    <span class="font-bold"><%= t("households.new.setup") %></span>
+  <% end %>
+</div>
+
+<% if setup %>
+  <%= step_progress steps: t("households.new.steps"), current: 2 %>
+<% end %>
+
+<div>
+  <h1 class="screen-title"><%= t("invitations.new.title") %></h1>
+  <p class="screen-subtitle"><%= t("invitations.new.subtitle") %></p>
+</div>
+
+<%= form_with model: @invitation, url: household_invitations_path(@household, setup: (1 if setup)),
+      html: { class: "flex flex-col gap-4 flex-1", novalidate: true } do |f| %>
+  <%# The message sits under the field (B4); no summary box on top. %>
+  <%= f.field :email, as: :email, label: t("invitations.new.email_label"), autofocus: true,
+        autocomplete: "off", placeholder: t("invitations.new.email_placeholder") %>
+  <% @invitation.errors[:base].each do |message| %>
+    <div class="alert-box" role="alert"><%= message %></div>
+  <% end %>
+  <% if @pending %>
+    <p class="m-0 text-sm">
+      <%= link_to t("invitations.new.resend_existing"), household_invitation_path(@household, @pending), class: "font-semibold" %>
+    </p>
+  <% end %>
+
+  <%= card do %>
+    <div class="text-xs text-muted"><%= t("invitations.new.preview_label") %></div>
+    <div class="font-bold mt-1.5"><%= t("invitations.mailer_subject", inviter: current_user.first_name, household: @household.name) %></div>
+    <div class="text-sm leading-5 text-muted mt-1"><%= t("invitations.new.preview_body", days: Invitation::VALIDITY.in_days.to_i) %></div>
+  <% end %>
+
+  <%= sticky_cta do %>
+    <%= f.submit t("invitations.new.submit") %>
+    <% if setup %>
+      <%= link_to t("invitations.new.later"), household_chores_setup_path(@household),
+            class: "text-center font-semibold text-sm min-h-[44px] flex items-center justify-center" %>
+    <% end %>
+  <% end %>
+<% end %>

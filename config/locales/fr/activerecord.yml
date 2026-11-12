@@ -142,7 +142,18 @@ fr:
         invitation:
           attributes:
             email:
-              taken: a déjà une invitation pour ce foyer
+              blank: "Saisissez l'adresse de la personne à inviter."
+              invalid: "Cette adresse n'est pas valide. Vérifiez qu'elle contient un @."
+              incomplete_domain: "Adresse incomplète : il manque la fin du domaine (par exemple gmail.com)."
+              own_email: "C'est votre propre adresse. Saisissez celle de la personne à inviter."
+              already_member: "%{name} fait déjà partie de ce foyer."
+              already_invited: "Une invitation est déjà en attente pour cette adresse depuis le %{date}."
+              already_invited_now: "Une invitation est déjà en attente pour cette adresse."
+              resend_limit: "Cette adresse a déjà reçu %{max} renvois : la limite est atteinte."
+              resend_wait: "Un envoi est parti à cette adresse il y a peu. Réessayez dans %{minutes} min."
+            base:
+              household_full: "Le foyer compte déjà %{max} personnes, invitations en attente comprises. C'est le maximum."
+              not_acceptable: "Cette invitation ne peut plus être acceptée avec ce compte."
         member_pause:
           attributes:
             starts_on:

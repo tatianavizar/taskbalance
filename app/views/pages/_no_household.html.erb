@@ -19,6 +19,15 @@
   <p class="mt-1 mb-0 text-sm leading-5"><%= t("auth.no_household.journal_body") %></p>
 <% end %>
 
+<% resuming = pending_invitation_of(current_user) %>
+<% if resuming %>
+  <%= callout do %>
+    <b><%= t("invitations.resume.title") %></b>
+    <p class="mt-1 mb-2 text-sm leading-5"><%= t("invitations.resume.body", household: resuming.household.name) %></p>
+    <%= link_to t("invitations.resume.cta"), invitee_resume_path(resuming), class: "font-semibold" %>
+  <% end %>
+<% end %>
+
 <p class="m-0 text-[13px] leading-[18px] text-muted"><%= t("auth.no_household.invitation") %></p>
 
 <%= sticky_cta do %>

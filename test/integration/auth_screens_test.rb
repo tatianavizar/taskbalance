@@ -61,11 +61,12 @@ class AuthScreensTest < ActionDispatch::IntegrationTest
   end
 
   test "an invited sign-up skips the confirmation screen" do
+    households(:smith_home).update!(setup_step: "tasks") # still being set up: B12
     invitation = Invitation.create!(email: "guest@test.com", household: households(:smith_home))
     get new_user_registration_path(invitation_token: invitation.token)
     sign_up(email: "guest@test.com")
 
-    assert_redirected_to dashboard_path
+    assert_redirected_to waiting_invitation_path(invitation.token)
   end
 
   test "the confirm screen needs a session and, once confirmed, says so" do

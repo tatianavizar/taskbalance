@@ -1,8 +1,7 @@
 require "test_helper"
 
-# B10, B11, B14: the invited person's preferences and split. Reaching them
-# before joining is lot 3's (invitations.invitee_id); the screens already take
-# the acting participant, so they are rendered here with an invited one.
+# B10, B11, B14 rendered for an invited participant. The request flow,
+# through lot 3's access, is in test/integration/invitee_setup_test.rb.
 class InviteeSplitScreensTest < ActionView::TestCase
   helper SplitHelper
   helper ComponentsHelper
@@ -17,6 +16,9 @@ class InviteeSplitScreensTest < ActionView::TestCase
     @chore = @household.chores.create!(task: tasks(:cook_meal), assignee_user_ids: [ @dana.id ])
     participant = SplitParticipant.for_invitation(@invitation, color: "blue", user: @karim)
     view.define_singleton_method(:current_participant) { participant }
+    @invitation.claim_for!(@karim)
+    invitation = @invitation
+    view.define_singleton_method(:current_invitation) { invitation }
     view.define_singleton_method(:hotwire_native_app?) { false }
     view.define_singleton_method(:user_signed_in?) { true }
   end
@@ -34,6 +36,8 @@ class InviteeSplitScreensTest < ActionView::TestCase
     assert_includes rendered, "Étape 2 sur 2"
     assert_includes rendered, "Proposée par Dana le"
     assert_includes rendered, "Rejoindre le foyer"
+    assert_includes rendered, "Finalement, ne pas rejoindre ce foyer"
+    assert_includes rendered, decline_invitation_path(@invitation.token)
     assert_includes rendered, "assignments[#{@chore.id}][]"
   end
 

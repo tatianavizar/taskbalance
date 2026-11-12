@@ -22,6 +22,9 @@ class MemberPause < ApplicationRecord
   validate :retroactive_limits, on: :create
 
   after_create :notify_engine
+  # Every pause path notifies through the outbox: the engine recorded
+  # member_pause.declared (and any outcome); deliver it without waiting.
+  after_create_commit { NotificationsDispatchJob.perform_later(household_member.household_id) }
 
   scope :overlapping, ->(week) {
     where(starts_on: ..week.sunday).where("member_pauses.ends_on IS NULL OR member_pauses.ends_on >= ?", week.monday)

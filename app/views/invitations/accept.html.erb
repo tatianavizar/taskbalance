@@ -1,0 +1,38 @@
+<%# B9: a signed-in account with the invited address. Locals: invitation, leave_first (already in another household, D13). %>
+<% household = invitation.household %>
+<% provide :chrome, "none" %>
+<% provide :title, t("invitations.accept.title", inviter: invitation_inviter_name(invitation), household: household.name) %>
+<div class="flex items-center gap-2.5 min-h-[44px]">
+  <%= logo %><span class="flex-1 font-bold"><%= t("app.name") %></span>
+  <%= avatar(initials: member_initials(current_user), color: "blue", size: 30) %>
+</div>
+
+<div>
+  <h1 class="screen-title"><%= t("invitations.accept.title", inviter: invitation_inviter_name(invitation), household: household.name) %></h1>
+  <p class="screen-subtitle"><%= t("invitations.accept.account", name: current_user.first_name, email: current_user.email) %></p>
+</div>
+
+<% if leave_first %>
+  <div class="alert-box" role="alert">
+    <b><%= t("invitations.accept.leave_first_title") %></b><br>
+    <%= t("invitations.accept.leave_first_body", household: current_user.household.name) %>
+  </div>
+<% else %>
+  <%= card do %>
+    <ul class="list-none m-0 p-0 flex flex-col gap-3 text-sm leading-5">
+      <% t("invitations.accept.rules").each do |rule| %>
+        <li class="flex gap-3"><span class="flex-none w-2 h-2 rounded-full bg-ink mt-1.5" style="background:var(--color-ink)" aria-hidden="true"></span><span><%= rule %></span></li>
+      <% end %>
+    </ul>
+  <% end %>
+  <p class="m-0 text-[13px] leading-[18px] text-muted"><%= t("invitations.accept.last_step", date: invitation_expiry(invitation)) %></p>
+<% end %>
+
+<%= sticky_cta do %>
+  <% if leave_first %>
+    <%= link_to t("invitations.accept.open_household"), household_path(current_user.household), class: "btn btn-primary" %>
+  <% else %>
+    <%= button_to t("invitations.accept.continue"), claim_invitation_path(invitation.token), class: "btn btn-primary w-full", form_class: "contents" %>
+  <% end %>
+  <%= button_to t("invitations.accept.decline"), decline_invitation_path(invitation.token), class: "btn btn-secondary w-full", form_class: "contents" %>
+<% end %>

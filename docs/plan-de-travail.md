@@ -37,7 +37,7 @@ Tailles pour une personne : **S** = moins d'une demi-journée, **M** = 1 à 3 jo
 - **1.2 :** « Fait par » est retiré. L'auteur d'un enregistrement est toujours `current_user`, et un `user_id` envoyé est ignoré. Tests mis à jour.
 - **Lot 0** (socle mobile) et **lot 1** (comptes, foyer, écrans A1–A10, B1, B2, F4, F7, intro I1–I3) : fusionnés dans `mobile-v1`.
 - **Lot 5a** (moteur : `WeeklyStats`, bilans, niveaux, pauses) : sur la branche `lot5a-engine`, en cours de reprise.
-- **Lot 2** (catalogue et mise en place) : sur la branche `lot2-catalogue`. Catalogue en français avec clé stable et valeurs par défaut, `Chore` (fréquence, occurrences, échéance, `created_by_id`, `active`), `chore_assignees`, tâche perso C5 à C7, `chore_preferences`, `setup_step`, `week_plans` avec la proposition D18, réglages C16. Reste pour le lot 3 : l'accès de la personne invitée avant l'adhésion (B10, B11, B14 sont prêts, l'accès est bouchonné dans `SplitAccess` et `Household#invitee_participant_for`), le transfert de ses assignations à l'adhésion (`ChoreAssignee.transfer_invitation!`) et le recalcul de la répartition provisoire (`WeekPlan#recompute!`).
+- **Lot 2** (catalogue et mise en place) : sur la branche `lot2-catalogue`. Catalogue en français avec clé stable et valeurs par défaut, `Chore` (fréquence, occurrences, échéance, `created_by_id`, `active`), `chore_assignees`, tâche perso C5 à C7, `chore_preferences`, `setup_step`, `week_plans` avec la proposition D18, réglages C16. Branché sur le lot 3 : accès de la personne invitée avant l'adhésion (B10, B11, B14), transfert de ses assignations à l'adhésion, recalcul de la répartition provisoire, refus depuis B11. Notifications du lot 8a branchées : tâche assignée, répartition proposée, « Prêt ».
 - **Tests :** dans le sandbox, lancer `PARALLEL_WORKERS=1 bin/rails test` (le socket DRb des tests parallèles y est bloqué).
 
 ## 3. Écarts entre les maquettes et le backlog
@@ -144,9 +144,6 @@ Les autres restent ouvertes. Chacune bloque le lot indiqué.
 | D2 | D15 et D16 disent qu'une tâche réassignée « compte dans votre charge mentale cette semaine », alors que le bilan ne compte que ce qui est enregistré. On change le texte (« prévue ») ou la règle ? | D15, D16 | Lot 6 |
 | D4 | Qui peut remettre l'écart à zéro : la personne qui le porte, ou celle qu'il avantage ? Le backlog dit les deux (constat 17 de l'audit). | C9 | Lot 6 |
 | D7 | I3 dit qu'une semaine déséquilibrée « ne fait pas reculer, sauf au niveau ultime ». Le backlog dit jamais. Quel texte ? | I2, I3 | Lot 10 |
-| D8 | H2 donne des textes différents selon la personne, alors que 3.7 dit « mêmes mots pour tous ». On reformule en « mêmes faits et mêmes chiffres » ? | H2 | Lot 8 |
-| D9 | L'email est un canal à part avec ses propres réglages (H4), ou toujours le repli du push (priorité 4) ? Que plafonne la limite « un bilan et une alerte par semaine », et par canal ou en tout ? | H1, H4 | Lot 8 |
-| D12 | Les renvois d'invitation : 3 envois ou 4 ? Comptés par invitation ou par email et foyer ? | B5, B13 | Lot 3 |
 | D17 | Taille maximale du foyer ? | P2, P6 | Lot 10 |
 | D19 | Restent ouvertes, depuis le handoff : textes d'E4 et E15, repère à 50 % du temps, variantes d'E10, E4 et E2 pour un foyer de 3, chiffres divergents entre écrans (constat 20), CGU et politique de confidentialité. | — | Lot 10 |
 
