@@ -1,10 +1,10 @@
 # What the Tasks tab lists (D3, D4) for one person of a household: the open
 # occurrences of the week, in three sections.
 #
-#   late    due before today: this week's (but not the daily ones, which
-#           lapse with their day), plus the monthly, yearly and one-off ones
-#           of earlier weeks that nobody did (the weekly ones lapse with
-#           their week)
+#   late    due before today, of this week or an earlier one. Nothing lapses:
+#           a task nobody did stays late until it is done, whatever its
+#           frequency. `late_groups` folds them by chore, with a count, so a
+#           daily task missed for a week is one line, not seven.
 #   today   due today
 #   later   due after today, until Sunday
 #
@@ -43,6 +43,21 @@ class TaskBoard
   end
 
   def late = visible.select { |entry| entry.due_on < today }
+  # Late occurrences folded by chore, oldest first: one Group per chore.
+  # `entry` is the one « Fait » fulfils: the oldest the viewer can do, else
+  # the oldest.
+  Group = Data.define(:chore, :entries) do
+    def count = entries.size
+    def oldest = entries.first
+    def entry = entries.find(&:can_complete?) || oldest
+    def since = oldest.due_on
+  end
+
+  def late_groups
+    late.group_by { |entry| entry.chore.id }.values.map { |list| Group.new(chore: list.first.chore, entries: list) }
+      .sort_by { |group| [ group.since, group.chore.effective_name.to_s ] }
+  end
+
   def due_today = visible.select { |entry| entry.due_on == today }
   def later = visible.select { |entry| entry.due_on > today }
 
@@ -98,7 +113,7 @@ class TaskBoard
 
     current = ChoreOccurrence.of_active_chores.where(household_id: household.id).in_week(week)
     occurrences = ChoreOccurrence.where(id: current.select(:id))
-      .or(ChoreOccurrence.where(id: ChoreOccurrence.carried_over(household, week).select(:id)))
+      .or(ChoreOccurrence.where(id: ChoreOccurrence.earlier_weeks(household, week).select(:id)))
       .includes(:chore_logs, chore: [ :task, :chore_assignees ])
 
     occurrences.filter_map do |occurrence|
@@ -108,8 +123,6 @@ class TaskBoard
       # Open while someone carrying it has not done it.
       pending = assignees.reject { |participant| participant.user_id && done.include?(participant.user_id) }
       next if assignees.empty? || pending.empty?
-      # A daily task lapses with its day: tomorrow's replaces it.
-      next if occurrence.chore.daily? && occurrence.due_on < today
 
       Entry.new(occurrence: occurrence, chore: occurrence.chore, assignees: assignees, done_by_ids: done, viewer_key: viewer_key)
     end

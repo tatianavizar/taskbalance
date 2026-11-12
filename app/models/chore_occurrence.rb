@@ -17,12 +17,11 @@ class ChoreOccurrence < ApplicationRecord
   scope :in_week, ->(week) { where(week_start: week.monday) }
   scope :of_active_chores, -> { joins(:chore).merge(Chore.active) }
 
-  # Chores that come back by themselves (daily, weekly) lapse with their
-  # week: tomorrow's occurrence replaces them. The others (monthly, yearly,
-  # one-off) stay late until someone does them.
-  def self.carried_over(household, week)
+  # Occurrences of earlier weeks. None lapses: a task nobody did stays late,
+  # whatever its frequency, until it is done. Logging it fulfils it, but the
+  # log keeps the day it was really done and counts in that week.
+  def self.earlier_weeks(household, week)
     of_active_chores.where(household_id: household.id).where(week_start: ...week.monday)
-      .where(chores: { frequency: Chore.frequencies.values_at("monthly", "annually", "once") })
   end
 
   def done_by?(user_id)
