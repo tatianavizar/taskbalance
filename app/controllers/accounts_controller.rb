@@ -21,6 +21,16 @@ class AccountsController < ApplicationController
     end
   end
 
+  # F4, Notifications: one switch per event type (D9). Types left out of the
+  # form keep their setting; unknown ones are ignored.
+  def update_notifications
+    submitted = params.fetch(:preferences, {}).permit(*NotificationPreference::EVENT_TYPES)
+    submitted.each do |event_type, value|
+      NotificationPreference.set(current_user, event_type, ActiveModel::Type::Boolean.new.cast(value) == true)
+    end
+    redirect_to account_path, notice: t("notifications.account.saved")
+  end
+
   def edit_email
   end
 

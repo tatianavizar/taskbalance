@@ -15,7 +15,26 @@
   <%= list_row title: t("auth.account.password"), subtitle: t("auth.account.password_value"), href: edit_password_path %>
 </div>
 
+<section aria-labelledby="notification-settings">
+  <h2 id="notification-settings" class="text-[13px] font-bold text-muted mb-2"><%= t("notifications.account.heading") %></h2>
+  <p class="field-hint mt-0 mb-2"><%= t("notifications.account.intro") %></p>
+  <%= form_with url: account_notifications_path, method: :patch, scope: :preferences, html: { class: "list-stack", data: { controller: "autosubmit" } } do |f| %>
+    <% NotificationPreference.settings_for(current_user).each do |event_type, enabled| %>
+      <%= label_tag "preferences_#{event_type}", class: "list-row cursor-pointer" do %>
+        <span class="flex-1 min-w-0">
+          <span class="block font-semibold"><%= t("notifications.event_types.#{event_type}") %></span>
+          <span class="block text-[13px] leading-[18px] text-muted"><%= t("notifications.event_hints.#{event_type}") %></span>
+        </span>
+        <%= hidden_field_tag "preferences[#{event_type}]", "0", id: nil %>
+        <%= check_box_tag "preferences[#{event_type}]", "1", enabled, id: "preferences_#{event_type}", class: "switch-input", role: "switch", data: { action: "change->autosubmit#submit" } %>
+      <% end %>
+    <% end %>
+    <%= f.submit t("notifications.account.save"), variant: :secondary %>
+  <% end %>
+</section>
+
 <div class="list-stack">
+  <%= list_row title: t("notifications.account.feed"), href: notifications_path %>
   <%= list_row title: t("auth.account.intro"), href: intro_path(1) %>
 </div>
 

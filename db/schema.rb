@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_11_12_130000) do
+ActiveRecord::Schema[8.0].define(version: 2026_11_13_090100) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -212,6 +212,40 @@ ActiveRecord::Schema[8.0].define(version: 2026_11_12_130000) do
     t.check_constraint "ends_on IS NULL OR ends_on >= starts_on", name: "member_pauses_dates_ordered"
   end
 
+  create_table "notification_preferences", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.string "event_type", null: false
+    t.boolean "enabled", default: true, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["user_id", "event_type"], name: "index_notification_preferences_on_user_id_and_event_type", unique: true
+    t.index ["user_id"], name: "index_notification_preferences_on_user_id"
+  end
+
+  create_table "notifications", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.bigint "household_id"
+    t.string "kind", null: false
+    t.string "event_type", null: false
+    t.string "cap_class"
+    t.string "dedup_key", null: false
+    t.jsonb "facts", default: {}, null: false
+    t.string "channel"
+    t.string "suppressed_reason"
+    t.date "cap_week_start"
+    t.datetime "deliver_at", null: false
+    t.datetime "dispatched_at"
+    t.datetime "read_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["household_id"], name: "index_notifications_on_household_id"
+    t.index ["user_id", "cap_class", "cap_week_start"], name: "index_notifications_weekly_cap", unique: true, where: "((channel IS NOT NULL) AND (cap_class IS NOT NULL))"
+    t.index ["user_id", "created_at"], name: "index_notifications_on_user_id_and_created_at"
+    t.index ["user_id", "dedup_key"], name: "index_notifications_on_user_id_and_dedup_key", unique: true
+    t.index ["user_id"], name: "index_notifications_on_user_id"
+    t.check_constraint "channel IS NULL OR suppressed_reason IS NULL", name: "notifications_sent_or_suppressed"
+  end
+
   create_table "recurring_chores", force: :cascade do |t|
     t.bigint "household_id", null: false
     t.bigint "task_id", null: false
@@ -302,6 +336,9 @@ ActiveRecord::Schema[8.0].define(version: 2026_11_12_130000) do
   add_foreign_key "liked_tasks", "users"
   add_foreign_key "member_pauses", "household_members", on_delete: :cascade
   add_foreign_key "member_pauses", "users", column: "declared_by_id", on_delete: :nullify
+  add_foreign_key "notification_preferences", "users", on_delete: :cascade
+  add_foreign_key "notifications", "households", on_delete: :cascade
+  add_foreign_key "notifications", "users", on_delete: :cascade
   add_foreign_key "recurring_chores", "households"
   add_foreign_key "recurring_chores", "tasks"
   add_foreign_key "recurring_chores", "users", column: "assigned_to_id"
