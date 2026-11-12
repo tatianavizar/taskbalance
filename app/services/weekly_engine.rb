@@ -362,9 +362,10 @@ class WeeklyEngine
       result.level_changes << record_level_change(from, to, count_before, count, reason, week_start: week.monday, household_week: record)
     end
     attrs = { level: to || from, balanced_weeks_count: count }
-    # The ultimate window starts at the first time the level was reached; it
-    # is never moved by a loss, a regain or a regression.
-    attrs[:ultimate_reached_on] = week.monday if to == Progression::ULTIMATE && household.ultimate_reached_on.nil?
+    # The ultimate window restarts at each reach by thresholds (first reach,
+    # or a new one after a regression or a membership reset), never at a
+    # regain after the quota was exceeded.
+    attrs[:ultimate_reached_on] = week.monday if to == Progression::ULTIMATE && reason == :reached
     household.update!(attrs)
   end
 

@@ -116,8 +116,14 @@ class HouseholdMember < ApplicationRecord
     errors.add(:base, :household_full)
   end
 
+  # Arrival or departure (create, destroy, leave!): state solo/active and the
+  # progression reset. Skipped when the whole household is being destroyed.
   def refresh_household_state
-    Household.find_by(id: household_id)&.refresh_membership_state!
+    return if destroyed_by_association
+
+    household = Household.find_by(id: household_id) or return
+    household.reset_progression_for_membership_change!
+    household.refresh_membership_state!
   end
 
   def refresh_household_monograms

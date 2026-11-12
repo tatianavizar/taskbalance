@@ -5,7 +5,6 @@ module Progression
   # Level n needs HouseholdRules::LEVEL_THRESHOLDS[n - 1] balanced weeks.
   THRESHOLDS = HouseholdRules::LEVEL_THRESHOLDS.each_with_index.to_h { |weeks, i| [ i + 1, weeks ] }.freeze
   ULTIMATE = HouseholdRules::LEVEL_THRESHOLDS.size
-  ULTIMATE_MIN_RATIO = Rational(HouseholdRules::ULTIMATE_KEEP_RATE, 100)
 
   module_function
 
@@ -25,30 +24,37 @@ module Progression
   end
 
   # First Monday of the window that keeps the ultimate level, for a report on
-  # `week`: the week the household first reached the ultimate level
-  # (households.ultimate_reached_on), capped at the last
-  # HouseholdRules::ULTIMATE_WINDOW_WEEKS weeks (`week` included). Losing and
-  # regaining the level does not restart it (product owner, 2026-11-12).
+  # `week` (decision 2026-11-12): households.ultimate_reached_on, capped at the
+  # last HouseholdRules::ULTIMATE_WINDOW_WEEKS weeks (`week` included).
+  # ultimate_reached_on moves at each reach by thresholds (the first one, or
+  # one after a regression or a membership reset); a regain after the quota
+  # was exceeded does not move it, or the quota could be dodged.
   def ultimate_window_start(household, week)
     cap = week.monday - (7 * (HouseholdRules::ULTIMATE_WINDOW_WEEKS - 1))
     [ household.ultimate_reached_on, cap ].compact.max
   end
 
-  # Share of balanced weeks among the final, non-neutral weeks of that window.
-  # nil when the window holds no such week.
-  def ultimate_ratio(household, week)
-    weeks = household.household_weeks.final.where.not(outcome: "neutral")
-      .where(week_start: ultimate_window_start(household, week)..week.monday)
-    total = weeks.count
-    return nil if total.zero?
-
-    weeks.balanced.count.to_r / total
+  # Unbalanced final weeks of that window. Neutral weeks don't count, nor
+  # weeks a retroactive pause neutralised (WeekCorrection, D3).
+  def unbalanced_weeks_in_window(household, week)
+    household.household_weeks.final.unbalanced.uncorrected
+      .where(week_start: ultimate_window_start(household, week)..week.monday).count
   end
 
-  # Kept while the ratio is strictly above HouseholdRules::ULTIMATE_KEEP_RATE %.
-  # An empty window keeps the level.
+  # Kept while the window holds at most HouseholdRules::ULTIMATE_UNBALANCED_QUOTA
+  # unbalanced weeks.
   def keeps_ultimate?(household, week)
-    ratio = ultimate_ratio(household, week)
-    ratio.nil? || ratio > ULTIMATE_MIN_RATIO
+    unbalanced_weeks_in_window(household, week) <= HouseholdRules::ULTIMATE_UNBALANCED_QUOTA
+  end
+
+  # « Il vous reste N semaines » (E9): quota minus the unbalanced weeks in the
+  # window ending with the last final report, never below 0. nil below the
+  # ultimate level.
+  def ultimate_margin(household)
+    return nil unless household.level == ULTIMATE
+
+    last_monday = household.household_weeks.final.maximum(:week_start)
+    week = last_monday ? Week.new(last_monday, household.zone) : household.current_week
+    [ HouseholdRules::ULTIMATE_UNBALANCED_QUOTA - unbalanced_weeks_in_window(household, week), 0 ].max
   end
 end

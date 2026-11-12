@@ -28,6 +28,8 @@ class HouseholdWeek < ApplicationRecord
   validate :week_start_is_a_monday
 
   scope :chronological, -> { order(:week_start) }
+  # Weeks no retroactive pause neutralised (D3).
+  scope :uncorrected, -> { where.not(id: WeekCorrection.select(:household_week_id)) }
 
   def self.provisional_at(week)
     week.time_zone.local(week.sunday.year, week.sunday.month, week.sunday.day, PROVISIONAL_HOUR)

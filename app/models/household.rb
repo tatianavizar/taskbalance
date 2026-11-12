@@ -60,6 +60,21 @@ class Household < ApplicationRecord
     level == Progression::ULTIMATE
   end
 
+  # A member arrived or left (decision 2026-11-12): the level measures the
+  # balance between these people, so level, balanced-weeks counter and
+  # ultimate window go back to zero. Report history stays. Logs one
+  # membership_changed LevelChange, only when something was not already zero
+  # (a first member, or a solo household gaining its second, logs nothing).
+  def reset_progression_for_membership_change!
+    return if level.zero? && balanced_weeks_count.zero? && ultimate_reached_on.nil?
+
+    transaction do
+      level_changes.create!(from_level: level, to_level: 0, balanced_weeks_count_before: balanced_weeks_count,
+                            balanced_weeks_count_after: 0, reason: :membership_changed, week_start: current_week.monday)
+      update!(level: 0, balanced_weeks_count: 0, ultimate_reached_on: nil)
+    end
+  end
+
   # Called when a member arrives or leaves: the only state transitions that do
   # not wait for a final report. Blocked and setting_up are left alone.
   def refresh_membership_state!
