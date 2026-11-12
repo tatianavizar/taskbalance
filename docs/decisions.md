@@ -255,3 +255,10 @@
 ## 2026-11-13 · Pas d'email quand une invitation est déclinée
 - **Décidé par :** la porteuse du projet.
 - **Règle :** la personne qui gère le foyer le voit dans l'app (B13) ; aucun email.
+
+## 2026-11-13 · Back-office ActiveAdmin 4
+- **Décidé par :** la porteuse du projet.
+- **Outil :** ActiveAdmin 4 (Tailwind, importmap ; la 3 demande Sprockets et Sass, retirés). Le Tailwind de l'espace reprend la DA 50/50 (tokens partagés avec l'app).
+- **Accès :** modèle `AdminUser` séparé des comptes de l'app, double authentification obligatoire, pas d'inscription libre.
+- **Ce que voit l'équipe :** comptes, foyers, invitations, et des agrégats par foyer. Jamais le détail des enregistrements ni les préférences : ils appartiennent à leur auteur.
+- **Actions :** renvoyer ou annuler une invitation, débloquer un foyer, confirmer un email ; supprimer un compte arrive avec le lot 7. Chaque action est journalisée.
