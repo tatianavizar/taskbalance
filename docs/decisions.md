@@ -283,3 +283,10 @@
 ## 2026-11-13 · Recalcul des parts en direct
 - **Décidé par :** la porteuse du projet.
 - **Règle :** dans les écrans de répartition (C9, C12, B11), les pourcentages se mettent à jour dès qu'une assignation change, sans enregistrer. Seul « Valider » enregistre.
+
+## 2026-11-13 · Écart reporté : lectures retenues au lot 6 (à confirmer)
+- **Formule :** écart d'une semaine close = moyenne des parts exactes (mentale, exécution) − part juste. Le solde s'additionne jusqu'à compensation réelle ou remise à zéro. La cible du lundi = part juste − solde, ramenée dans la zone ; le reste reste reporté.
+- **Exclues :** semaines neutres, semaines avant le premier plan, report désactivé, semaine validée « sans reporter l'écart ».
+- **« Valider sans reporter l'écart » :** proposé seulement à la personne au-dessus de la zone (D4).
+- **Remise à zéro à trois ou plus :** la personne qui la fait renonce à son seul surplus, rendu aux autres au prorata de ce qui leur est dû.
+- **Arrivée ou départ :** l'écart n'est pas remis à zéro ; la personne qui arrive part de 0.
