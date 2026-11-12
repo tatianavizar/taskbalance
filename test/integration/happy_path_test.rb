@@ -88,8 +88,19 @@ class HappyPathTest < ActionDispatch::IntegrationTest
     # The recurring job runs every 15 min; simulate its runs at the key moments.
     sunday_2030 = week2 + 6.days + 11.5.hours   # week2 is Monday 09:00
     [ week2 - 6.hours,                          # Monday 03:00 + : closes week 1
-      sunday_2030,                              # provisional report of week 2
-      sunday_2030 + 7.hours,                    # Monday 03:30: final week 2
+      sunday_2030 ].each do |at|                # provisional week 2 (no message)
+      travel_to(at)
+      perform_enqueued_jobs { WeeklyEngineJob.perform_now }
+    end
+
+    # Both log again on Sunday at 21:00, after the provisional report.
+    travel_to(sunday_2030 + 30.minutes)
+    [ virginie, karim ].each do |user|
+      ChoreLog.create!(user: user, household: household, chore: chore, mental_load: true,
+                       execution_load: true, time_spent: 15, completed_at: Time.current)
+    end
+
+    [ sunday_2030 + 7.hours,                    # Monday 03:30: final week 2
       sunday_2030 + 12.hours ].each do |at|     # Monday 08:30: report delivery
       travel_to(at)
       perform_enqueued_jobs { WeeklyEngineJob.perform_now }
@@ -103,9 +114,33 @@ class HappyPathTest < ActionDispatch::IntegrationTest
     assert_equal 1, household.reload.level, "one balanced week reaches level 1"
 
     # --- Both get the same report, with the same figures -------------------------
-    reports = Notification.where(household: household, kind: "weekly_report")
-    assert_equal [ karim.id, virginie.id ].sort, reports.pluck(:user_id).uniq.sort
+    # The report of week 2 comes from the final report: Sunday 21:00 logs
+    # included, not provisional, and the level that report gave.
+    week2_start = week2.to_date.iso8601
+    reports = Notification.where(household: household, kind: "weekly_report").where("facts->>'week_start' = ?", week2_start)
+    assert_equal [ karim.id, virginie.id ].sort, reports.pluck(:user_id).sort
     assert_equal 1, reports.map(&:facts).uniq.size, "D8: same facts for every recipient"
+    facts = reports.first.facts
+    assert_equal false, facts["provisional"]
+    assert_equal 1, facts["level"]
+    assert_equal [ 2, 2 ], facts["members"].map { _1["logs_count"] }, "Sunday 21:00 logs are in the report"
+    assert(reports.all? { _1.channel.present? }, "sent, not suppressed")
+
+    # --- A week with no run on Sunday: the job next runs on Tuesday ---------------
+    week3 = week2 + 7.days
+    travel_to(week3 + 2.days) # Wednesday
+    [ virginie, karim ].each do |user|
+      ChoreLog.create!(user: user, household: household, chore: chore, mental_load: true,
+                       execution_load: true, time_spent: 20, completed_at: Time.current)
+    end
+    travel_to(week3 + 8.days) # Tuesday after, 09:00: the first run since Wednesday
+    perform_enqueued_jobs { WeeklyEngineJob.perform_now }
+
+    week3_reports = Notification.where(household: household, kind: "weekly_report")
+      .where("facts->>'week_start' = ?", week3.to_date.iso8601)
+    assert_equal [ karim.id, virginie.id ].sort, week3_reports.pluck(:user_id).sort
+    assert(week3_reports.all? { _1.channel.present? && _1.facts["provisional"] == false })
+    assert_equal [ 1, 2 ], [ household.reload.level, household.balanced_weeks_count ], "week 3 counted too"
 
     get notifications_path
     assert_response :success

@@ -17,10 +17,10 @@ class NotificationsDispatcherTest < ActiveSupport::TestCase
   def final_at(week) = HouseholdWeek.final_at(week)
   def provisional_at(week) = HouseholdWeek.provisional_at(week)
 
-  # Runs the engine at `now` and dispatches its result, as WeeklyEngineJob does.
+  # Runs the engine at `now` and delivers its outbox, as WeeklyEngineJob does.
   def tick(now)
     result = run_engine(@household, now)
-    Notifications::Dispatcher.engine_result(@household, result, now: now)
+    Notifications::Dispatcher.deliver_pending(@household, now: now)
     result
   end
 
@@ -39,12 +39,15 @@ class NotificationsDispatcherTest < ActiveSupport::TestCase
 
   # ---- H3 -------------------------------------------------------------------
 
-  test "the provisional report goes out Sunday 20:00 to every member" do
+  test "the weekly report is built from the final report and goes out Monday 08:00 to every member" do
     log!(@household, @alice, at: mid(week(0)), count: 3)
     log!(@household, @bob, at: mid(week(0)))
 
-    assert_no_enqueued_emails { tick(provisional_at(week(0)) - 1.minute) }
-    assert_enqueued_emails(2) { tick(provisional_at(week(0))) }
+    assert_no_enqueued_emails { tick(provisional_at(week(0))) }
+    assert_no_enqueued_emails { tick(final_at(week(0)) - 1.minute) }
+    assert_enqueued_emails(2) { tick(final_at(week(0))) }
+    assert_enqueued_with(job: ActionMailer::MailDeliveryJob, at: paris(2026, 10, 12, 8))
+    assert_equal [ false ], Notification.where(kind: "weekly_report").map { _1.facts["provisional"] }.uniq
 
     deliver_all
     assert_equal [ @alice.email, @bob.email ].sort, ActionMailer::Base.deliveries.flat_map(&:to).sort
@@ -53,7 +56,7 @@ class NotificationsDispatcherTest < ActiveSupport::TestCase
   test "D8: both members get the same facts and the same figures, only the phrasing changes" do
     log!(@household, @alice, at: mid(week(0)), count: 3, minutes: 20)
     log!(@household, @bob, at: mid(week(0)), minutes: 20)
-    tick(provisional_at(week(0)))
+    tick(final_at(week(0)))
     deliver_all
 
     to_alice = mail_to(@alice, "Semaine")
@@ -65,12 +68,13 @@ class NotificationsDispatcherTest < ActiveSupport::TestCase
     assert_includes text_of(to_alice), "Vous portez 75 % de la charge mentale."
     assert_includes text_of(to_bob), "Alice porte 75 % de la charge mentale."
     assert_includes text_of(to_alice), "Au-dessus de 60 %"
-    assert_equal Notification.where(kind: "weekly_report").pluck(:facts).uniq.size, 1, "one set of facts for every recipient"
+    reports = Notification.where(kind: "weekly_report").where("facts->>'week_start' = ?", week(0).monday.iso8601)
+    assert_equal 1, reports.pluck(:facts).uniq.size, "one set of facts for every recipient"
   end
 
   test "a balanced week names no one" do
     log_balanced_week!(@household, [ @alice, @bob ], week(0))
-    tick(provisional_at(week(0)))
+    tick(final_at(week(0)))
     deliver_all
 
     mail = mail_to(@bob, "Semaine")
@@ -88,8 +92,9 @@ class NotificationsDispatcherTest < ActiveSupport::TestCase
     tick(final_at(week(0)))
     assert_no_enqueued_emails { tick(final_at(week(0)) + 1.hour) }
 
-    assert_enqueued_emails(2) { tick(final_at(week(1))) }
+    assert_enqueued_emails(4) { tick(final_at(week(1))) } # the weekly report and E3, to both
     assert_enqueued_with(job: ActionMailer::MailDeliveryJob, at: paris(2026, 10, 19, 8))
+    assert_equal 2, Notification.where(kind: "alert_no_logs").count
     deliver_all
 
     to_bob = mail_to(@bob, "close")
@@ -103,14 +108,15 @@ class NotificationsDispatcherTest < ActiveSupport::TestCase
     assert_includes text_of(to_bob), "Alice 21, vous 0"
   end
 
-  test "no alert for a week nobody logged in, or for a household of one" do
+  test "no alert for a week nobody logged in, or for a household of one (the weekly report still goes)" do
     tick(final_at(week(0)))
     assert_no_enqueued_emails { tick(final_at(week(0)) + 1.minute) }
-    assert_equal 0, Notification.count
+    assert_equal [ "weekly_report" ], Notification.distinct.pluck(:kind)
 
     solo_household, _carol = build_household("Carol", joined_at: JOINED.call)
-    result = run_engine(solo_household, final_at(week(0)))
-    assert_no_enqueued_emails { Notifications::Dispatcher.engine_result(solo_household, result, now: final_at(week(0))) }
+    run_engine(solo_household, final_at(week(0)))
+    Notifications::Dispatcher.deliver_pending(solo_household, now: final_at(week(0)))
+    assert_equal [ "weekly_report" ], Notification.where(household: solo_household).distinct.pluck(:kind)
   end
 
   test "two empty weeks: the question to everyone, no alert E3 for that week, E4 at the deadline, E5 on the way back" do
@@ -162,15 +168,17 @@ class NotificationsDispatcherTest < ActiveSupport::TestCase
 
   test "running the engine job twice at the same moment sends nothing twice" do
     log_balanced_week!(@household, [ @alice, @bob ], week(0))
-    now = provisional_at(week(0))
+    now = final_at(week(0))
 
     assert_enqueued_emails(2) do
       travel_to(now) do
         WeeklyEngineJob.perform_now(now: now)
-        WeeklyEngineJob.perform_now(now: now)
+        assert_no_difference("Notification.count") { WeeklyEngineJob.perform_now(now: now) }
       end
     end
-    assert_equal 2, Notification.where(household: @household).count
+    # The arrival week's report came due a week ago: in the feed, not sent.
+    assert_equal 4, Notification.where(household: @household).count
+    assert_equal 2, Notification.where(household: @household, suppressed_reason: "stale").count
   end
 
   test "a failure while notifying is reported and does not undo the engine" do
@@ -181,7 +189,7 @@ class NotificationsDispatcherTest < ActiveSupport::TestCase
     subscriber.define_singleton_method(:report) { |error, **| reported << error }
     Rails.error.subscribe(subscriber)
 
-    Notifications::Dispatcher.stub(:engine_result, ->(*) { raise "mail down" }) do
+    Notifications::Dispatcher.stub(:deliver_pending, ->(*) { raise "mail down" }) do
       travel_to(now) { WeeklyEngineJob.perform_now(now: now) }
     end
 
@@ -200,7 +208,8 @@ class NotificationsDispatcherTest < ActiveSupport::TestCase
     inquiry = AbsenceInquiry.last
 
     pause = travel_to(final_at(week(1)) + 1.day) { inquiry.answer_yes!(by: @alice) }
-    notifications = Notifications::Dispatcher.pause_declared(pause, now: final_at(week(1)) + 1.day)
+    assert_enqueued_with(job: NotificationsDispatchJob, args: [ @household.id ])
+    Notifications::Dispatcher.deliver_pending(@household, now: final_at(week(1)) + 1.day)
     assert_equal %w[absence_outcome pause_declared], Notification.where(household: @household).order(:kind).where(kind: %w[absence_outcome pause_declared]).distinct.pluck(:kind)
 
     deliver_all
@@ -210,7 +219,10 @@ class NotificationsDispatcherTest < ActiveSupport::TestCase
     assert(subjects.any? { _1.start_with?("Pause déclarée pour Bob.") })
 
     assert_no_difference "Notification.count" do
-      Notifications::Dispatcher.pause_declared(pause, now: final_at(week(1)) + 2.days)
+      Notifications::Dispatcher.deliver_pending(@household, now: final_at(week(1)) + 2.days)
+      @household.engine_events.update_all(delivered_at: nil) # even a full replay
+      Notifications::Dispatcher.deliver_pending(@household, now: final_at(week(1)) + 2.days)
     end
+    assert pause
   end
 end

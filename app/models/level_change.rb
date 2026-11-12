@@ -24,4 +24,16 @@ class LevelChange < ApplicationRecord
   scope :standing_regressions, -> {
     regressed.where.not(id: LevelChange.where.not(cancelled_level_change_id: nil).select(:cancelled_level_change_id))
   }
+
+  # Every level move lands in the outbox, whoever made it (engine, D3
+  # cancellation, membership reset).
+  after_create :record_event
+
+  private
+
+  def record_event
+    EngineEvent.record!(household: household, name: "level.changed", subject: self, at: created_at,
+                        level_change_id: id, reason: reason, from_level: from_level, to_level: to_level,
+                        absence_inquiry_id: absence_inquiry_id)
+  end
 end
