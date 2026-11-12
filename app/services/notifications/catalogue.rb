@@ -15,7 +15,8 @@ module Notifications
   module Catalogue
     ENTRIES = [
       Entry.new("weekly_report",    "weekly_report",    "report", :report),
-      Entry.new("alert_no_logs",    "alert",            "alert",  :dashboard), # E3
+      Entry.new("reengagement",     "weekly_report",    "report", :dashboard), # instead of the report, empty week
+      Entry.new("alert_no_logs",   "alert",            "alert",  :dashboard), # E3
       Entry.new("alert_blocked",    "alert",            "alert",  :dashboard), # E4
       Entry.new("alert_unblocked",  "alert",            "alert",  :dashboard), # E5
       Entry.new("task_assigned",    "task_assigned",    nil,      :chores),
