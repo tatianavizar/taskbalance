@@ -24,6 +24,16 @@ Rails.application.routes.draw do
   get "intro", to: redirect("/intro/1"), as: :intro_start
   get "intro/:step", to: "intro#show", as: :intro, constraints: { step: /\d+/ }
 
+  # Comment on calcule ? (I4) : les règles, publiques, lues dans HouseholdRules.
+  get "regles", to: "rules#show", as: :rules
+
+  # Pages légales (brouillon) : conditions d'utilisation et confidentialité.
+  get "cgu", to: "legal#terms", as: :terms
+  get "confidentialite", to: "legal#privacy", as: :privacy
+
+  # « OK » du bandeau cookies : retient qu'il a été lu, dans un cookie nécessaire.
+  resource :cookie_notice, path: "cookies", only: [ :create ]
+
   # Compte (F4) : prénom, email et mot de passe se modifient chacun sur leur écran.
   get "compte" => "accounts#show", as: :account
   scope "compte", controller: "accounts" do
@@ -124,6 +134,8 @@ Rails.application.routes.draw do
     resource :setup, only: [ :show, :update ], controller: "households/setups"
     # C1, M1, C2 : tâches du foyer
     resource :chores_setup, only: [ :show, :update ], controller: "households/chores_setup"
+    # P2 : couleur et lettres du membre (ou de la personne invitée, avant d'avoir rejoint)
+    resource :member_style, path: "pastille", only: [ :show, :update ], controller: "households/member_styles"
     # C3, B10 : préférences, privées
     resource :preferences, only: [ :show, :update ], controller: "households/preferences"
     # C12, C4, C8, B11, B14 : répartition

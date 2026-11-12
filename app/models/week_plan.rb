@@ -137,6 +137,19 @@ class WeekPlan < ApplicationRecord
     self
   end
 
+  # The gap waiver counts only while its author carries the surplus in the
+  # plan as it stands (D4): above the zone in the snapshot.
+  def gap_waiver_valid?
+    return false if carry_gap || gap_waived_by_id.nil?
+
+    split.above_zone.any? { |participant| participant_user_id(participant) == gap_waived_by_id }
+  end
+
+  # Whether the week's real gap is folded into the carried balances.
+  def gap_carried?
+    !gap_waiver_valid?
+  end
+
   # One person's validation. Returns true once the plan is validated.
   def approve!(by:)
     raise NotAParticipant unless participant?(by)
@@ -217,6 +230,10 @@ class WeekPlan < ApplicationRecord
     participants = household.split_participants(include_invitations: starting?)
     split = PlannedSplit.from_household(household, week: week, participants: participants)
     self.status = :proposed
+    # A new snapshot starts without waiver: whoever waived the gap on the
+    # previous one has to ask again, and still be above the zone.
+    self.carry_gap = true
+    self.gap_waived_by = nil
     self.proposed_by = by
     self.proposed_at = Time.current
     self.provisional = participants.any?(&:provisional?)
@@ -245,10 +262,20 @@ class WeekPlan < ApplicationRecord
   def validate_if_complete!
     return unless household.auto_validate_splits? || pending_participants.empty?
 
+    drop_stale_waiver
+
     update!(status: :validated, validated_at: Time.current)
   end
 
   private
+
+  # Safety net at validation: a waiver whose author is no longer above the
+  # zone is dropped, so the gap is carried (SplitGap ignores it too).
+  def drop_stale_waiver
+    return if carry_gap || gap_waiver_valid?
+
+    update!(carry_gap: true, gap_waived_by: nil)
+  end
 
   def shares_hash(split)
     split.shares.transform_values { |s| { "mental" => s.mental, "execution" => s.execution, "average" => s.average } }

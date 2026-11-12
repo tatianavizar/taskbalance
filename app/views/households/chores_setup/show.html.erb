@@ -64,6 +64,6 @@
 
   <%= sticky_cta do %>
     <%= submit_tag(setting_up ? t("chores.setup.submit_setup", count: active_count) : t("chores.setup.submit"), class: "btn btn-primary", data: { disable_with: false }) %>
-    <%= link_to t("chores.setup.add_custom"), new_chore_path(return_to: "catalogue"), class: "link text-center text-sm min-h-[40px] flex items-center justify-center" %>
+    <%= link_to t("chores.setup.add_custom"), new_chore_path(return_to: "catalogue"), class: "link text-center text-sm min-h-[44px] flex items-center justify-center" %>
   <% end %>
 <% end %>

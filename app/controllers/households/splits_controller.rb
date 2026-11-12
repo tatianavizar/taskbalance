@@ -159,7 +159,7 @@ module Households
 
       zone = HouseholdRules.zone(@plan.participant_list.size)
       shares = outside.map { |p| "#{p.first_name} #{helpers.share_percent(@plan.split.share_of(p.key).average)}" }
-      key = @plan.carry_gap ? "split.zone.saved_outside" : "split.zone.saved_outside_waived"
+      key = @plan.gap_carried? ? "split.zone.saved_outside" : "split.zone.saved_outside_waived"
       t(key, min: zone.min, max: zone.max, shares: shares.to_sentence)
     end
 

@@ -57,6 +57,25 @@ class SplitGapTest < ActiveSupport::TestCase
     assert_equal week(1).monday, @household.reload.gap_folded_through
   end
 
+  test "a waiver whose author is not above the zone in the plan is ignored when the week is folded" do
+    plan = plan!(@household, week(1))
+    plan.update!(carry_gap: false, gap_waived_by: @bob) # Bob carries 0 % in this plan
+    final_week!(@household, week(1), @alice => [ 80.0, 80.0 ], @bob => [ 20.0, 20.0 ])
+    SplitGap.fold!(@household)
+
+    assert_in_delta 30.0, SplitGap.balance_of(@household, @alice)
+  end
+
+  test "a waiver whose author is not above the zone is dropped at validation" do
+    plan = plan!(@household, week(1), by: @alice)
+    plan.update!(carry_gap: false, gap_waived_by: @bob)
+    plan.approve!(by: @bob)
+
+    assert plan.reload.validated?
+    assert plan.carry_gap
+    assert_nil plan.gap_waived_by
+  end
+
   test "with the carry-over off nothing is folded and the targets are the fair share" do
     @household.update!(gap_carry_over_enabled: false)
     final_week!(@household, week(0), @alice => [ 70.0, 70.0 ], @bob => [ 30.0, 30.0 ])

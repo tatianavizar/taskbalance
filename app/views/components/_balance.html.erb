@@ -1,5 +1,37 @@
 <%# share nil : rien n'est encore mesuré (D1), « — » et une barre vide. %>
 <% measured = !share.nil? %>
+<% zone ||= nil %>
+<% if others.size >= 2 %>
+<%# Trois membres et plus (P3, P4) : une barre par membre, la personne qui regarde en premier, avec la zone en pointillés
+    et le repère de la part juste. Le nom et le pourcentage disent tout ce que la barre montre : jamais la couleur seule. %>
+<% rows = [ { name: name, share: share, balanced: balanced, self: true } ] + others.map { |o| o.merge(self: false) } %>
+<section class="card" style="padding:14px 16px">
+  <div class="flex justify-between text-[13px] leading-[18px]">
+    <b class="font-bold"><%= title %></b>
+    <span class="text-muted"><%= count %></span>
+  </div>
+  <div role="img" aria-label="<%= aria %>" class="balance-rows">
+    <% rows.each do |row| %>
+      <% value = row[:share] %>
+      <% in_zone = row[:balanced] %>
+      <div class="balance-row" aria-hidden="true">
+        <b class="balance-name"><%= row[:name] %></b>
+        <div class="balance-track">
+          <% if zone %><span class="balance-zone" style="left:<%= zone.begin %>%;width:<%= zone.end - zone.begin %>%"></span><% end %>
+          <% unless value.nil? %>
+            <i style="width:<%= value.clamp(0, 100) %>%;background:<%= row[:self] ? (balanced ? "var(--color-balanced)" : "var(--color-self)") : "var(--color-others)" %>"></i>
+          <% end %>
+          <span class="balance-fair" style="left:calc(<%= fair %>% - 1px)"></span>
+        </div>
+        <b class="balance-value"><%= value.nil? ? "—" : "#{value} %" %></b>
+      </div>
+      <% if in_zone == false && !value.nil? %>
+        <div class="balance-flag" aria-hidden="true"><%= t("components.balance.out_of_zone") %></div>
+      <% end %>
+    <% end %>
+  </div>
+</section>
+<% else %>
 <section class="card" style="padding:14px 16px">
   <div class="flex justify-between text-[13px] leading-[18px]">
     <b class="font-bold"><%= title %></b>
@@ -26,3 +58,4 @@
     <div class="absolute" style="left:calc(<%= fair %>% - 1px);top:-4px;width:2px;height:22px;background:var(--color-ink)"></div>
   </div>
 </section>
+<% end %>

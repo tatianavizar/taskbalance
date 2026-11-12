@@ -12,7 +12,7 @@
 # must be a week the member logged nothing. Over final weeks, the engine then
 # records a correction and may cancel a regression (WeeklyEngine, D3).
 class MemberPause < ApplicationRecord
-  RETROACTIVE_DAYS = 14
+  RETROACTIVE_DAYS = HouseholdRules::PAUSE_RETROACTIVE_DAYS
 
   belongs_to :household_member
   belongs_to :declared_by, class_name: "User", optional: true
@@ -20,11 +20,16 @@ class MemberPause < ApplicationRecord
   validates :starts_on, presence: true
   validate :ends_after_start
   validate :retroactive_limits, on: :create
+  validate :declared_for_someone_else_stays_in_the_inquiry, if: :declared_for_someone_else?
+  validate :extension_limits, on: :update
 
   after_create :notify_engine
   # Every pause path notifies through the outbox: the engine recorded
   # member_pause.declared (and any outcome); deliver it without waiting.
   after_create_commit { NotificationsDispatchJob.perform_later(household_member.household_id) }
+  # New dates are announced like a declaration (member_pause.updated).
+  after_update :announce_new_dates, if: :saved_change_to_dates?
+  after_update_commit(if: :saved_change_to_dates?) { NotificationsDispatchJob.perform_later(household_member.household_id) }
 
   scope :overlapping, ->(week) {
     where(starts_on: ..week.sunday).where("member_pauses.ends_on IS NULL OR member_pauses.ends_on >= ?", week.monday)
@@ -47,6 +52,18 @@ class MemberPause < ApplicationRecord
     reason if user && user.id == household_member.user_id
   end
 
+  # A pause declared by someone other than the member (F8, or a « yes » to an
+  # absence question).
+  def declared_for_someone_else?
+    declared_by_id.present? && declared_by_id != household_member&.user_id
+  end
+
+  # Only a pause that is current or in the future can be edited: a finished
+  # one is history (closed weeks) and only a new declaration can change it.
+  def editable?(today = household.zone.today)
+    ends_on.nil? || ends_on >= today
+  end
+
   # Ends the pause today, or removes it if it has not started yet.
   def cancel!(today = household.zone.today)
     return destroy! if starts_on > today
@@ -60,19 +77,56 @@ class MemberPause < ApplicationRecord
     errors.add(:ends_on, :before_start) if starts_on && ends_on && ends_on < starts_on
   end
 
-  def retroactive_limits
+  def saved_change_to_dates?
+    saved_change_to_starts_on? || saved_change_to_ends_on?
+  end
+
+  # F8 (D3): a pause for someone else is bounded, with an end, to the weeks
+  # of one open absence inquiry or regression about that member (first week
+  # Monday to last week Sunday).
+  def declared_for_someone_else_stays_in_the_inquiry
     return if starts_on.nil? || household_member.nil?
+    return errors.add(:ends_on, :required_for_someone_else) if ends_on.nil?
+
+    ranges = AbsenceInquiry.where(household_member_id: household_member_id)
+      .select(&:correction_window_open?).map { |i| i.first_week_start..(i.last_week_start + 6) }
+    return if ranges.any? { |range| range.cover?(starts_on) && range.cover?(ends_on) }
+
+    errors.add(:base, :outside_inquiry_weeks)
+  end
+
+  # Extending a pause is a new declaration for the days it adds: same limits
+  # as a creation. The days it adds are after today for a pause that can be
+  # edited; closed weeks are refused (a new declaration goes through the D3
+  # correction path, an edit does not).
+  def extension_limits
+    from = newly_covered_from
+    return if from.nil?
+
+    retroactive_limits(from)
+    errors.add(:ends_on, :closed_weeks_need_declaration) if Week.containing(from, household.time_zone).end_at < Time.current
+  end
+
+  def newly_covered_from
+    return starts_on if starts_on_changed? && starts_on_was && starts_on < starts_on_was
+    return unless ends_on_changed? && ends_on_was && (ends_on.nil? || ends_on > ends_on_was)
+
+    ends_on_was + 1
+  end
+
+  def retroactive_limits(from = starts_on)
+    return if from.nil? || household_member.nil?
 
     zone = household.zone
     today = zone.today
-    return unless starts_on < today
+    return unless from < today
 
     inquiry_start = AbsenceInquiry.where(household_member_id: household_member_id)
       .select { |inquiry| inquiry.correction_window_open? }.map(&:first_week_start).min
     earliest = [ today - RETROACTIVE_DAYS, inquiry_start ].compact.min
-    return errors.add(:starts_on, :too_far_back, days: RETROACTIVE_DAYS) if starts_on < earliest
+    return errors.add(:starts_on, :too_far_back, days: RETROACTIVE_DAYS) if from < earliest
 
-    week = Week.containing(starts_on, household.time_zone)
+    week = Week.containing(from, household.time_zone)
     last_day = [ ends_on, today ].compact.min
     now = Time.current
     while week.monday <= last_day && week.end_at < now
@@ -85,5 +139,11 @@ class MemberPause < ApplicationRecord
 
   def notify_engine
     WeeklyEngine.new(household).pause_declared(self)
+  end
+
+  def announce_new_dates
+    EngineEvent.record!(household: household, name: "member_pause.updated", subject: self, at: Time.current,
+                        household_member_id: household_member_id, user_id: household_member.user_id,
+                        starts_on: starts_on, ends_on: ends_on, declared_by_id: declared_by_id)
   end
 end

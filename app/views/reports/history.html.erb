@@ -58,8 +58,8 @@
   <% reports.reverse_each do |report| %>
     <% line = report.line_for(current_user) %>
     <% measured = line && !report.neutral? %>
-    <div class="grid items-center text-sm min-h-[40px] border-t border-divider" style="grid-template-columns:44px repeat(3,minmax(0,1fr)) 112px;gap:4px" id="history-week-<%= report.week.monday.iso8601 %>">
-      <%= link_to t("alerts.first_empty.short_week", number: report.week.number), report_path(semaine: report.week.monday), class: "font-bold no-underline", "aria-label": t("reports.history.open_week", week: report.week.label) %>
+    <div class="grid items-center text-sm min-h-[44px] border-t border-divider" style="grid-template-columns:44px repeat(3,minmax(0,1fr)) 112px;gap:4px" id="history-week-<%= report.week.monday.iso8601 %>">
+      <%= link_to t("alerts.first_empty.short_week", number: report.week.number), report_path(semaine: report.week.monday), class: "font-bold no-underline inline-flex items-center min-h-[44px]", "aria-label": t("reports.history.open_week", week: report.week.label) %>
       <% %i[mental execution].each do |dimension| %>
         <span class="text-right">
           <% value = line&.share(dimension) %>

@@ -6,9 +6,10 @@ module Notifications
     class PauseDeclared < Event
       KIND = "pause_declared".freeze
 
-      def initialize(pause)
+      def initialize(pause, updated: false)
         super(pause.household)
         @pause = pause
+        @updated = updated
       end
 
       def facts
@@ -22,7 +23,8 @@ module Notifications
 
       private
 
-      def key_parts = [ "pause-#{@pause.id}" ]
+      # New dates of the same pause are a new occurrence, sent again.
+      def key_parts = @updated ? [ "pause-#{@pause.id}", "dates-#{@pause.starts_on}-#{@pause.ends_on}" ] : [ "pause-#{@pause.id}" ]
     end
   end
 end

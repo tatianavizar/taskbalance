@@ -223,7 +223,7 @@ class WeeklyEngineTest < ActiveSupport::TestCase
     assert_equal 4, household.level
 
     travel_to(final_at(week(22)) + 1.day) do
-      MemberPause.declare!(member: membership(household, bob), declared_by: alice,
+      MemberPause.declare!(member: membership(household, bob), declared_by: bob,
                            starts_on: week(22).monday, ends_on: week(22).sunday)
     end
     assert_equal 7, Progression.unbalanced_weeks_in_window(household.reload, week(22))

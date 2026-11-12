@@ -271,6 +271,7 @@ Ordre conseillé. Chaque lot se termine sur des écrans utilisables de bout en b
 - CGU et politique de confidentialité, liées depuis A2, et petit bandeau cookies (décision 2026-11-12). S
 - TestFlight, test interne sur le Play Store, puis publication. M
 - **Écrans :** P1 à P8, C14, I4.
+- **Fait (partie A, branche `lot10-a`) :** barres par membre, feuille d'assignation, P1, P2, I4, passe d'accessibilité, CGU, confidentialité et bandeau cookies. **Reste :** relecture juridique des pages, polices auto-hébergées, D7 à confirmer, VoiceOver et TalkBack sur appareil, TestFlight et stores.
 
 **Total indicatif :** environ 21 semaines pour une personne (somme des lots). C'est une estimation de taille, pas un engagement. Les lots 4 et 5 portent le produit : on peut tester avec de vrais foyers dès la fin du lot 5, dans la coquille native, avant les notifications.
 

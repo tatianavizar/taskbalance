@@ -25,7 +25,7 @@
   <%= callout do %>
     <b><%= t("invitations.resume.title") %></b>
     <p class="mt-1 mb-2 text-sm leading-5"><%= t("invitations.resume.body", household: resuming.household.name) %></p>
-    <%= link_to t("invitations.resume.cta"), invitee_resume_path(resuming), class: "font-semibold" %>
+    <%= link_to t("invitations.resume.cta"), invitee_resume_path(resuming), class: "font-semibold inline-flex items-center min-h-[44px]" %>
   <% end %>
 <% end %>
 

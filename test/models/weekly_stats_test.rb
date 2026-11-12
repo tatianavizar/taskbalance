@@ -202,7 +202,7 @@ class WeeklyStatsTest < ActiveSupport::TestCase
 
   test "two members with one paused: neutral" do
     household, (alice, bob) = build_household("Alice", "Bob")
-    travel_to(paris(2026, 10, 1, 8)) { MemberPause.declare!(member: membership(household, bob), declared_by: alice, starts_on: Date.new(2026, 10, 1), ends_on: Date.new(2026, 10, 5)) }
+    travel_to(paris(2026, 10, 1, 8)) { MemberPause.declare!(member: membership(household, bob), declared_by: bob, starts_on: Date.new(2026, 10, 1), ends_on: Date.new(2026, 10, 5)) }
     log!(household, alice, at: @wednesday)
 
     s = stats(household)
@@ -320,13 +320,13 @@ class WeeklyStatsTest < ActiveSupport::TestCase
 
   test "the snapshot carries first names and leaves the pause reason out" do
     household, (alice, bob) = build_household("Alice", "Bob")
-    travel_to(paris(2026, 10, 5, 8)) { MemberPause.declare!(member: membership(household, bob), declared_by: alice, starts_on: Date.new(2026, 10, 6), reason: "Hôpital") }
+    travel_to(paris(2026, 10, 5, 8)) { MemberPause.declare!(member: membership(household, bob), declared_by: bob, starts_on: Date.new(2026, 10, 6), reason: "Hôpital") }
 
     snapshot = stats(household).to_snapshot
     assert_equal Date.new(2026, 10, 5), snapshot[:week_start]
     assert_equal %w[Alice Bob], snapshot[:members].map { _1["first_name"] }
     assert_equal "Bob", snapshot[:pauses].first["first_name"]
-    assert_equal alice.id, snapshot[:pauses].first["declared_by_id"]
+    assert_equal bob.id, snapshot[:pauses].first["declared_by_id"]
     assert_not_includes snapshot.to_s, "Hôpital"
     assert_equal "neutral", snapshot[:outcome]
   end

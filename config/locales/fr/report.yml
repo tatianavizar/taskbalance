@@ -276,6 +276,7 @@ fr:
       stopped: "Pause arrêtée."
     refused:
       not_declarable: "Une pause pour un autre membre se déclare seulement après une descente de niveau, tant qu'elle peut être annulée."
+      finished: "Cette pause est terminée : ses dates ne changent plus. Déclarez une nouvelle pause."
 
   # Niveaux (E8, E9, E13).
   levels:

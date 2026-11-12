@@ -15,6 +15,9 @@
   <%= f.field :password, as: :password, autocomplete: "new-password",
         hint: (t("auth.password_hint", count: @minimum_password_length) if @minimum_password_length) %>
   <p class="m-0 text-[13px] leading-[18px] text-muted"><%= t("auth.sign_up.ownership") %></p>
+  <p class="m-0 text-[13px] leading-[18px] text-muted" id="legal-notice"><%= t("legal.sign_up_notice_html",
+        terms: link_to(t("legal.terms.link"), terms_path, class: "link inline-block min-h-[24px]"),
+        privacy: link_to(t("legal.privacy.link"), privacy_path, class: "link inline-block min-h-[24px]")) %></p>
 
   <%= sticky_cta do %>
     <%= f.submit t("auth.sign_up.submit") %>

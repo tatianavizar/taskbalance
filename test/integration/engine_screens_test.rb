@@ -588,6 +588,43 @@ class EngineScreensTest < ActionDispatch::IntegrationTest
     assert_empty household.member_pauses
   end
 
+  test "F8: a pause for the absent member needs an end and stays inside the weeks of the regression" do
+    household, virginie, karim = blocked_household
+    travel_to(paris(2026, 10, 29, 9))
+    sign_in virginie
+    target = membership(household, karim)
+
+    post member_pauses_path, params: { member_pause: { household_member_id: target.id, starts_on: "2026-10-12", ends_on: "" } }
+    assert_response :unprocessable_entity
+    assert_text "a une date de fin"
+    assert_empty target.member_pauses
+
+    post member_pauses_path, params: { member_pause: { household_member_id: target.id, starts_on: "2026-10-12", ends_on: "2026-11-30" } }
+    assert_response :unprocessable_entity
+    assert_text "doit rester dans les semaines de la question d'absence"
+
+    post member_pauses_path, params: { member_pause: { household_member_id: target.id, starts_on: "2026-10-05", ends_on: "2026-10-25" } }
+    assert_response :unprocessable_entity
+    assert_empty target.member_pauses
+    assert household.reload.blocked?, "nothing was cancelled"
+  end
+
+  test "F6: a finished pause cannot be extended" do
+    household, (virginie, karim) = couple
+    travel_to(paris(2026, 10, 14, 10))
+    pause = MemberPause.create!(household_member: membership(household, karim), declared_by: karim,
+                                starts_on: Date.new(2026, 10, 12), ends_on: Date.new(2026, 10, 13))
+    travel_to(paris(2026, 10, 20, 10))
+    sign_in karim
+
+    get edit_member_pause_path(pause)
+    assert_redirected_to member_pauses_path
+    patch member_pause_path(pause), params: { member_pause: { ends_on: "2026-10-30" } }
+
+    assert_redirected_to member_pauses_path
+    assert_equal Date.new(2026, 10, 13), pause.reload.ends_on
+  end
+
   test "E5: the block lifted is announced without naming anyone" do
     household, virginie, karim = blocked_household
     log_balanced_week!(household, [ virginie, karim ], week(3))

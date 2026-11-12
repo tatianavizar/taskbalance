@@ -20,6 +20,7 @@ module InviteeResume
   # was proposed) or B14 (the creator chose « Attendre »).
   def invitee_resume_path(invitation)
     case invitation.resume_stage
+    when :style then household_member_style_path(invitation.household)
     when :preferences then household_preferences_path(invitation.household)
     else waiting_invitation_path(invitation.token)
     end

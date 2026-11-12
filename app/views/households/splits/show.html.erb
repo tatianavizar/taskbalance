@@ -5,6 +5,7 @@
 <% provide :title, t("split.title") %>
 <% provisional = @split.participants.select(&:provisional?) %>
 <% proposer = @plan&.proposed_by %>
+<% sheet_assignment = @split.participants.size >= SplitHelper::SHEET_FROM %>
 
 <div class="flex items-center gap-2.5">
   <%= back_button(setting_up ? household_chores_setup_path(@household) : household_path(@household)) %>
@@ -37,6 +38,10 @@
     <p class="mt-2 m-0"><%= status_pill validation_status(@plan), tone: (@plan.validated? ? :soft : :outline) %></p>
   <% end %>
 </div>
+
+<% if @plan&.gap_waiver_valid? %>
+  <%= callout do %><p class="m-0 text-sm" role="status"><%= t("split.zone.waived_notice", name: @plan.gap_waived_by.first_name) %></p><% end %>
+<% end %>
 
 <% if @split.items.empty? %>
   <%= callout do %><p class="m-0"><%= t("split.empty") %></p><% end %>
@@ -74,6 +79,9 @@
               </span>
               <% if @locked %>
                 <span class="text-[13px] text-right"><%= assignees_label(item.assignees, @split.participants) %></span>
+              <% elsif sheet_assignment %>
+                <%# Dès 3 membres (P6, C14) : un bouton par tâche, qui montre les personnes assignées et ouvre la feuille. %>
+                <%= render "households/splits/assign_sheet", item: item, participants: @split.participants %>
               <% else %>
                 <span class="flex gap-1" role="group" aria-label="<%= item.name %>">
                   <%= hidden_field_tag "assignments[#{item.chore_id}][]", "", id: nil %>

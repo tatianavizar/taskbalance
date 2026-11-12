@@ -44,4 +44,5 @@ fr:
       level_drop: "Niveau 3 → 2"
       pause_title: "Une absence ? Mettez-vous en pause."
       pause_body: "Vacances, maladie, déplacement : les semaines en pause ne comptent pas."
-      note: "Une semaine non équilibrée ne fait pas reculer, sauf au niveau ultime."
+      note: "Une semaine non équilibrée ne fait pas reculer : le foyer ne monte pas, c'est tout. Seule exception, le niveau ultime : au-delà de %{quota} semaines déséquilibrées sur %{window}, retour au niveau 4."
+      rules_link: "Comment on calcule ?"
