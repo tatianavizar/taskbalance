@@ -103,4 +103,20 @@ class ContentSecurityPolicyTest < ActionDispatch::IntegrationTest
     end
     assert_select "dialog"
   end
+
+  test "the back office (ActiveAdmin) stays within the policy" do
+    get new_admin_user_session_path
+    assert_response :success
+    assert_page_within_policy("/admin/login")
+    assert_select "link[rel=stylesheet][href*=active_admin]"
+
+    sign_in_team!
+    [ "/admin", "/admin/users", "/admin/users/#{users(:alice).id}", "/admin/households",
+      "/admin/households/#{@household.id}", "/admin/invitations", "/admin/admin_actions" ].each do |path|
+      get path
+      assert_response :success, path
+      assert_page_within_policy(path)
+    end
+    assert_select "script[type=importmap][nonce='#{nonce}']"
+  end
 end
