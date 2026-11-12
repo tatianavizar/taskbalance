@@ -20,6 +20,8 @@ module Notifications
   #                               logged anything (2+ members)
   #   member.first_empty_week     E3 alert, about that member
   #   household.unblocked         E5
+  #   household.admin_unblocked   the block lifted from the back office: only
+  #                               the members behind it, never naming the team
   #   absence_inquiry.opened      the absence question (E11, P5)
   #   level.changed regressed     E4 alert, block
   #   level.changed regression_cancelled   absence outcome "cancelled"
@@ -64,6 +66,7 @@ module Notifications
       when "household_week.final" then weekly_report(subject, event.payload)
       when "member.first_empty_week" then no_logs_alert(subject, event.payload["user_id"])
       when "household.unblocked" then send_event Events::UnblockedAlert.new(subject)
+      when "household.admin_unblocked" then send_event Events::BlockLiftedAlert.new(event)
       when "absence_inquiry.opened" then send_event Events::AbsenceQuestion.new(subject)
       when "level.changed" then level_change(subject)
       when "absence_inquiry.resolved" then resolved(subject, event.payload["outcome"])

@@ -22,8 +22,10 @@
 #   member_pause.declared     household_member_id, user_id, starts_on, ends_on,
 #                             declared_by_id (every pause path)
 #   member_pause.updated      same payload: the dates of a pause changed
-#   household.admin_unblocked admin_user_id, level, balanced_weeks_count (the back
-#                             office lifted the block; no subject, nothing is sent)
+#   household.admin_unblocked admin_user_id, level, balanced_weeks_count, user_ids
+#                             (the back office lifted the block; subject: the
+#                             household; only `user_ids`, the members behind the
+#                             block, are told)
 #
 # Notifications::Dispatcher.deliver_pending drains it: an event is marked
 # delivered only after the Notifier ran for it, so a crashed dispatch is

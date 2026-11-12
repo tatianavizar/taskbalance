@@ -151,6 +151,12 @@ fr:
           unbalanced: "La semaine n'est pas équilibrée : elle ne compte pas."
         streak: "Le compte des semaines sans enregistrement repart de zéro."
 
+      alert_block_lifted:
+        title: "La progression du foyer est débloquée"
+        level: "Le foyer reste au niveau %{level}."
+        counts: "Les semaines équilibrées comptent de nouveau pour monter de niveau."
+        keep: "Une absence à venir ? Déclarez une pause."
+
       absence_question:
         title:
           self: "Semaine %{week} close : vous n'avez rien enregistré depuis 2 semaines"

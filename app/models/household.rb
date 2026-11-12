@@ -107,17 +107,35 @@ class Household < ApplicationRecord
   # Back office: the team lifts a block by hand (docs/decisions.md, 2026-11-13).
   # Only the state and the date go back; the level and the balanced-weeks
   # counter are the engine's and stay as they are. Recorded as an EngineEvent
-  # (`household.admin_unblocked`, nothing is sent for it) next to the engine's
-  # own. Returns false when the household is not blocked.
+  # (`household.admin_unblocked`) next to the engine's own; the members behind
+  # the block are told (Events::BlockLiftedAlert), nobody else. Returns false
+  # when the household is not blocked.
   def admin_unblock!(by:)
-    with_lock do
-      return false unless blocked?
+    unblocked = with_lock do
+      next false unless blocked?
 
+      concerned = members_behind_block
       update!(state: household_members.count >= 2 ? "active" : "solo", blocked_at: nil)
-      EngineEvent.record!(household: self, name: "household.admin_unblocked",
-                          admin_user_id: by.id, level: level, balanced_weeks_count: balanced_weeks_count)
+      EngineEvent.record!(household: self, name: "household.admin_unblocked", subject: self,
+                          admin_user_id: by.id, level: level, balanced_weeks_count: balanced_weeks_count,
+                          user_ids: concerned.map(&:id))
       true
     end
+    # Tell the person concerned now, not at the next engine run.
+    NotificationsDispatchJob.perform_later(id) if unblocked
+    unblocked
+  end
+
+  # The members whose empty weeks caused the current block: every absence
+  # inquiry that ended in a regression since the household was blocked (a
+  # second one during the same block does not drop the level again, but its
+  # member is concerned too). Members who left since are gone with their
+  # inquiries.
+  def members_behind_block
+    return [] unless blocked_at
+
+    User.where(id: absence_inquiries.regressed.where(deadline_at: blocked_at..)
+                                    .joins(:household_member).select("household_members.user_id")).order(:id).to_a
   end
 
   def manager
