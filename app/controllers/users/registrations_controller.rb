@@ -17,6 +17,12 @@ class Users::RegistrationsController < Devise::RegistrationsController
     redirect_to account_path
   end
 
+  # Account deletion (F5) is lot 7: it must anonymise and keep the logs, which
+  # belong to their author. Until then Devise's DELETE /users is closed.
+  def destroy
+    raise ActionController::RoutingError, "Account deletion is not available yet"
+  end
+
   def create
     build_resource(sign_up_params)
     skip_confirmation_if_invited(resource)
