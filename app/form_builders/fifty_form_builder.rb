@@ -97,7 +97,7 @@ class FiftyFormBuilder < ActionView::Helpers::FormBuilder
     invalid = errors?(method)
     described_by = [ (field_id(method, :hint) if hint), (field_id(method, :error) if invalid) ].compact.join(" ").presence
     attrs = html.merge(
-      "aria-invalid": (invalid ? "true" : nil),
+      "aria-invalid": (invalid ? "true" : html[:"aria-invalid"]),
       "aria-describedby": described_by
     ).compact
 

@@ -12,10 +12,16 @@ fr:
       delete_confirm: "Supprimer ce foyer ? Les enregistrements de chaque membre sont conservés."
     new:
       title: "Créer le foyer"
+      setup: "Mise en place"
+      steps: [ "Foyer", "Partenaire", "Tâches", "Répartition" ]
+      heading: "Comment s'appelle votre foyer ?"
+      subtitle: "C'est le foyer qui progresse, pas chaque personne. Ce nom n'est visible que par ses membres."
+      submit: "Continuer"
     edit:
       title: "Modifier le foyer"
     form:
       name_label: "Nom du foyer"
+      name_hint: "%{count} caractères maximum."
       name_placeholder: "Ex. : Chez Virginie et Karim"
       submit_create: "Créer le foyer"
       submit_update: "Enregistrer"

@@ -1,0 +1,27 @@
+<% provide :chrome, "none" %>
+<% provide :title, t("auth.confirm_pending.title") %>
+<%= back_button account_path %>
+<h1 class="screen-title"><%= t("auth.confirm_pending.title") %></h1>
+
+<% if @confirmed %>
+  <%= callout do %><p class="m-0"><%= t("auth.confirm_pending.confirmed") %></p><% end %>
+<% else %>
+  <%= callout do %>
+    <p class="m-0"><%= t("auth.confirm_pending.body_html", email: ERB::Util.html_escape(@address), hours: Devise.confirm_within.in_hours.to_i) %></p>
+  <% end %>
+  <p class="m-0 text-sm leading-5 text-muted"><%= t("auth.confirm_pending.help") %></p>
+<% end %>
+
+<div class="mt-auto flex flex-col gap-2.5 pb-2">
+  <%= link_to t("auth.confirm_pending.continue"), (current_household ? dashboard_path : new_household_path), class: "btn btn-primary" %>
+  <% unless @confirmed %>
+    <div data-controller="countdown" data-countdown-seconds-value="<%= @resend_in %>"
+         data-countdown-wait-label-value="<%= t("auth.confirm_pending.resend_wait", seconds: "%s") %>">
+      <%= button_to t("auth.confirm_pending.resend"), user_confirmation_path, params: { user: { email: @address } },
+            class: "btn btn-secondary", disabled: @resend_in.positive?,
+            form_class: "m-0", data: { countdown_target: "button" } %>
+    </div>
+    <%= link_to t("auth.confirm_pending.change_address"), edit_email_path,
+          class: "flex items-center justify-center min-h-[44px] font-semibold text-sm" %>
+  <% end %>
+</div>
