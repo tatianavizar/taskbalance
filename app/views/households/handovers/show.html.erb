@@ -1,0 +1,31 @@
+<%# D16 : la personne à qui la tâche est proposée accepte ou refuse ; celle qui l'a proposée peut annuler. Pour la semaine seulement. %>
+<% provide :title, t("handovers.show.title") %>
+<% for_me = @handover.to_user_id == current_user.id %>
+<% chore = @handover.chore.effective_name %>
+<div class="flex items-center gap-2.5">
+  <%= back_button(household_split_path(@household)) %>
+  <span class="font-bold flex-1"><%= t("households.show.breadcrumb_split") %></span>
+</div>
+
+<div>
+  <h1 class="screen-title">
+    <%= for_me ? t("handovers.show.heading_to_me", name: @handover.from_user.first_name, chore: chore) : t("handovers.show.heading_by_me", name: @handover.to_user.first_name, chore: chore) %>
+  </h1>
+  <p class="screen-subtitle"><%= t("handovers.show.week", number: @handover.week.number) %></p>
+  <p class="mt-2 m-0"><%= status_pill t("handovers.status.#{@handover.status}"), tone: (@handover.pending? ? :outline : :soft) %></p>
+</div>
+
+<%= callout do %>
+  <p class="m-0 text-sm"><%= for_me ? t("handovers.show.planned_self", chore: chore) : t("handovers.show.planned_other", name: @handover.to_user.first_name, chore: chore) %></p>
+<% end %>
+
+<% if @handover.open? %>
+  <%= sticky_cta do %>
+    <% if for_me %>
+      <%= button_to t("handovers.show.accept"), accept_household_handover_path(@household, @handover), class: "btn btn-primary" %>
+      <%= button_to t("handovers.show.refuse"), refuse_household_handover_path(@household, @handover), class: "btn btn-outline" %>
+    <% else %>
+      <%= button_to t("handovers.show.cancel"), cancel_household_handover_path(@household, @handover), class: "btn btn-outline" %>
+    <% end %>
+  <% end %>
+<% end %>

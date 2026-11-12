@@ -42,9 +42,8 @@
   <%= callout do %><p class="m-0"><%= t("split.empty") %></p><% end %>
   <%= link_to t("split.tasks_link"), household_chores_setup_path(@household), class: "btn btn-primary" %>
 <% else %>
-  <%= render "households/splits/planned_bar", split: @split, viewer: current_participant %>
-
   <% if @locked %>
+    <%= render "households/splits/planned_bar", split: @split, viewer: current_participant %>
     <%= callout do %><p class="m-0 text-sm"><%= t("split.locked") %></p><% end %>
   <% end %>
 
@@ -52,7 +51,12 @@
     <div class="alert-box" role="alert"><%= @error %></div>
   <% end %>
 
-  <%= form_with url: household_split_path(@household), method: :patch, html: { class: "flex flex-col gap-3 flex-1" } do %>
+  <%# Lot 6 : les parts se recalculent dès qu'une assignation change (split-preview → #preview, rien n'est enregistré). Sans JavaScript, « Mettre à jour les parts » reste. %>
+  <% live = @locked ? {} : { controller: "split-preview", split_preview_url_value: preview_household_split_path(@household), action: "change->split-preview#refresh" } %>
+  <%= form_with url: household_split_path(@household), method: :patch, html: { class: "flex flex-col gap-3 flex-1", data: live } do %>
+    <% unless @locked %>
+      <%= render "households/splits/planned_bar", split: @split, viewer: current_participant, waivable: !invitee %>
+    <% end %>
     <% @split.items_by_category.sort_by { |category, _| Chore::CATEGORIES.index(category) || 99 }.each do |category, items| %>
       <details class="split-group" open>
         <summary>
@@ -96,9 +100,16 @@
       <%= sticky_cta do %>
         <% label = if !invitee then t("split.validate") elsif @plan&.awaiting_proposal? then t("split.invitee.propose_and_join") else t("split.invitee.join") end %>
         <%= button_tag label, name: "commit_action", value: "validate", class: "btn btn-primary" %>
-        <%= button_tag t("split.recompute"), name: "commit_action", value: "recompute", class: "btn btn-secondary" %>
+        <%= button_tag t("split.recompute"), name: "commit_action", value: "recompute", class: "btn btn-secondary",
+                       data: { split_preview_target: "fallback" } %>
       <% end %>
     <% end %>
+  <% end %>
+<% end %>
+<% if !setting_up && !invitee %>
+  <%= render "households/splits/gap", household: @household, balances: @gap_balances %>
+  <% if @plan && !@plan.awaiting_proposal? %>
+    <%= render "households/splits/handovers", household: @household %>
   <% end %>
 <% end %>
 <% if invitee && current_invitation %>

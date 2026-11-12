@@ -1,0 +1,20 @@
+<%# C9 : l'écart reporté (SplitGap). Il nomme qui a porté le plus ; seule cette personne peut le remettre à zéro (D4). En pourcentage, sans « points ». %>
+<% carriers = household.household_members.includes(:user).select { |m| balances.fetch(m.user_id, 0) >= SplitGap::CARRIER_MIN } %>
+<% if carriers.any? && household.gap_carry_over_enabled %>
+  <section class="card flex flex-col gap-2" aria-labelledby="gap-title">
+    <h2 id="gap-title" class="m-0 text-[15px] font-bold font-sans"><%= t("split.gap.title") %></h2>
+    <% carriers.each do |member| %>
+      <% percent = "#{balances[member.user_id].round} %" %>
+      <p class="m-0 text-sm">
+        <%= member.user_id == current_user.id ? t("split.gap.carried_self", percent: percent) : t("split.gap.carried_other", name: member.user.first_name, percent: percent) %>
+      </p>
+    <% end %>
+    <p class="m-0 text-[13px] text-muted"><%= t("split.gap.compensation") %></p>
+    <% if carriers.any? { |m| m.user_id == current_user.id } %>
+      <%= button_to t("split.gap.reset"), reset_gap_household_split_path(household), method: :post,
+                    class: "btn btn-secondary btn-sm", form: { data: { turbo_confirm: t("split.gap.reset_confirm") } } %>
+    <% else %>
+      <p class="m-0 text-[13px] text-muted"><%= t("split.gap.reset_by_carrier") %></p>
+    <% end %>
+  </section>
+<% end %>

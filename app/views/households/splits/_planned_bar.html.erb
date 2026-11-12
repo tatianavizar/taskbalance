@@ -1,8 +1,14 @@
-<%# « Prévu cette semaine » : une barre par foyer, la moyenne des deux charges de chaque personne (2.2c). La personne qui regarde en premier. %>
+<%# « Prévu cette semaine » : une barre par foyer, la moyenne des deux charges de chaque personne (2.2c). La personne qui regarde en premier.
+    Remplacé en direct par SplitsController#preview (lot 6) : même calcul, côté serveur.
+    waivable : la personne au-dessus de la zone peut valider « sans reporter l'écart » (décision 2026-11-08, D4). %>
+<% waivable = local_assigns.fetch(:waivable, false) %>
 <% ordered = split.participants.sort_by { |p| p.key == viewer.key ? 0 : 1 } %>
 <% values = ordered.map { |p| [ p, split.share_of(p.key)&.average ] } %>
 <% fair = HouseholdRules.fair_share(split.participants.size) %>
-<section class="callout flex flex-col gap-1" aria-labelledby="planned-title">
+<% zone = HouseholdRules.zone(split.participants.size) %>
+<% outside = split.outside_zone %>
+<div id="planned_bar" class="flex flex-col gap-2">
+<section class="callout flex flex-col gap-1" aria-labelledby="planned-title" aria-live="polite">
   <h2 id="planned-title" class="m-0 text-[15px] font-bold text-center font-sans"><%= t("split.planned") %></h2>
   <div class="flex justify-between gap-2 text-sm" style="font-variant-numeric: tabular-nums">
     <% values.each_with_index do |(participant, value), i| %>
@@ -23,3 +29,16 @@
     <p class="m-0 mt-2 text-[13px] leading-[18px]"><%= t("split.not_exact", even: even_split_label(split.participants)) %></p>
   <% end %>
 </section>
+<% if outside.any? && zone %>
+  <div class="alert-box" role="status">
+    <p class="m-0"><%= t("split.zone.outside", min: zone.min, max: zone.max,
+                         shares: outside.map { |p| "#{p.first_name} #{share_percent(split.share_of(p.key).average)}" }.to_sentence) %></p>
+    <% if waivable && split.above_zone.any? { |p| p.key == viewer.key } %>
+      <label class="flex items-start gap-2 mt-2 text-sm">
+        <%= check_box_tag :carry_gap, "0", false, id: "carry_gap" %>
+        <span><%= t("split.zone.waive") %></span>
+      </label>
+    <% end %>
+  </div>
+<% end %>
+</div>
