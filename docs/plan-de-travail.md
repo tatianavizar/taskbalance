@@ -35,7 +35,9 @@ Tailles pour une personne : **S** = moins d'une demi-journée, **M** = 1 à 3 jo
 
 - **1.1 :** le jeton d'invitation est généré avant la validation, et un email invalide réaffiche le formulaire au lieu d'une erreur 500. Tests modèle et contrôleur ajoutés.
 - **1.2 :** « Fait par » est retiré. L'auteur d'un enregistrement est toujours `current_user`, et un `user_id` envoyé est ignoré. Tests mis à jour.
-- **À vérifier :** la suite de tests n'a pas pu tourner dans le sandbox (pas d'accès au socket Postgres).
+- **Lot 0** (socle mobile) et **lot 1** (comptes, foyer, écrans A1–A10, B1, B2, F4, F7, intro I1–I3) : fusionnés dans `mobile-v1`.
+- **Lot 5a** (moteur : `WeeklyStats`, bilans, niveaux, pauses) : sur la branche `lot5a-engine`, en cours de reprise.
+- **Tests :** dans le sandbox, lancer `PARALLEL_WORKERS=1 bin/rails test` (le socket DRb des tests parallèles y est bloqué).
 
 ## 3. Écarts entre les maquettes et le backlog
 
@@ -146,13 +148,9 @@ Les autres restent ouvertes. Chacune bloque le lot indiqué.
 | D7 | I3 dit qu'une semaine déséquilibrée « ne fait pas reculer, sauf au niveau ultime ». Le backlog dit jamais. Quel texte ? | I2, I3 | Lot 10 |
 | D8 | H2 donne des textes différents selon la personne, alors que 3.7 dit « mêmes mots pour tous ». On reformule en « mêmes faits et mêmes chiffres » ? | H2 | Lot 8 |
 | D9 | L'email est un canal à part avec ses propres réglages (H4), ou toujours le repli du push (priorité 4) ? Que plafonne la limite « un bilan et une alerte par semaine », et par canal ou en tout ? | H1, H4 | Lot 8 |
-| D10 | Durée de session : 30 jours (G5), 2 semaines (Devise), ou seulement si « Garder la session ouverte » est coché (A4, décoché par défaut) ? | A4, G5 | Lot 1 |
-| D11 | La confirmation de l'email bloque-t-elle la création du foyer (B1) ? | A3, A10 | Lot 1 |
 | D12 | Les renvois d'invitation : 3 envois ou 4 ? Comptés par invitation ou par email et foyer ? | B5, B13 | Lot 3 |
-| D13 | Un utilisateur dans plusieurs foyers : aucun écran ne permet de passer de l'un à l'autre. On limite à un foyer en V1 ? | B9, F7 | Lot 1 |
 | D14 | Qui peut modifier les tâches du foyer (C1, M1) ? Et que devient la répartition déjà validée quand on ajoute ou retire une tâche en cours de semaine ? | M1, C2, C5, C7 | Lot 2 |
 | D15 | Une personne invitée mais pas encore inscrite compte-t-elle dans la part juste de la répartition de départ (« À trois… 33 % ») ? | P1, C4 | Lot 2 |
-| D16 | Monogramme : l'initiale seule, deux lettres seulement en cas de doublon (2.2e), ou initiale et dernière lettre par défaut (P2) ? | P2, F1 | Lot 1 |
 | D17 | Taille maximale du foyer ? | P2, P6 | Lot 10 |
 | D18 | Proposition de répartition calculée à partir des préférences : C4, C12 et B11 la montrent, le backlog la met dans « Plus tard » (L). En V1 ? | C4, B11 | Lot 2 |
 | D19 | Restent ouvertes, depuis le handoff : textes d'E4 et E15, repère à 50 % du temps, variantes d'E10, E4 et E2 pour un foyer de 3, chiffres divergents entre écrans (constat 20), CGU et politique de confidentialité. | — | Lot 10 |
@@ -276,7 +274,8 @@ Ordre conseillé. Chaque lot se termine sur des écrans utilisables de bout en b
 - Une barre par membre, panneau d'assignation P6, choix de la couleur P2, inviter plusieurs membres P1, taille maximale (D17). M
 - Écran de règles I4 qui lit les constantes. S
 - Passe d'accessibilité : cibles de 44 px, rôles ARIA, VoiceOver et TalkBack (constats 16, 25 et 27 de l'audit). M
-- Questions restantes (D7, D19), CGU et politique de confidentialité. S
+- Questions restantes (D7, D19). S
+- CGU et politique de confidentialité, liées depuis A2, et petit bandeau cookies (décision 2026-11-12). S
 - TestFlight, test interne sur le Play Store, puis publication. M
 - **Écrans :** P1 à P8, C14, I4.
 

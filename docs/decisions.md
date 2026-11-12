@@ -158,3 +158,34 @@
   - Il n'y a ni rappel quotidien ni relance pour enregistrer (H1).
 - **Rejeté :** les séries de jours consécutifs, et les relances quotidiennes.
 - **Repose sur :** `docs/audit-ux.md`, verdict anti-patterns.
+
+## 2026-11-12 · Écran de connexion sans mention de la durée de session
+- **Décidé par :** la porteuse du projet.
+- **Pourquoi :** la session d'une semaine n'a pas besoin d'être annoncée. La case « Garder la session ouverte » (A4) est retirée, et la ligne qui la remplaçait aussi.
+- **Repose sur :** A4.
+
+## 2026-11-12 · Mot de passe trop court : rappeler le minimum
+- **Décidé par :** la porteuse du projet.
+- **Règle :** l'erreur dit « 6 caractères minimum. », comme l'aide sous le champ.
+- **Rejeté :** « 3 caractères sur 6 » (maquette A3) et « Trop court : … ».
+
+## 2026-11-12 · Écarts de maquette acceptés sur les écrans de compte
+- **Décidé par :** la porteuse du projet.
+- « Changer d'adresse » (A10) mène au changement d'email du compte, pas à l'inscription, qui créerait un deuxième compte.
+- I3 reprend la règle d'absence : une seule déclaration suffit, de la personne absente ou d'un autre membre. Le lien vers « Comment on calcule ? » attend I4.
+
+## 2026-11-12 · CGU, politique de confidentialité et bandeau cookies avant le lancement
+- **Décidé par :** la porteuse du projet.
+- **À faire :** les pages CGU et confidentialité, liées depuis l'inscription (A2), et un petit bandeau cookies.
+- **Note :** l'app ne pose aujourd'hui que des cookies nécessaires (session, intro déjà vue), exemptés de consentement : le bandeau informe, il ne demande rien tant qu'aucun traceur de mesure n'est ajouté.
+
+## 2026-11-12 · Moteur hebdomadaire : règles confirmées
+- **Décidé par :** la porteuse du projet.
+- **Zone sur la part exacte :** on compare la part non arrondie à la zone ; l'arrondi ne sert qu'à l'affichage. 39,5 % est hors de la zone 40–60. La part juste reste arrondie (33 % à trois).
+- **Niveau ultime :** le ratio de 85 % se mesure à partir de la semaine où le foyer a atteint le niveau ultime pour la première fois, sur 52 semaines au plus, semaines neutres exclues.
+- **Pause :** une pause neutralise toute semaine qu'elle touche, même d'un jour, quel que soit le moment où elle est déclarée.
+- **Part juste :** calculée sur les membres actifs (non en pause).
+- **Régression :** appliquée le mercredi 20:00, après la question d'absence, pas au bilan définitif.
+- **Personne n'enregistre :** la semaine est « silencieuse ». Elle ne compte pas dans les séries vides individuelles ; trois semaines silencieuses mettent le foyer en sommeil.
+- **Semaine d'arrivée :** neutre pour tout le foyer.
+- **Rejeté :** arrondir les parts avant de vérifier la zone (cela avantage la personne qui en fait le moins).

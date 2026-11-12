@@ -11,13 +11,13 @@ What the Rails app must do to match the mockups and the service blueprint. Order
 Validated by the product owner on 2026-11-08 unless marked *(default)*.
 
 - **The week:** Monday 00:00 to Sunday 23:59 in the household's time zone.
-- **Fair share:** 100 / number of members, rounded. A member is in the zone when their share of the week's **mental-load** logs **and** their share of **execution** logs are each the fair share ± 10 points:
+- **Fair share:** 100 / number of **active** (non-paused) members, rounded. Shares are compared with the zone **unrounded**; rounding is for display only, so 39.5 % is out of 40–60 % (decision 2026-11-12). A member is in the zone when their share of the week's **mental-load** logs **and** their share of **execution** logs are each the fair share ± 10 points:
   - 2 members: 40–60 %.
   - 3 members: 23–43 %.
   - 4 members: 15–35 %.
 - **Balanced week:** every active member is in the zone on both dimensions. Time is shown but does not count.
 - **Neutral week:** no mental-load log or no execution log that week, or fewer than 2 active (non-paused) members. It is neither balanced nor unbalanced; nothing moves.
-- **Unbalanced week:** the household does not progress. It is **never** a cause of regression or blocking.
+- **Unbalanced week:** the household does not progress. It is **never** a cause of regression or blocking, except at the ultimate level, which drops back to level 4 below 85 % (see below).
 - **Levels:** reached by cumulative balanced weeks.
 
   | Level | Total balanced weeks | Added |
@@ -28,7 +28,7 @@ Validated by the product owner on 2026-11-08 unless marked *(default)*.
   | 4 | 10 | +4 |
   | Ultimate | 15 | +5 |
 
-- **Keeping the ultimate level:** it holds while more than 85 % of the last 52 weeks are balanced (rolling window). Neutral weeks are excluded *(default)*. Households younger than 52 weeks count the weeks since creation *(default)*. Below 85 %, the household goes back to level 4, and it gets the ultimate level back automatically as soon as the ratio is above 85 % again.
+- **Keeping the ultimate level:** it holds while more than 85 % of the final weeks are balanced, counted from the week the household **first reached** the ultimate level, over 52 weeks at most (decision 2026-11-12). Neutral weeks are excluded. Below 85 %, the household goes back to level 4, and it gets the ultimate level back automatically as soon as the ratio is above 85 % again.
 - **Non-logging:**
   - A member with **zero logs for 2 consecutive weeks** makes the household regress one level, and its progression is blocked.
   - Each member is warned after the first week at zero (E3).
@@ -42,7 +42,7 @@ Validated by the product owner on 2026-11-08 unless marked *(default)*.
 - **Unblocking:** a week in which every active member logs at least one task *(default)*.
 - **Pauses:** any member can declare a pause (start date, optional end date), as many times as they want.
   - The dates are visible to every member; the reason is optional and private *(default)*.
-  - Paused weeks never count as empty weeks for that member.
+  - Paused weeks never count as empty weeks for that member. A pause neutralises every week it touches, even by one day (decision 2026-11-12).
   - A paused member is not an active member, so a two-person household with one member paused has neutral weeks *(default)*.
 - **Blocking freezes progression only.** Logging, reports and editing the split stay available.
 - **Logs:** a member only logs what they did themselves. A log's author is always `current_user`.
