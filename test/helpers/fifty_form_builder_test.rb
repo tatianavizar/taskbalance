@@ -30,6 +30,23 @@ class FiftyFormBuilderTest < ActionView::TestCase
     assert_includes html, 'role="alert"'
   end
 
+  test "a password field gets an eye button, hidden by default" do
+    html = fields_for(:user, User.new, builder: FiftyFormBuilder) do |f|
+      concat f.field(:password, as: :password)
+    end
+
+    assert_includes html, 'data-controller="password-visibility"'
+    assert_includes html, 'type="password"'
+    assert_includes html, 'type="button"'
+    assert_includes html, 'aria-label="Afficher le mot de passe"'
+    assert_includes html, 'aria-pressed="false"'
+    assert_includes html, 'aria-controls="user_password"'
+  end
+
+  test "other fields have no eye button" do
+    assert_not_includes render_form(User.new), "password-visibility"
+  end
+
   test "submit renders the primary button" do
     assert_includes render_form(User.new), "btn btn-primary"
   end
