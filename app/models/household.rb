@@ -196,6 +196,12 @@ class Household < ApplicationRecord
     [ "household", household_or_id.respond_to?(:id) ? household_or_id.id : household_or_id, "home" ].join(":")
   end
 
+  # The household a stream name belongs to (see home_stream), or nil. Action
+  # Cable lets only its members subscribe (ApplicationCable::HouseholdStreamGuard).
+  def self.household_id_from_stream(stream_name)
+    stream_name.to_s[/\Ahousehold:(\d+)(?::|\z)/, 1]&.to_i
+  end
+
   def week_plan_for(week = current_week)
     week_plans.find_by(week_start: week.monday)
   end
