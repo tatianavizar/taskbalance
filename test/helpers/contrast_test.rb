@@ -8,7 +8,8 @@ require "test_helper"
 # The app has two grounds: the light one (tokens on `--color-bg`) and the ink
 # one (intro I2, alerts, primary buttons, cookie banner). Both are checked.
 class ContrastTest < ActiveSupport::TestCase
-  CSS = Rails.root.join("app/assets/tailwind/application.css").read
+  # The tokens moved to tokens.css (shared with the back-office build).
+  CSS = Rails.root.join("app/assets/tailwind/application.css").read + Rails.root.join("app/assets/tailwind/tokens.css").read
 
   def token(name)
     CSS[/--color-#{Regexp.escape(name)}:\s*(#[0-9a-fA-F]{6})/, 1] or flunk("token --color-#{name} not found")

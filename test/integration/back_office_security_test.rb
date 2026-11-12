@@ -1,8 +1,9 @@
 require "test_helper"
+require "rake"
 
 # Regression tests for the security review of the back office (lot 9).
 class BackOfficeSecurityTest < ActionDispatch::IntegrationTest
-  EMAIL_CELL = "td.col-email"
+  EMAIL_CELL = "td[data-column=email]"
 
   def emails_listed
     css_select(EMAIL_CELL).map { |cell| cell.text.squish }
@@ -36,7 +37,7 @@ class BackOfficeSecurityTest < ActionDispatch::IntegrationTest
     open_enrolment_link(admin)
     sign_in_admin(admin, otp: "")
     post "/admin/two_factor", params: { code: "123456" }
-    assert_response :unprocessable_entity
+    assert_response :forbidden # no secret: no enrolment to finish, and no 500
   end
 
   test "1. the link alone, without the password, shows nothing" do
@@ -72,8 +73,13 @@ class BackOfficeSecurityTest < ActionDispatch::IntegrationTest
   test "1. a link expires after 30 minutes" do
     admin = create_admin(enrolled: false)
     open_enrolment_link(admin)
-    sign_in_admin(admin, otp: "")
-    travel 31.minutes do
+    start = Time.current
+    travel_to(start) { sign_in_admin(admin, otp: "") }
+    travel_to(start + 25.minutes) do # still good
+      get "/admin/two_factor"
+      assert_response :success
+    end
+    travel_to(start + 31.minutes) do # link 31 minutes old; session last seen 6 minutes ago
       get "/admin/two_factor"
       assert_response :forbidden
     end
@@ -166,12 +172,12 @@ class BackOfficeSecurityTest < ActionDispatch::IntegrationTest
     household = households(:smith_home)
     %w[a b c].each { |n| Invitation.invite(household: household, email: "#{n}@example.com", inviter: users(:alice), first_name: n.upcase) }
     get "/admin/invitations"
-    default = css_select("td.col-email").map { |c| c.text.squish }
+    default = css_select(EMAIL_CELL).map { |c| c.text.squish }
     [ { order: "invitations.token_asc" }, { order: "token_desc" }, { q: { s: "token asc" } }, { q: { s: "households.name asc" } },
       { q: { s: [ "email asc", "token desc" ] } } ].each do |params|
       get "/admin/invitations", params: params
       assert_response :success, params.inspect
-      assert_equal default, css_select("td.col-email").map { |c| c.text.squish }, params.inspect
+      assert_equal default, css_select(EMAIL_CELL).map { |c| c.text.squish }, params.inspect
     end
   end
 
@@ -204,10 +210,10 @@ class BackOfficeSecurityTest < ActionDispatch::IntegrationTest
     assert_not_includes response.body, "3 novembre"
 
     get "/admin/households"
-    default = css_select("td.col-name").map { |c| c.text.squish }
+    default = css_select("td[data-column=nom]").map { |c| c.text.squish }
     [ "last_activity_at_asc", "last_activity_at_desc", "member_count_desc" ].each do |order|
       get "/admin/households", params: { order: order }
-      assert_equal default, css_select("td.col-name").map { |c| c.text.squish }, order
+      assert_equal default, css_select("td[data-column=nom]").map { |c| c.text.squish }, order
     end
   end
 
@@ -282,6 +288,7 @@ class BackOfficeSecurityTest < ActionDispatch::IntegrationTest
   end
 
   test "7. the password is asked on the terminal, twice, without echo; ENV is a warned fallback" do
+    Rails.application.load_tasks unless defined?(AdminTasks)
     output = StringIO.new
     assert_equal "typed password here", AdminTasks.read_password(input: FakeTerminal.new("typed password here\n", "typed password here\n"), output: output, env: {})
     assert_not_includes output.string, "typed password here"

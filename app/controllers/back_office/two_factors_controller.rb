@@ -75,7 +75,8 @@ module BackOffice
     # replaced by a newer one) and be this admin's.
     def require_enrolment_link
       token = session[SESSION_TOKEN]
-      return if token.present? && AdminUser.find_by_token_for(:enrolment, token) == current_admin_user
+      return if current_admin_user.otp_secret.present? && token.present? &&
+               AdminUser.find_by_token_for(:enrolment, token) == current_admin_user
 
       render :link_required, status: :forbidden
     end

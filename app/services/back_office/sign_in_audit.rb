@@ -17,12 +17,16 @@ module BackOffice
     # a session). `locked` is its own action: the account is out of reach.
     def failed(env, opts)
       request = ActionDispatch::Request.new(env)
-      return unless request.post? && request.path == Rails.application.routes.url_helpers.admin_user_session_path
+      # The failure app has already rewritten the path (/unauthenticated): the form's is `attempted_path`.
+      return unless request.post? && opts[:attempted_path] == Rails.application.routes.url_helpers.admin_user_session_path
 
       email = request.params.dig("admin_user", "email").to_s
       admin = AdminUser.find_by(email: email.strip.downcase) if email.present?
       reason = opts[:message].to_s
-      AdminAction.record_event!(action: reason == "locked" ? "admin.locked" : "admin.sign_in_failed", email: email,
+      # Devise is paranoid here (the message says "invalid" even for a locked
+      # account), so the lock is read from the account itself.
+      locked = reason == "locked" || admin&.access_locked?
+      AdminAction.record_event!(action: locked ? "admin.locked" : "admin.sign_in_failed", email: email,
                                 admin: admin, record: admin, reason: reason.presence || "invalid", ip: ip(env))
     rescue StandardError => e
       Rails.error.report(e, handled: true)

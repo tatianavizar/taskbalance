@@ -322,3 +322,10 @@
 - **Cookies :** le bandeau informe et un « OK » mémorise la lecture (cookie nécessaire `cookie_notice_seen`, 12 mois). Pas de choix tant qu'aucun traceur n'existe. Masqué dans les coquilles natives.
 - **Pages légales :** `/cgu` et `/confidentialite`, brouillons « à valider juridiquement », éditeur, adresse, immatriculation et hébergeur en espaces à compléter. **À traiter avant publication :** les polices se chargent depuis Google Fonts (adresse IP transmise à Google) ; les héberger supprime le transfert et garde la promesse « aucun traceur » sans réserve.
 - **Contraste :** le badge « Ult. » (blanc sur terracotta, 4,35:1) passe en encre sur blanc ; le terracotta ne marque que la part de la personne qui regarde. L'app n'a qu'un thème clair ; les deux fonds vérifiés sont le fond clair et le fond encre (intro, alertes, bandeau).
+
+## 2026-11-13 · Back-office : durcissement après revue de sécurité
+- **Enrôlement :** le secret TOTP n'est montré qu'à une session arrivée par un lien à usage unique (30 min, lié au compte, remis hors bande par `admin:bootstrap` / `admin:reset_two_factor`) et connectée par mot de passe. Un secret neuf par lien ; réinitialiser met fin à toutes les sessions du compte.
+- **Emails :** deux actions distinctes (adresse actuelle, changement en attente), chacune nomme l'adresse visée. Le journal garde des empreintes à clé (HMAC), pas les adresses.
+- **Tri :** liste blanche par ressource ; tout le reste retombe sur l'ordre par défaut.
+- **Dernière activité d'un foyer :** semaine ISO, seulement pour deux membres ou plus, non triable.
+- **Journal :** connexions, refus, blocages et commandes console y figurent ; il est en ajout seul dans Postgres (trigger), donc `db/structure.sql`. Un compte admin se désactive, il ne se supprime pas. Session : 30 min d'inactivité, 8 h au total.

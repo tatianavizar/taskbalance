@@ -1,4 +1,4 @@
-\restrict 0MF379eYyduo5k11M3XwXPMnyPfquM4VPgzqZFyoSsEzSNFLbaDrvYyczY9dOea
+\restrict Ql9pAnvL60hORjPoFeqKdF29BRgMQrGaIXYPrHY2PaVliad2opolt8tLRai3h58
 
 -- Dumped from database version 16.14 (Homebrew)
 -- Dumped by pg_dump version 16.14 (Homebrew)
@@ -46,7 +46,7 @@ CREATE TABLE public.absence_answers (
     corrected_at timestamp(6) without time zone,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT absence_answers_answer_values CHECK (((answer)::text = ANY (ARRAY[('yes'::character varying)::text, ('no'::character varying)::text])))
+    CONSTRAINT absence_answers_answer_values CHECK (((answer)::text = ANY ((ARRAY['yes'::character varying, 'no'::character varying])::text[])))
 );
 
 
@@ -344,7 +344,7 @@ CREATE TABLE public.chore_preferences (
     choice character varying NOT NULL,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT chore_preferences_choice CHECK (((choice)::text = ANY (ARRAY[('like'::character varying)::text, ('neutral'::character varying)::text, ('dislike'::character varying)::text])))
+    CONSTRAINT chore_preferences_choice CHECK (((choice)::text = ANY ((ARRAY['like'::character varying, 'neutral'::character varying, 'dislike'::character varying])::text[])))
 );
 
 
@@ -591,7 +591,9 @@ CREATE TABLE public.invitations (
     cancelled_at timestamp(6) without time zone,
     invitee_id bigint,
     inviter_id bigint,
-    first_name character varying
+    first_name character varying,
+    color character varying,
+    monogram character varying
 );
 
 
@@ -788,7 +790,7 @@ CREATE TABLE public.split_gap_entries (
     amount numeric(8,3) NOT NULL,
     reset_by_id bigint,
     created_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT split_gap_entries_kind CHECK (((kind)::text = ANY (ARRAY[('week'::character varying)::text, ('reset'::character varying)::text])))
+    CONSTRAINT split_gap_entries_kind CHECK (((kind)::text = ANY ((ARRAY['week'::character varying, 'reset'::character varying])::text[])))
 );
 
 
@@ -824,7 +826,7 @@ CREATE TABLE public.split_setting_changes (
     applied_at timestamp(6) without time zone,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT split_setting_changes_status CHECK (((status)::text = ANY (ARRAY[('pending'::character varying)::text, ('applied'::character varying)::text, ('withdrawn'::character varying)::text])))
+    CONSTRAINT split_setting_changes_status CHECK (((status)::text = ANY ((ARRAY['pending'::character varying, 'applied'::character varying, 'withdrawn'::character varying])::text[])))
 );
 
 
@@ -862,7 +864,7 @@ CREATE TABLE public.task_handovers (
     responded_at timestamp(6) without time zone,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT task_handovers_status CHECK (((status)::text = ANY (ARRAY[('pending'::character varying)::text, ('accepted'::character varying)::text, ('refused'::character varying)::text, ('cancelled'::character varying)::text]))),
+    CONSTRAINT task_handovers_status CHECK (((status)::text = ANY ((ARRAY['pending'::character varying, 'accepted'::character varying, 'refused'::character varying, 'cancelled'::character varying])::text[]))),
     CONSTRAINT task_handovers_two_people CHECK ((from_user_id <> to_user_id))
 );
 
@@ -1028,8 +1030,8 @@ CREATE TABLE public.week_plans (
     targets jsonb DEFAULT '{}'::jsonb NOT NULL,
     carry_gap boolean DEFAULT true NOT NULL,
     gap_waived_by_id bigint,
-    CONSTRAINT week_plans_kind CHECK (((kind)::text = ANY (ARRAY[('starting'::character varying)::text, ('weekly'::character varying)::text]))),
-    CONSTRAINT week_plans_status CHECK (((status)::text = ANY (ARRAY[('awaiting_proposal'::character varying)::text, ('proposed'::character varying)::text, ('validated'::character varying)::text])))
+    CONSTRAINT week_plans_kind CHECK (((kind)::text = ANY ((ARRAY['starting'::character varying, 'weekly'::character varying])::text[]))),
+    CONSTRAINT week_plans_status CHECK (((status)::text = ANY ((ARRAY['awaiting_proposal'::character varying, 'proposed'::character varying, 'validated'::character varying])::text[])))
 );
 
 
@@ -1973,7 +1975,7 @@ CREATE UNIQUE INDEX index_split_setting_changes_one_pending ON public.split_sett
 -- Name: index_task_handovers_live; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE UNIQUE INDEX index_task_handovers_live ON public.task_handovers USING btree (chore_id, week_start, from_user_id) WHERE ((status)::text = ANY (ARRAY[('pending'::character varying)::text, ('accepted'::character varying)::text]));
+CREATE UNIQUE INDEX index_task_handovers_live ON public.task_handovers USING btree (chore_id, week_start, from_user_id) WHERE ((status)::text = ANY ((ARRAY['pending'::character varying, 'accepted'::character varying])::text[]));
 
 
 --
@@ -2513,7 +2515,7 @@ ALTER TABLE ONLY public.split_setting_changes
 --
 
 ALTER TABLE ONLY public.chores
-    ADD CONSTRAINT fk_rails_e36dfa813c FOREIGN KEY (task_id) REFERENCES public.tasks(id) ON DELETE RESTRICT;
+    ADD CONSTRAINT fk_rails_e36dfa813c FOREIGN KEY (task_id) REFERENCES public.tasks(id) ON DELETE RESTRICT NOT VALID;
 
 
 --
@@ -2552,11 +2554,12 @@ ALTER TABLE ONLY public.week_plans
 -- PostgreSQL database dump complete
 --
 
-\unrestrict 0MF379eYyduo5k11M3XwXPMnyPfquM4VPgzqZFyoSsEzSNFLbaDrvYyczY9dOea
+\unrestrict Ql9pAnvL60hORjPoFeqKdF29BRgMQrGaIXYPrHY2PaVliad2opolt8tLRai3h58
 
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20261113092400'),
 ('20261113092300'),
 ('20261113092200'),
 ('20261113092100'),
