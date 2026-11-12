@@ -305,5 +305,5 @@
 - **Décidé par :** la porteuse du projet.
 - **Écart (lot 6) :** « Valider sans reporter l'écart » réservé à la personne au-dessus de la zone ; à trois ou plus, la remise à zéro ne porte que sur son propre surplus ; l'écart n'est pas remis à zéro à l'arrivée ou au départ d'un membre.
 - **« Fait » (lot 4) :** enregistre en un geste avec les valeurs par défaut de la tâche ; le formulaire complet reste accessible.
-- **Tâche non faite :** elle reste en attente (« En retard ») jusqu'à ce qu'elle soit faite, quelle que soit sa fréquence. L'enregistrement compte dans la semaine où la tâche est faite.
+- **Tâche non faite (révisé le même jour) :** « En retard » se limite à la semaine en cours. Une tâche quotidienne ou hebdomadaire non faite disparaît à la fin de la semaine ; une tâche mensuelle, annuelle ou ponctuelle reste en retard jusqu'à ce qu'elle soit faite. L'enregistrement compte dans la semaine où la tâche est faite.
 - **Pas de lignes de série** (« Saisie 5 semaines sur 5 », « comme les 2 précédentes ») : cohérent avec la vérification des pratiques manipulatrices.
