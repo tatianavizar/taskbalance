@@ -121,6 +121,11 @@ module Notifications
       ]
     end
 
+    def reengagement
+      title = m("title", week: facts["week_number"], household: facts["household_name"])
+      { subject: title, title: title, lines: [ m("line") ] }
+    end
+
     # ---- E3, E4, E5 -------------------------------------------------------
 
     def alert_no_logs

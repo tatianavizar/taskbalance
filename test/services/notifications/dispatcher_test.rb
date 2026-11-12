@@ -15,6 +15,7 @@ class NotificationsDispatcherTest < ActiveSupport::TestCase
   def week(n) = Week.containing(Date.new(2026, 10, 5) + (7 * n), PARIS)
   def mid(week) = week.start_at + 2.days + 10.hours
   def final_at(week) = HouseholdWeek.final_at(week)
+  def monday_8am(week) = paris(week.next.monday.year, week.next.monday.month, week.next.monday.day, 8)
   def provisional_at(week) = HouseholdWeek.provisional_at(week)
 
   # Runs the engine at `now` and delivers its outbox, as WeeklyEngineJob does.
@@ -108,15 +109,71 @@ class NotificationsDispatcherTest < ActiveSupport::TestCase
     assert_includes text_of(to_bob), "Alice 21, vous 0"
   end
 
-  test "no alert for a week nobody logged in, or for a household of one (the weekly report still goes)" do
-    tick(final_at(week(0)))
-    assert_no_enqueued_emails { tick(final_at(week(0)) + 1.minute) }
-    assert_equal [ "weekly_report" ], Notification.distinct.pluck(:kind)
-
+  test "a household of one gets no weekly report" do
     solo_household, _carol = build_household("Carol", joined_at: JOINED.call)
     run_engine(solo_household, final_at(week(0)))
     Notifications::Dispatcher.deliver_pending(solo_household, now: final_at(week(0)))
-    assert_equal [ "weekly_report" ], Notification.where(household: solo_household).distinct.pluck(:kind)
+
+    assert_equal 0, Notification.where(household: solo_household).count
+    assert_equal 0, solo_household.engine_events.undelivered.count, "the event is consumed, not left pending"
+  end
+
+  test "a solo household that did log still gets no report" do
+    solo_household, users = build_household("Carol", joined_at: JOINED.call)
+    log!(solo_household, users.first, at: mid(week(0)))
+    run_engine(solo_household, final_at(week(0)))
+    Notifications::Dispatcher.deliver_pending(solo_household, now: final_at(week(0)))
+
+    assert_equal 0, Notification.where(household: solo_household).count
+  end
+
+  test "a week nobody logged in: a short re-engagement message instead of the report, to each member" do
+    assert_enqueued_emails(2) { tick(final_at(week(0))) }
+    assert_equal [ "reengagement" ], Notification.where(deliver_at: monday_8am(week(0))).distinct.pluck(:kind)
+    assert_no_enqueued_emails { tick(final_at(week(0)) + 1.minute) }
+    assert_equal 0, Notification.where(kind: "alert_no_logs").count, "no E3 when nobody logged"
+
+    deliver_all
+    mail = mail_to(@alice, "Aucune tâche")
+    assert_equal "Aucune tâche enregistrée la semaine 41 dans Foyer test.", mail.subject
+    assert_equal mail.subject.sub(/\.\z/, ""), mail_to(@bob, "Aucune tâche").subject.sub(/\.\z/, "")
+    text = text_of(mail)
+    assert_includes text, "50/50 garde la trace des tâches du foyer"
+    assert_includes text, "Ouvrir 50/50 : http://example.com/dashboard"
+    assert_no_match(/Alice|Bob|vous n'avez|streak|série|urgent|vite|dernier|déjà/i, text.split("--").first)
+    assert_no_match(/\w·\w/, text)
+  end
+
+  test "the re-engagement message takes the report slot and follows the weekly_report setting" do
+    NotificationPreference.set(@bob, "weekly_report", false)
+    tick(final_at(week(0)))
+
+    now_for = ->(user) { Notification.find_by!(user: user, deliver_at: monday_8am(week(0))) }
+    assert_equal "reengagement", now_for.(@alice).kind
+    assert_equal "report", now_for.(@alice).cap_class
+    assert_equal "weekly_report", now_for.(@alice).event_type
+    assert_equal "preference", now_for.(@bob).suppressed_reason
+
+    # A report for the same week and person is held back by the cap.
+    report = Notifications::Events::WeeklyReport.new(@household.household_weeks.final.find_by!(week_start: week(0).monday))
+    assert_equal "cap", Notifications::Notifier.call(report, to: [ @alice ], now: final_at(week(0))).sole.suppressed_reason
+  end
+
+  test "a week where only one member logged is a normal report, not the re-engagement message" do
+    log!(@household, @alice, at: mid(week(0)))
+    tick(final_at(week(0)))
+
+    kinds = Notification.where(deliver_at: monday_8am(week(0))).distinct.pluck(:kind)
+    assert_includes kinds, "weekly_report"
+    assert_not_includes kinds, "reengagement"
+  end
+
+  test "a neutral week that has logs is still a report" do
+    log!(@household, @alice, at: mid(week(0)), mental: true, execution: false)
+    log!(@household, @bob, at: mid(week(0)), mental: true, execution: false)
+    tick(final_at(week(0)))
+
+    assert_equal [ "weekly_report" ], Notification.where(deliver_at: monday_8am(week(0))).distinct.pluck(:kind)
   end
 
   test "two empty weeks: the question to everyone, no alert E3 for that week, E4 at the deadline, E5 on the way back" do

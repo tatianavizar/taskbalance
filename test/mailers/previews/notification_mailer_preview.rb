@@ -17,6 +17,10 @@ class NotificationMailerPreview < ActionMailer::Preview
     notify "weekly_report", report_facts(outcome: "neutral", neutral_reason: "no_execution_logs", carrier: nil)
   end
 
+  def reengagement
+    notify "reengagement", { "household_name" => "Chez Virginie et Karim", "week_number" => 45 }
+  end
+
   def alert_no_logs_about_me
     notify "alert_no_logs", no_logs_facts(subject: person(VIRGINIE, "Virginie"))
   end

@@ -14,7 +14,10 @@ module Notifications
   #
   # Outbox event               -> notification
   #   household_week.final       H3 weekly report, from the final report and
-  #                               the level right after it (Monday 08:00)
+  #                               the level right after it (Monday 08:00);
+  #                               nothing for a household of one; the
+  #                               re-engagement message instead when nobody
+  #                               logged anything (2+ members)
   #   member.first_empty_week     E3 alert, about that member
   #   household.unblocked         E5
   #   absence_inquiry.opened      the absence question (E11, P5)
@@ -71,9 +74,20 @@ module Notifications
       Notifier.call(event, now: @now)
     end
 
+    # A household of one has no balance to report: nothing is sent. A week
+    # nobody logged in (2+ members) gets the re-engagement message instead of
+    # the report, on the same cap slot.
     def weekly_report(household_week, payload)
+      return if household_week.members.size < 2
+      return send_event Events::Reengagement.new(household_week) if nobody_logged?(household_week)
+
       progression = payload.slice("level", "balanced_weeks_count", "blocked").presence
       send_event Events::WeeklyReport.new(household_week, progression: progression)
+    end
+
+    def nobody_logged?(household_week)
+      household_week.neutral? && %w[no_mental_logs no_execution_logs].include?(household_week.neutral_reason) &&
+        household_week.members.sum { |m| m["logs_count"].to_i }.zero?
     end
 
     def no_logs_alert(household_week, user_id)

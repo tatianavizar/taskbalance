@@ -110,6 +110,10 @@ fr:
           execution: "Exécution"
           time: "Temps"
 
+      reengagement:
+        title: "Aucune tâche enregistrée la semaine %{week} dans %{household}."
+        line: "50/50 garde la trace des tâches du foyer, en charge mentale comme en exécution. Vous pouvez reprendre quand vous voulez."
+
       alert_no_logs:
         subject:
           self: "Semaine %{week} close : vous n'avez enregistré aucune tâche"

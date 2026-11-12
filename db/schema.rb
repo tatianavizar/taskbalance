@@ -319,7 +319,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_11_13_090100) do
   add_foreign_key "chore_logs", "users"
   add_foreign_key "chores", "households"
   add_foreign_key "chores", "recurring_chores"
-  add_foreign_key "chores", "tasks", on_delete: :restrict, validate: false
+  add_foreign_key "chores", "tasks", on_delete: :restrict
   add_foreign_key "chores", "users", column: "assigned_to_id"
   add_foreign_key "engine_events", "households", on_delete: :cascade
   add_foreign_key "household_members", "households"
