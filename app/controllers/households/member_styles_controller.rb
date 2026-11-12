@@ -46,7 +46,7 @@ module Households
       @membership = current_user.household_membership
       @invitation = (current_invitation unless @membership)
       raise ActiveRecord::RecordNotFound unless @membership || @invitation
-      return redirect_to(waiting_invitation_path(@invitation.token)) if @invitation && !@household.setup_ready_for_invitee?
+      return redirect_to(invitee_waiting_path) if @invitation && !@household.setup_ready_for_invitee?
 
       @subject = build_subject
     end

@@ -24,9 +24,9 @@ class InviteeSetupTest < ActionDispatch::IntegrationTest
     sign_in @karim
 
     get invitation_path(@invitation.token)
-    assert_redirected_to waiting_invitation_path(@invitation.token)
+    assert_redirected_to invitee_waiting_path
     get household_split_path(@household)
-    assert_redirected_to waiting_invitation_path(@invitation.token)
+    assert_redirected_to invitee_waiting_path
 
     sign_in users(:carol)
     get household_preferences_path(@household)

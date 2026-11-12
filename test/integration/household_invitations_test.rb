@@ -125,13 +125,15 @@ class HouseholdInvitationsTest < ActionDispatch::IntegrationTest
     perform_enqueued_jobs
     mail = ActionMailer::Base.deliveries.last
     invitation = Invitation.last
+    token = token_in_mail(mail)
 
+    assert_equal invitation, Invitation.find_by_token(token)
     assert_equal [ "newcomer@test.com" ], mail.to
     assert_equal "Alice vous invite à rejoindre Smith Home", mail.subject
     html = mail.html_part.body.to_s
     text = mail.text_part.body.to_s
-    assert_includes html, invitation_path(invitation.token)
-    assert_includes text, invitation_path(invitation.token)
+    assert_includes html, invitation_path(token)
+    assert_includes text, invitation_path(token)
     assert_match "Invitation valable jusqu'au", text
     assert_match "ignorez cet email", text
     assert_no_match(/compte existant|déjà un compte/, text)
@@ -139,9 +141,9 @@ class HouseholdInvitationsTest < ActionDispatch::IntegrationTest
 
   # ---- Resend (B5) ---------------------------------------------------------------
 
-  test "resend: refused before 15 minutes, with the remaining wait shown, then sent with the same token" do
+  test "resend: refused before 15 minutes, with the remaining wait shown, then sent with a new link" do
     invite "newcomer@test.com"
-    invitation = Invitation.last
+    invitation = with_link_token(Invitation.last)
     token = invitation.token
 
     get household_invitation_path(@household, invitation)
@@ -162,8 +164,17 @@ class HouseholdInvitationsTest < ActionDispatch::IntegrationTest
         post resend_household_invitation_path(@household, invitation)
       end
       assert_equal "Invitation renvoyée.", flash[:notice]
-      assert_equal token, invitation.reload.token
-      assert_equal 1, invitation.resend_count
+      assert_equal 1, invitation.reload.resend_count
+      assert_nil Invitation.find_by_token(token), "the earlier link stops working"
+      perform_enqueued_jobs
+      new_token = token_in_mail(ActionMailer::Base.deliveries.last)
+      assert_equal invitation, Invitation.find_by_token(new_token)
+
+      sign_out @alice
+      get invitation_path(token)
+      assert_response :not_found
+      get invitation_path(new_token)
+      assert_response :success
     end
   end
 
@@ -223,7 +234,7 @@ class HouseholdInvitationsTest < ActionDispatch::IntegrationTest
 
   test "cancelling goes through a confirmation, then the link stops working" do
     invite "newcomer@test.com"
-    invitation = Invitation.last
+    invitation = with_link_token(Invitation.last)
 
     get cancel_household_invitation_path(@household, invitation)
     assert_response :success

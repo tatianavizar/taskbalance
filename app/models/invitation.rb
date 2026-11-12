@@ -9,6 +9,13 @@
 #
 # Only a pending invitation can still be used. One pending invitation per
 # email and household (partial unique index); closed rows stay as history.
+#
+# The link's token is never stored (decision of 2026-11-13): the row keeps
+# `token_digest`, an HMAC-SHA256 of it under a key derived from
+# secret_key_base, and `Invitation.find_by_token` looks it up by that digest.
+# The raw token lives only in memory (`token`, set when it is issued or when
+# a link was looked up) and, sealed, in the queued email (`seal_token`). A
+# resend issues a new token: the link of the earlier emails stops working.
 class Invitation < ApplicationRecord
   include BackOfficeSearchable
 
@@ -33,7 +40,7 @@ class Invitation < ApplicationRecord
   normalizes :monogram, with: ->(value) { value.to_s.strip.presence }
 
   validates :email, presence: true, format: { with: URI::MailTo::EMAIL_REGEXP }
-  validates :token, presence: true
+  validates :token_digest, presence: true
   validates :color, inclusion: { in: HouseholdMember::COLORS }, allow_nil: true
   validates :monogram, length: { maximum: HouseholdMember::MONOGRAM_MAX_LENGTH }
   # Same rules as User#first_name. Asked on B3 (`invite`); rows sent before
@@ -43,11 +50,46 @@ class Invitation < ApplicationRecord
   validate :email_domain_complete
   validate :checks_for_new_invitation, on: :create
 
-  before_validation :generate_token, on: :create
+  before_validation :issue_token, on: :create
   before_validation :set_send_defaults, on: :create
 
   # The person sending it; lets the validations reject their own address.
   attr_accessor :sent_by
+
+  # The raw token, in memory only: just issued, or the one a link carried.
+  attr_accessor :token
+
+  TOKEN_DIGEST_SALT = "invitation-token-digest".freeze
+  TOKEN_SEAL_SALT = "invitation-token-mail".freeze
+
+  # Keyed, so a copy of the table without the app's secret gives no link.
+  def self.digest_token(token)
+    OpenSSL::HMAC.hexdigest("SHA256", Rails.application.key_generator.generate_key(TOKEN_DIGEST_SALT), token.to_s)
+  end
+
+  # The invitation a link points at, with `token` set; nil for an unknown,
+  # blank or replaced token. Works on a relation (`includes(...).find_by_token`).
+  def self.find_by_token(token)
+    return if token.blank?
+
+    find_by(token_digest: digest_token(token))&.tap { |invitation| invitation.token = token.to_s }
+  end
+
+  # The token travels to the mail job encrypted (job arguments are stored in
+  # the queue database), and only for as long as an invitation lasts.
+  def self.seal_token(token)
+    token_encryptor.encrypt_and_sign(token, expires_in: VALIDITY, purpose: :invitation_mail)
+  end
+
+  def self.unseal_token(sealed)
+    token_encryptor.decrypt_and_verify(sealed, purpose: :invitation_mail)
+  end
+
+  def self.token_encryptor
+    key = Rails.application.key_generator.generate_key(TOKEN_SEAL_SALT, ActiveSupport::MessageEncryptor.key_len)
+    ActiveSupport::MessageEncryptor.new(key)
+  end
+  private_class_method :token_encryptor
 
   # Pending and not past its date. A pending row past its date reads as
   # expired for every purpose, whether or not `expire_overdue!` wrote it yet.
@@ -63,7 +105,7 @@ class Invitation < ApplicationRecord
   def self.invite(household:, email:, inviter:, first_name: nil)
     expire_overdue!(where(household_id: household.id))
     invitation = new(household: household, email: email, first_name: first_name, inviter: inviter, sent_by: inviter)
-    InvitationMailer.invite(invitation).deliver_later if invitation.save
+    invitation.deliver_email if invitation.save
     invitation
   rescue ActiveRecord::RecordNotUnique
     invitation.errors.add(:email, :already_invited_now)
@@ -210,8 +252,6 @@ class Invitation < ApplicationRecord
     self.class.resends_used(household_id: household_id, email: email)
   end
 
-  # Same token, expiry reset, new email. Returns [:ok], the refusal
-  # ([:wait, seconds] or [:limit]), or [:closed] when no longer pending.
   # Who may resend: only the person who sent it, and the 50/50 team from the
   # back office (an AdminUser). Same limits and same email either way: see
   # `resend!`.
@@ -221,6 +261,9 @@ class Invitation < ApplicationRecord
     actor.present? && inviter_id.present? && inviter_id == actor.id
   end
 
+  # A new token (the earlier links stop working), expiry reset, new email.
+  # Returns [:ok], the refusal ([:wait, seconds] or [:limit]), or [:closed]
+  # when no longer pending.
   def resend!
     verdict = with_lock do
       next [ :closed ] unless usable?
@@ -229,11 +272,24 @@ class Invitation < ApplicationRecord
       next allowance unless allowance.first == :ok
 
       now = Time.current
+      issue_token
       update!(resend_count: resend_count + 1, last_sent_at: now, expires_at: now + VALIDITY)
       allowance
     end
-    InvitationMailer.invite(self).deliver_later if verdict == [ :ok ]
+    deliver_email if verdict == [ :ok ]
     verdict
+  end
+
+  # Queues the email with the token just issued (sealed).
+  def deliver_email
+    raise ArgumentError, "no token issued" if token.blank?
+
+    InvitationMailer.invite(self, self.class.seal_token(token)).deliver_later
+  end
+
+  # True when `token` is the current one (a resend replaces it).
+  def current_token?(raw)
+    raw.present? && ActiveSupport::SecurityUtils.secure_compare(self.class.digest_token(raw), token_digest.to_s)
   end
 
   private
@@ -270,8 +326,9 @@ class Invitation < ApplicationRecord
     usable? && for?(user) && user.household_membership.nil?
   end
 
-  def generate_token
-    self.token ||= SecureRandom.urlsafe_base64(32)
+  def issue_token
+    self.token = SecureRandom.urlsafe_base64(32)
+    self.token_digest = self.class.digest_token(token)
   end
 
   # A new row for an email already invited to this household (cancelled,

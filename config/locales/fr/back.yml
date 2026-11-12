@@ -7,3 +7,14 @@ fr:
   account_mailer:
     already_registered:
       subject: "Vous avez déjà un compte 50/50"
+    sign_in_locked:
+      subject_temporary: "Connexion à votre compte 50/50 bloquée pendant 2 heures"
+      subject_hard: "Connexion à votre compte 50/50 bloquée"
+      greeting: "Bonjour %{name},"
+      temporary_fact: "%{attempts} mots de passe incorrects ont été saisis pour votre compte en moins de %{hours} heures."
+      temporary_until: "La connexion est bloquée jusqu'au %{day} à %{hour} (heure de %{zone}). Elle rouvre ensuite d'elle-même."
+      hard_fact: "Des mots de passe incorrects ont encore été saisis pour votre compte : c'est le troisième blocage depuis la dernière connexion réussie. La connexion reste bloquée jusqu'à ce que l'équipe 50/50 la rouvre."
+      hard_contact_html: "Pour la rouvrir, écrivez à %{email} depuis cette adresse."
+      sessions: "Les sessions déjà ouvertes sur vos appareils restent ouvertes."
+      not_you: "Si ce n'était pas vous, vous pouvez changer de mot de passe dès maintenant (le blocage reste en place) :"
+      reset: "choisir un nouveau mot de passe"

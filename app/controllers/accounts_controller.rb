@@ -5,14 +5,15 @@
 class AccountsController < ApplicationController
   before_action :authenticate_user!
 
-  # A new address gets a confirmation mail: 3 changes per hour per person, and
-  # 3 per hour towards the same address, so nobody can flood an inbox.
-  EMAIL_CHANGES_PER_HOUR = 3
-  rate_limit to: EMAIL_CHANGES_PER_HOUR, within: 1.hour, only: :update_email, name: "email-change-user",
-             by: -> { current_user.id }, with: -> { email_change_rate_limited }
-  rate_limit to: EMAIL_CHANGES_PER_HOUR, within: 1.hour, only: :update_email, name: "email-change-address",
+  # A new address gets a confirmation mail (decision of 2026-11-13): 2 changes
+  # per account over a rolling 24 hours (User#email_change_allowed?, counted
+  # on changes that sent a mail), and 3 per hour towards the same address, so
+  # nobody can flood an inbox.
+  EMAIL_CHANGES_PER_ADDRESS_PER_HOUR = 3
+  rate_limit to: EMAIL_CHANGES_PER_ADDRESS_PER_HOUR, within: 1.hour, only: :update_email, name: "email-change-address",
              by: -> { params.dig(:user, :email).to_s.strip.downcase.presence || "user-#{current_user.id}" },
              with: -> { email_change_rate_limited }
+  before_action :check_email_change_allowance, only: %i[edit_email update_email]
 
   def show
   end
@@ -49,7 +50,11 @@ class AccountsController < ApplicationController
   end
 
   def update_email
+    return redirect_to(edit_email_path) if @email_change_blocked_until
+
     if current_user.update_with_password(params.expect(user: [ :email, :current_password ]))
+      # A confirmation mail went out (a new token): that is what counts.
+      current_user.record_email_change! if current_user.pending_reconfirmation? && current_user.saved_change_to_confirmation_token?
       notice = current_user.pending_reconfirmation? ? t("auth.account.flash.email_updated") : nil
       redirect_to(current_user.pending_reconfirmation? ? pending_user_confirmation_path : account_path, notice: notice)
     else
@@ -81,6 +86,12 @@ class AccountsController < ApplicationController
   end
 
   private
+
+  # The edit screen says it and the form is replaced by the date; a posted
+  # change is refused (the flash would repeat the screen).
+  def check_email_change_allowance
+    @email_change_blocked_until = current_user.email_change_blocked_until&.in_time_zone(current_user.zone)
+  end
 
   def email_change_rate_limited
     redirect_to edit_email_path, alert: t("devise.failure.rate_limited")

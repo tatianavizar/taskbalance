@@ -122,7 +122,7 @@ class InvitationFlowTest < ActionDispatch::IntegrationTest
     assert_equal user, @newcomer.reload.invitee
     assert_predicate @newcomer, :pending?
     assert_nil user.household
-    assert_redirected_to waiting_invitation_path(@newcomer.token)
+    assert_redirected_to invitee_waiting_path
   end
 
   test "the address of the invitation wins over a tampered one in the form" do
@@ -176,11 +176,11 @@ class InvitationFlowTest < ActionDispatch::IntegrationTest
     assert_no_difference "HouseholdMember.count" do
       post claim_invitation_path(@invitation.token)
     end
-    assert_redirected_to waiting_invitation_path(@invitation.token)
+    assert_redirected_to invitee_waiting_path
     assert_equal users(:dana), @invitation.reload.invitee
 
     get invitation_path(@invitation.token)
-    assert_redirected_to waiting_invitation_path(@invitation.token)
+    assert_redirected_to invitee_waiting_path
 
     follow_redirect!
     assert_response :success
@@ -216,7 +216,7 @@ class InvitationFlowTest < ActionDispatch::IntegrationTest
   end
 
   test "someone who is already a member sees that the link has been used" do
-    invitation = @household.invitations.build(email: users(:bob).email, token: "bob-token",
+    invitation = @household.invitations.build(email: users(:bob).email, token: "bob-token", token_digest: Invitation.digest_token("bob-token"),
                                               expires_at: 1.day.from_now, last_sent_at: Time.current)
     invitation.save!(validate: false)
     # a member of the household who still holds an open invitation to it
@@ -286,7 +286,38 @@ class InvitationFlowTest < ActionDispatch::IntegrationTest
     get waiting_invitation_path(@invitation.token)
     assert_response :success
     assert_select "a[href=?]", dashboard_path
-    assert_select "form[action=?]", decline_invitation_path(@invitation.token)
+    assert_select "form[action=?]", invitee_decline_path
+  end
+
+  # The app keeps only the token's digest: once claimed, the invitee reaches
+  # B12, the refusal and the resume without it.
+  test "without the token: /invitation routes serve the signed-in invitee's own invitation" do
+    get invitee_waiting_path
+    assert_redirected_to new_user_session_path
+
+    sign_in users(:dana)
+    get invitee_waiting_path
+    assert_response :not_found, "nothing claimed yet"
+    get invitee_invitation_path
+    assert_redirected_to dashboard_path
+
+    @invitation.claim_for!(users(:dana))
+    get invitee_invitation_path
+    assert_redirected_to invitee_waiting_path
+    get invitee_waiting_path
+    assert_response :success
+
+    post invitee_decline_path
+    assert_redirected_to dashboard_path
+    assert_predicate @invitation.reload, :declined?
+  end
+
+  test "without the token, someone else's claimed invitation is out of reach" do
+    @invitation.claim_for!(users(:dana))
+    sign_in users(:bob)
+    post invitee_decline_path
+    assert_response :not_found
+    assert_predicate @invitation.reload, :pending?
   end
 
   test "an invitee resumes the waiting screen after signing in again" do
@@ -295,7 +326,7 @@ class InvitationFlowTest < ActionDispatch::IntegrationTest
 
     post user_session_path, params: { user: { email: "dana@test.com", password: "password123" } }
 
-    assert_redirected_to waiting_invitation_path(@invitation.token)
+    assert_redirected_to invitee_waiting_path
   end
 
   test "the no-household home offers to resume an invitation in progress" do
@@ -306,7 +337,7 @@ class InvitationFlowTest < ActionDispatch::IntegrationTest
     @invitation.claim_for!(users(:dana))
     get dashboard_path
 
-    assert_select ".callout a[href=?]", waiting_invitation_path(@invitation.token)
+    assert_select ".callout a[href=?]", invitee_waiting_path
   end
 
   test "once cancelled, an invitee's access disappears and the waiting screen closes" do

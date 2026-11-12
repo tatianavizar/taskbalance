@@ -1,0 +1,11 @@
+<%# Shown once (BackOffice::Team): neither the password nor the link is stored in clear or logged. %>
+<div class="space-y-4 p-4 text-sm" data-test="issued">
+  <p><%= @issued.message %> À transmettre à <strong><%= @issued.admin.email %></strong>, par un autre canal que l'email si possible. Cette page ne s'affiche qu'une fois.</p>
+  <% if @issued.password %>
+    <p>Mot de passe : <code data-test="password"><%= @issued.password %></code></p>
+  <% end %>
+  <p>Lien d'activation de la double authentification (<%= (AdminUser::ENROLMENT_LINK_VALIDITY / 1.minute).to_i %> minutes, usage unique) :</p>
+  <p><code data-test="enrolment-link"><%= @enrolment_url %></code></p>
+  <p>La personne ouvre le lien, se connecte avec le mot de passe, ajoute le secret à son application d'authentification, puis saisit le premier code.</p>
+  <p><%= link_to "Retour à l'équipe", admin_admin_users_path %></p>
+</div>

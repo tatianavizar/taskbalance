@@ -4,7 +4,7 @@
 <% provide :chrome, "none" if invitee %>
 <% provide :title, t("member_style.title") %>
 <div class="flex items-center gap-2.5">
-  <%= back_button(invitee ? invitation_path(@invitation.token) : household_path(@household)) %>
+  <%= back_button(invitee ? invitee_invitation_path : household_path(@household)) %>
   <span class="font-bold flex-1"><%= invitee ? t("split.invitee.welcome", name: subject[:name]) : t("member_style.title") %></span>
   <% if invitee %><span class="text-[13px] text-muted"><%= t("member_style.step") %></span><% end %>
 </div>

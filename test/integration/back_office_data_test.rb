@@ -14,28 +14,50 @@ class BackOfficeDataTest < ActionDispatch::IntegrationTest
     @alice = users(:alice)
   end
 
+  # Both roles: no route is about a log, a preference or a per-member figure.
+  # A superadmin reads a person's data on one page only, /admin/users/:id/
+  # individual_data, which a plain admin cannot open (back_office_roles_test.rb).
   test "no admin route exposes a log, a preference or a per-member figure" do
     admin_paths = Rails.application.routes.routes.map { |route| route.path.spec.to_s }.grep(%r{\A/admin})
     assert_not_empty admin_paths
     FORBIDDEN.each do |name|
       assert_empty admin_paths.grep(/#{name}/), "an admin route mentions #{name}"
     end
+    assert_equal [ "/admin/users/:id/individual_data(.:format)" ], admin_paths.grep(/individual/)
   end
 
-  test "the back office registers exactly the four read-only resources and the dashboard" do
+  test "a plain admin reaches no individual data: the superadmin page is refused, nothing is logged" do
+    ChoreLog.create!(user: @alice, chore: chores(:smith_custom), household: @household, mental_load: true,
+                     execution_load: false, time_spent: 17, completed_at: Time.current)
+    assert_no_difference "AdminAction.where(action: 'user.individual_data_viewed').count" do
+      get "/admin/users/#{@alice.id}/individual_data"
+    end
+    assert_response :redirect
+    follow_redirect!
+    assert_select "[data-test=individual-data]", count: 0
+    get "/admin/users/#{@alice.id}"
+    assert_select "a", text: "Données individuelles", count: 0
+    get "/admin/households/#{@household.id}"
+    assert_select "a", text: "Consulter", count: 0
+  end
+
+  test "the back office registers the four read-only resources, the team (superadmins) and the dashboard" do
     resources = ActiveAdmin.application.namespaces[:admin].resources.map { |resource| resource.resource_name.to_s }
-    assert_equal %w[AdminAction Household Invitation User].sort, (resources - [ "Dashboard" ]).sort
+    assert_equal %w[AdminAction AdminUser Household Invitation User].sort, (resources - [ "Dashboard" ]).sort
     # ActiveAdmin's own Comment resource (routed even with comments off) is removed.
     assert_not_includes resources, "Comment"
     assert_empty Rails.application.routes.routes.map { |r| r.path.spec.to_s }.grep(%r{/admin/comments})
   end
 
-  test "the resources are read-only: no new, edit, update, destroy or batch route" do
+  test "the resources are read-only: no new, edit, update, destroy or batch route (the team page aside)" do
     paths = Rails.application.routes.routes.select { |r| r.path.spec.to_s.start_with?("/admin") }
                  .map { |r| [ r.verb, r.path.spec.to_s.sub("(.:format)", "") ] }
-    assert_empty paths.select { |_, path| path.end_with?("/new", "/edit", "/batch_action") }
+    assert_equal [ "/admin/admin_users/new" ], paths.select { |_, path| path.end_with?("/new", "/edit", "/batch_action") }.map(&:last)
     writes = paths.select { |verb, _| %w[POST PUT PATCH DELETE].include?(verb) }.map(&:last)
     allowed = %w[/admin/users/:id/confirm_current_email /admin/users/:id/confirm_pending_email /admin/users/:id/delete_account
+                 /admin/users/:id/unlock_account
+                 /admin/admin_users /admin/admin_users/:id/reset_two_factor /admin/admin_users/:id/deactivate
+                 /admin/admin_users/:id/change_role
                  /admin/households/:id/unblock
                  /admin/invitations/:id/resend /admin/invitations/:id/cancel
                  /admin/login /admin/logout /admin/two_factor /admin]

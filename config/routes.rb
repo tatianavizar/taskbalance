@@ -122,6 +122,11 @@ Rails.application.routes.draw do
   end
 
   # Invitation, côté personne invitée (B7 à B9, B12). Le jeton fait office d'identifiant.
+  # Une fois l'invitation prise en main (connectée), B12 et le refus passent par
+  # /invitation, sans jeton : l'app ne garde que son empreinte.
+  get "invitation", to: "invitations#resume", as: :invitee_invitation
+  get "invitation/attente", to: "invitations#waiting", as: :invitee_waiting
+  post "invitation/refus", to: "invitations#decline", as: :invitee_decline
   resources :invitations, only: [ :show ], param: :token do
     member do
       post :claim

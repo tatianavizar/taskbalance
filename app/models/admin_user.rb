@@ -12,6 +12,14 @@
 #   code (`enrol!`) turns the second factor on and uses the link up.
 #
 # Admins are never destroyed (the audit log points at them): `deactivate!`.
+#
+# Two roles (decision of 2026-11-13):
+#   admin       aggregates only: accounts, households, invitations, the audit
+#               log, and the actions of BackOffice::Actions.
+#   superadmin  every right: the above, managing the admins (BackOffice::Team)
+#               and reading a person's individual data (logs, preferences,
+#               shares, gap entries), each reading logged in admin_actions.
+# BackOfficeAuthorization enforces it in every ActiveAdmin controller.
 class AdminUser < ApplicationRecord
   # The idle timeout is `timeout_in`; this is the absolute one, from sign-in.
   SESSION_LIFETIME = 8.hours
@@ -28,6 +36,11 @@ class AdminUser < ApplicationRecord
          password_length: PASSWORD_MIN_LENGTH..128,
          maximum_attempts: 5, unlock_strategy: :time, unlock_in: 30.minutes,
          timeout_in: 30.minutes
+
+  ROLES = %w[admin superadmin].freeze
+  enum :role, ROLES.index_by(&:itself), default: "admin", validate: true
+
+  scope :active, -> { where(deactivated_at: nil) }
 
   # The audit log is append-only: `restrict`, never `nullify` (that would rewrite rows).
   has_many :admin_actions, dependent: :restrict_with_exception
@@ -59,6 +72,16 @@ class AdminUser < ApplicationRecord
 
   def two_factor_enrolled?
     otp_required_for_login?
+  end
+
+  def deactivated?
+    deactivated_at.present?
+  end
+
+  # A random password for an account created from the back office, shown once
+  # to the superadmin with the enrolment link.
+  def self.generate_password
+    SecureRandom.base58(20)
   end
 
   # (Re)starts the enrolment: a brand-new secret, no second factor, every

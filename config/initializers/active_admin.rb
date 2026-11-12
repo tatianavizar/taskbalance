@@ -5,6 +5,8 @@ ActiveAdmin.setup do |config|
   # requires the second factor (app/controllers/concerns/back_office_gate.rb).
   config.authentication_method = :authenticate_admin_user_with_two_factor!
   config.current_user_method = :current_admin_user
+  # Two roles (AdminUser): superadmin has every right, admin sees aggregates only.
+  config.authorization_adapter = "BackOffice::Authorization"
   config.logout_link_path = :destroy_admin_user_session_path
 
   # No comments: nothing in the back office is written freely.

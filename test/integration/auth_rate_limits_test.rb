@@ -2,8 +2,8 @@ require "test_helper"
 require "minitest/mock"
 
 # Limits on password guessing and on the endpoints that send account mails
-# (decision of 2026-11-08: 3 per hour per address, 9 per hour per connection),
-# and what the screens may reveal about an account.
+# (decisions of 2026-11-08 and 2026-11-13), and what the screens may reveal
+# about an account. The per-account lockout is in sign_in_lockout_test.rb.
 class AuthRateLimitsTest < ActionDispatch::IntegrationTest
   include ActionMailer::TestHelper
 
@@ -18,51 +18,12 @@ class AuthRateLimitsTest < ActionDispatch::IntegrationTest
 
   # --- Sign-in (finding 1) ---------------------------------------------------
 
-  test "sign-in attempts are throttled per address, with the wrong-password screen" do
-    Users::SessionsController::ATTEMPTS_PER_EMAIL.times { attempt(@alice.email) }
-    failed = [ response.status, response.body ]
-
-    attempt(@alice.email, "password123") # the right password, over the limit
-
-    assert_equal failed, [ response.status, response.body ]
-    assert_select ".alert-box[role=alert]"
-    assert_nil session["warden.user.user.key"], "a throttled attempt must not sign in"
-    get dashboard_path
-    assert_redirected_to new_user_session_path
-  end
-
-  test "a throttled unknown address and a throttled known one get the same answer" do
-    Users::SessionsController::ATTEMPTS_PER_EMAIL.times { attempt(@alice.email) }
-    attempt(@alice.email)
-    known = [ response.status, response.body.sub(@alice.email, "EMAIL") ]
-
-    Users::SessionsController::ATTEMPTS_PER_EMAIL.times { attempt("nobody@test.com") }
-    attempt("nobody@test.com")
-    unknown = [ response.status, response.body.sub("nobody@test.com", "EMAIL") ]
-
-    assert_equal known, unknown
-  end
-
-  test "the address is normalised before counting" do
-    Users::SessionsController::ATTEMPTS_PER_EMAIL.times { |i| attempt(i.even? ? " ALICE@test.com " : @alice.email) }
-    attempt(@alice.email, "password123")
-
-    assert_nil session["warden.user.user.key"]
-  end
-
   test "sign-in attempts are throttled per connection, whatever the address" do
     Users::SessionsController::ATTEMPTS_PER_IP.times { |i| attempt("someone#{i}@test.com") }
     attempt(@alice.email, "password123")
 
     assert_response :unprocessable_entity
     assert_nil session["warden.user.user.key"]
-  end
-
-  test "below the limit the right password still signs in" do
-    (Users::SessionsController::ATTEMPTS_PER_EMAIL - 1).times { attempt(@alice.email) }
-    attempt(@alice.email, "password123")
-
-    assert_redirected_to dashboard_path
   end
 
   # --- Password length -------------------------------------------------------
@@ -83,14 +44,38 @@ class AuthRateLimitsTest < ActionDispatch::IntegrationTest
     patch edit_email_path, params: { user: { email: to, current_password: "password123" } }
   end
 
-  test "an email change is limited to 3 per hour per person" do
+  test "an email change is limited to 2 per account over a rolling 24 hours" do
     sign_in @alice
-    3.times { |i| change_email("new#{i}@test.com") }
+    travel_to Time.zone.local(2026, 11, 12, 9, 0) do
+      change_email("new0@test.com")
+    end
+    travel_to Time.zone.local(2026, 11, 12, 20, 0) do
+      change_email("new1@test.com")
+      assert_equal "new1@test.com", @alice.reload.unconfirmed_email
 
-    assert_no_emails { change_email("new9@test.com") }
-    assert_redirected_to edit_email_path
-    assert_equal "Trop de demandes. Réessayez dans une heure.", flash[:alert]
-    assert_equal "new2@test.com", @alice.reload.unconfirmed_email
+      assert_no_emails { change_email("new2@test.com") }
+      assert_redirected_to edit_email_path
+      assert_equal "new1@test.com", @alice.reload.unconfirmed_email
+
+      get edit_email_path
+      assert_select "[data-test=email-change-limit]", text: /2 fois en 24 heures.*13 novembre à 10:00/
+      assert_select "input[name='user[email]']", count: 0
+    end
+    # 24 hours after the first change, one is free again; the window slides.
+    travel_to Time.zone.local(2026, 11, 13, 9, 1) do
+      change_email("new3@test.com")
+      assert_equal "new3@test.com", @alice.reload.unconfirmed_email
+      assert_no_emails { change_email("new4@test.com") }
+    end
+  end
+
+  test "a refused email change (wrong password) does not count" do
+    sign_in @alice
+    3.times { patch edit_email_path, params: { user: { email: "x@test.com", current_password: "nope" } } }
+    change_email("new0@test.com")
+    change_email("new1@test.com")
+    assert_equal "new1@test.com", @alice.reload.unconfirmed_email
+    assert_equal 2, @alice.recent_email_changes.size
   end
 
   test "an email change is limited to 3 per hour towards the same address" do

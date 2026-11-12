@@ -30,6 +30,7 @@ fr:
       send_paranoid_instructions: "Si cette adresse correspond à un compte, vous allez recevoir un email pour réinitialiser votre mot de passe."
       updated: "Votre mot de passe est modifié. La session est ouverte."
       updated_not_active: "Votre mot de passe est modifié."
+      updated_but_locked: "Votre mot de passe est modifié. La connexion à ce compte reste bloquée : l'email reçu à ce sujet indique jusqu'à quand, ou comment la faire rouvrir."
     registrations:
       destroyed: "Votre compte a été supprimé."
       signed_up: "Bienvenue sur 50/50."

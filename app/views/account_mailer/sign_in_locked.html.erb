@@ -1,0 +1,10 @@
+<p><%= t("account_mailer.sign_in_locked.greeting", name: @user.first_name) %></p>
+<% if @hard %>
+<p><%= t("account_mailer.sign_in_locked.hard_fact", attempts: @attempts) %></p>
+<p><%= t("account_mailer.sign_in_locked.hard_contact_html", email: mail_to(@support_email)) %></p>
+<% else %>
+<p><%= t("account_mailer.sign_in_locked.temporary_fact", attempts: @attempts, hours: @window_hours) %></p>
+<p><%= t("account_mailer.sign_in_locked.temporary_until", day: @unlocks_day, hour: @unlocks_hour, zone: @user.time_zone) %></p>
+<% end %>
+<p><%= t("account_mailer.sign_in_locked.sessions") %></p>
+<p><%= t("account_mailer.sign_in_locked.not_you") %> <a href="<%= @reset_password_url %>"><%= t("account_mailer.sign_in_locked.reset") %></a></p>

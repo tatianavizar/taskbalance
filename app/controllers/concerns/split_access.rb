@@ -38,6 +38,6 @@ module SplitAccess
     raise ActiveRecord::RecordNotFound unless current_participant
     return unless current_participant.provisional? && !@household.setup_ready_for_invitee?
 
-    redirect_to waiting_invitation_path(current_invitation.token)
+    redirect_to invitee_waiting_path
   end
 end

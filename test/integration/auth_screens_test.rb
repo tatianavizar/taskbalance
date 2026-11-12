@@ -66,7 +66,7 @@ class AuthScreensTest < ActionDispatch::IntegrationTest
     get new_user_registration_path(invitation_token: invitation.token)
     sign_up(email: "guest@test.com")
 
-    assert_redirected_to waiting_invitation_path(invitation.token)
+    assert_redirected_to invitee_waiting_path
   end
 
   test "the confirm screen needs a session and, once confirmed, says so" do
