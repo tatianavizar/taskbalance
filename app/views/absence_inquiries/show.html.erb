@@ -45,9 +45,9 @@
   <% if @pause_open %>
     <div>
       <% if @concerned %>
-        <%= link_to t("alerts.pause_link"), new_member_pause_path(du: first_day, au: last_day), class: "font-bold underline" %>
+        <%= link_to t("alerts.pause_link"), new_member_pause_path(du: first_day, au: last_day), class: "font-bold underline inline-flex items-center min-h-[44px]" %>
       <% else %>
-        <%= link_to t("alerts.pause_for_link", name: name), new_member_pause_path(pour: inquiry.household_member_id, du: first_day, au: last_day), class: "font-bold underline" %>
+        <%= link_to t("alerts.pause_for_link", name: name), new_member_pause_path(pour: inquiry.household_member_id, du: first_day, au: last_day), class: "font-bold underline inline-flex items-center min-h-[44px]" %>
       <% end %>
     </div>
   <% end %>

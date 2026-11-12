@@ -19,6 +19,12 @@ module ApplicationHelper
     !hotwire_native_app? && content_for(:chrome) != "none" && user_signed_in?
   end
 
+  # Le bandeau cookies s'affiche tant qu'on n'a pas cliqué « OK ». Jamais dans
+  # les coquilles natives : elles n'ont ni navigateur ni bandeau à montrer.
+  def cookie_banner?
+    !hotwire_native_app? && cookies[:cookie_notice_seen].blank?
+  end
+
   # Onglet actif selon le contrôleur courant.
   def active_tab
     case controller_path

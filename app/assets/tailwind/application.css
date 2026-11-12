@@ -36,7 +36,9 @@
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
       animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
       transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
     }
   }
 }
@@ -243,11 +245,57 @@
   .done-btn { flex: none; min-height: 44px; padding: 0 14px; border-radius: 17px; border: 1.5px solid var(--color-ink); background: transparent; font: 700 13px var(--font-sans); color: var(--color-ink); cursor: pointer; }
   .stepper { display: flex; align-items: center; justify-content: space-between; gap: 6px; background: var(--color-surface); border: 1.5px solid var(--color-field); border-radius: 14px; min-height: 52px; padding: 0 6px; }
   .stepper[data-invalid="true"] { border: 2px solid var(--color-ink); }
-  .stepper-btn { width: 44px; height: 40px; border-radius: 10px; border: 0; background: var(--color-soft); font: 700 20px var(--font-sans); color: var(--color-ink); cursor: pointer; }
+  .stepper-btn { width: 44px; height: 44px; border-radius: 10px; border: 0; background: var(--color-soft); font: 700 20px var(--font-sans); color: var(--color-ink); cursor: pointer; }
   .stepper-input { flex: 1; min-width: 0; border: 0; background: transparent; text-align: center; font: 700 18px var(--font-sans); color: var(--color-ink); font-variant-numeric: tabular-nums; }
   .stepper-input:focus-visible { outline: 3px solid var(--color-ink); outline-offset: 2px; border-radius: 8px; }
   .kv-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; min-height: 42px; border-top: 1px solid var(--color-divider); font-size: 14px; }
   .kv-row:first-child { border-top: 0; }
   .kv-row > span:first-child { color: var(--color-muted); }
   .tabular { font-variant-numeric: tabular-nums; }
+}
+
+/* Lot 10 : Balance à trois membres et plus (P3, P4), feuille d'assignation (P6, C14). */
+@layer components {
+  .balance-rows { display: flex; flex-direction: column; margin-top: 4px; }
+  .balance-row { display: grid; grid-template-columns: minmax(56px, 26%) minmax(0, 1fr) 44px; align-items: center; gap: 8px; margin-top: 8px; font-size: 14px; }
+  .balance-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .balance-value { text-align: right; font-variant-numeric: tabular-nums; }
+  .balance-track { position: relative; height: 12px; border-radius: 6px; background: var(--color-track); }
+  .balance-track > i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 6px; }
+  .balance-zone { position: absolute; top: -3px; bottom: -3px; border: 1.5px dashed var(--color-ink); border-radius: 4px; text-decoration: none; }
+  .balance-fair { position: absolute; top: -2px; width: 2px; height: 16px; background: var(--color-ink); }
+  .balance-flag { margin: -2px 0 0 calc(26% + 8px); font-size: 12px; line-height: 16px; color: var(--color-muted); font-weight: 600; }
+
+  .assign-button { flex: none; display: inline-flex; align-items: center; gap: 6px; max-width: 46%; min-height: 44px; padding: 0 12px; border-radius: 22px; border: 1.5px solid var(--color-field); background: var(--color-surface); font: 600 13px var(--font-sans); color: var(--color-ink); cursor: pointer; text-align: left; }
+  .assign-button > span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .sheet-dialog { border: 0; padding: 0; background: transparent; max-width: 430px; width: 100%; margin: auto auto 0; color: var(--color-ink); }
+  .sheet-dialog::backdrop { background: rgb(15 26 20 / 0.55); }
+  .sheet { background: var(--color-bg); border-radius: 24px 24px 0 0; padding: 10px 20px calc(24px + env(safe-area-inset-bottom)); display: flex; flex-direction: column; gap: 10px; max-height: 90dvh; overflow-y: auto; }
+  .sheet-grip { align-self: center; width: 40px; height: 5px; border-radius: 3px; background: var(--color-field); }
+  .sheet-row { display: flex; align-items: center; gap: 10px; min-height: 56px; border-top: 1px solid var(--color-divider); cursor: pointer; }
+  .sheet-row:first-child { border-top: 0; }
+  .sheet-row .check-input:focus-visible + .check-box { outline: 3px solid var(--color-ink); outline-offset: 2px; }
+  .swatches { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px 8px; }
+  .swatch { display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 12px; line-height: 16px; min-height: 44px; cursor: pointer; text-align: center; }
+  .swatch-dot { width: 52px; height: 52px; border-radius: 50%; box-sizing: border-box; border: 1.5px solid var(--color-field); display: flex; align-items: center; justify-content: center; font-weight: 700; }
+  .swatch-input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  .swatch-input:checked + .swatch-dot { border: 3px solid var(--color-ink); }
+  .swatch-input:checked ~ .swatch-name { font-weight: 700; }
+  .swatch-input:focus-visible + .swatch-dot { outline: 3px solid var(--color-ink); outline-offset: 2px; }
+  .swatch-input:disabled + .swatch-dot { opacity: .55; }
+  .swatch-input:disabled ~ .swatch-name { color: var(--color-muted); }
+  .rule-row { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 10px; padding: 10px 0; border-top: 1px solid var(--color-divider); font-size: 14px; line-height: 20px; }
+  .rule-row:first-child { border-top: 0; }
+  .cookie-banner { position: fixed; left: 50%; transform: translateX(-50%); width: calc(100% - 24px); max-width: 406px; bottom: calc(12px + env(safe-area-inset-bottom)); z-index: 30; background: var(--color-ink); color: #fff; border-radius: 16px; padding: 12px 14px; font-size: 13px; line-height: 18px; display: flex; align-items: center; gap: 12px; }
+  .cookie-banner.with-tabs { bottom: calc(80px + env(safe-area-inset-bottom)); }
+  .cookie-banner a { color: var(--color-mint); font-weight: 600; text-decoration: underline; }
+  .cookie-banner .cookie-ok { flex: none; min-height: 44px; min-width: 56px; padding: 0 16px; border-radius: 22px; background: var(--color-mint); color: var(--color-ink); font: 700 14px var(--font-sans); border: 0; cursor: pointer; }
+  .legal { display: flex; flex-direction: column; gap: 12px; font-size: 15px; line-height: 22px; }
+  .legal h2 { font-family: var(--font-sans); font-size: 16px; line-height: 22px; font-weight: 700; margin: 12px 0 0; letter-spacing: 0; }
+  .legal-todo { background: var(--color-soft); border-bottom: 1.5px dashed var(--color-ink); font-weight: 600; }
+  .legal ul { margin: 0; padding-left: 20px; list-style: disc; }
+  .legal p { margin: 0; }
+  .sr-only-focusable:not(:focus):not(:focus-within) { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .skip-link { position: absolute; left: 8px; top: -60px; z-index: 50; background: var(--color-ink); color: var(--color-mint); padding: 12px 16px; border-radius: 12px; font-weight: 700; }
+  .skip-link:focus { top: 8px; }
 }

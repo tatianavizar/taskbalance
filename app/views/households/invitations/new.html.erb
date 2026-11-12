@@ -31,7 +31,7 @@
   <% end %>
   <% if @pending %>
     <p class="m-0 text-sm">
-      <%= link_to t("invitations.new.resend_existing"), household_invitation_path(@household, @pending), class: "font-semibold" %>
+      <%= link_to t("invitations.new.resend_existing"), household_invitation_path(@household, @pending), class: "font-semibold inline-flex items-center min-h-[44px]" %>
     </p>
   <% end %>
 

@@ -1,0 +1,20 @@
+fr:
+  legal:
+    draft: "Brouillon, à valider juridiquement"
+    draft_body: "Ce texte décrit ce que l'appli fait aujourd'hui. Les mots entre crochets sont à compléter avant la publication : nom de l'éditeur, adresse, numéro d'immatriculation, hébergeur."
+    updated: "Dernière mise à jour : %{date}"
+    terms:
+      title: "Conditions d'utilisation"
+      heading: "Conditions générales d'utilisation"
+      link: "conditions d'utilisation"
+    privacy:
+      title: "Confidentialité"
+      heading: "Politique de confidentialité"
+      link: "politique de confidentialité"
+    sign_up_notice_html: "En créant un compte, vous acceptez les %{terms} et la %{privacy}."
+  cookies:
+    banner:
+      label: "Cookies"
+      text_html: "50/50 ne pose que les cookies nécessaires à son fonctionnement : votre session, la session d'une semaine et la mémoire de l'introduction. Aucun traceur. %{more}."
+      more: "En savoir plus"
+      ok: "OK"

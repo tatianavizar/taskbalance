@@ -30,8 +30,8 @@
 #   inquiry.answer!(by: user, value: "yes" | "no", at: Time.current)
 #   inquiry.correct!(answer, by: user, value: "yes" | "no", at: Time.current)
 class AbsenceInquiry < ApplicationRecord
-  DEADLINE_WDAY_OFFSET = 2 # Wednesday, counted from the Monday of the closing
-  DEADLINE_HOUR = 20
+  DEADLINE_WDAY_OFFSET = HouseholdRules::ABSENCE_DEADLINE_DAY_OFFSET # Wednesday, counted from the Monday of the closing
+  DEADLINE_HOUR = HouseholdRules::ABSENCE_DEADLINE_HOUR
   REFUSALS = %i[invalid_answer closed not_a_member not_concerned not_correctable].freeze
 
   class AnswerRefused < StandardError

@@ -57,20 +57,22 @@ module ComponentsHelper
 
   # Balance d'une charge.
   #   share      : part de la personne qui regarde, en % (nil : rien de mesuré)
-  #   others     : [{ name:, share: }] les autres membres
+  #   others     : [{ name:, share:, balanced: }] les autres membres
   #   fair       : repère de la part juste (par défaut 100 / nombre de membres)
-  #   balanced   : semaine équilibrée -> la part passe en vert foncé
-  def balance(title:, count:, name:, share:, others:, balanced: false, fair: nil, aria: nil)
+  #   zone       : zone équilibrée (Range, par défaut la part juste +/- 10)
+  #   balanced   : true -> la part passe en vert foncé ; false -> « hors zone »
+  #
+  # À deux, une barre partagée ; à trois et plus, une barre par membre avec la
+  # zone en pointillés. Le texte alternatif commence par le titre, nomme chaque
+  # part, la zone et les personnes hors zone : la barre n'est jamais seule.
+  def balance(title:, count:, name:, share:, others:, balanced: nil, fair: nil, zone: nil, aria: nil)
     members = others.size + 1
-    fair ||= (100.0 / members).round
-    aria ||= if share.nil?
-      t("components.balance.aria_empty", title: title, fair: fair)
-    else
-      t("components.balance.aria", title: title, you: name, share: share,
-        others: others.map { |o| "#{o[:name]} #{o[:share]} %" }.to_sentence, fair: fair)
-    end
+    fair ||= HouseholdRules.fair_share(members)
+    zone ||= HouseholdRules.zone(members)
+    aria ||= balance_aria(title: title, name: name, share: share, others: others,
+                          balanced: balanced, fair: fair, zone: zone)
     render "components/balance", title: title, count: count, name: name, share: share,
-           others: others, balanced: balanced, fair: fair, aria: aria
+           others: others, balanced: balanced, fair: fair, zone: zone, aria: aria
   end
 
   # `total` nil : niveau ultime, il n'y a plus de niveau suivant.
@@ -91,5 +93,18 @@ module ComponentsHelper
 
   def confirm_dialog
     render "components/confirm_dialog"
+  end
+
+  private
+
+  def balance_aria(title:, name:, share:, others:, balanced:, fair:, zone:)
+    return t("components.balance.aria_empty", title: title, fair: fair) if share.nil?
+
+    parts = [ "#{name} #{share} %" ] + others.map { |o| "#{o[:name]} #{o[:share].nil? ? "—" : "#{o[:share]} %"}" }
+    text = t("components.balance.aria", title: title, shares: parts.to_sentence, fair: fair)
+    text += " #{t("components.balance.aria_zone", min: zone.begin, max: zone.end)}" if zone
+    out = (balanced == false ? [ name ] : []) + others.select { |o| o[:balanced] == false && !o[:share].nil? }.map { |o| o[:name] }
+    text += " #{t("components.balance.aria_out", names: out.to_sentence)}" if out.any?
+    text
   end
 end

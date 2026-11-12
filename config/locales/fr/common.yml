@@ -3,6 +3,7 @@ fr:
     back: "Retour"
     cancel: "Annuler"
     close: "Fermer"
+    skip_to_content: "Aller au contenu"
     confirm: "Confirmer"
     next: "Suivant"
     save: "Enregistrer"

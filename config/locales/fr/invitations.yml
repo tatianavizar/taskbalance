@@ -62,6 +62,7 @@ fr:
         declined: "La personne ne voit plus rien du foyer. Une nouvelle invitation reste possible, dans la limite de %{max} renvois par adresse."
         expired: "Le lien ne fonctionne plus. Une nouvelle invitation reste possible, dans la limite de %{max} renvois par adresse."
       next_setup: "Choisir les tâches du foyer"
+      invite_another: "Inviter une autre personne"
       invite_again: "Inviter de nouveau"
       continue_solo: "Continuer sans partenaire"
     cancel:

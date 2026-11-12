@@ -70,6 +70,9 @@
 <%= sticky_cta do %>
   <% if state == "pending" %>
     <%= link_to t("invitations.show.next_setup"), household_chores_setup_path(@household), class: "btn btn-primary" %>
+    <% if @household.room_for_another_person? %>
+      <%= link_to t("invitations.show.invite_another"), new_household_invitation_path(@household), class: "btn btn-secondary" %>
+    <% end %>
   <% else %>
     <%= link_to t("invitations.show.invite_again"), new_household_invitation_path(@household, email: @invitation.email, first_name: @invitation.first_name), class: "btn btn-primary" %>
     <%= link_to t("invitations.show.continue_solo"), household_path(@household), class: "btn btn-secondary" %>

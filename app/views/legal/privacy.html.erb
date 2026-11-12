@@ -1,0 +1,88 @@
+<%# Politique de confidentialité : brouillon, écrit d'après ce que l'appli fait vraiment. Les mots entre crochets sont à remplir. %>
+<% provide :chrome, "none" %>
+<% provide :title, t("legal.privacy.title") %>
+<% todo = ->(text) { tag.span("[#{text}]", class: "legal-todo") } %>
+<div class="flex items-center gap-2.5">
+  <%= back_button(@back_path) %>
+  <span class="font-bold"><%= t("legal.privacy.title") %></span>
+</div>
+
+<h1 class="screen-title"><%= t("legal.privacy.heading") %></h1>
+<%= render "legal/draft_notice" %>
+<p class="m-0 text-[13px] leading-[18px] text-muted"><%= t("legal.updated", date: "12 novembre 2026") %></p>
+
+<article class="legal" id="privacy">
+  <h2>1. Qui est responsable de vos données</h2>
+  <p><%= todo.("À COMPLÉTER : nom ou raison sociale de l'éditeur") %>, <%= todo.("À COMPLÉTER : adresse") %>. Contact pour toute question sur vos données : <%= todo.("À COMPLÉTER : adresse email de contact ou du délégué à la protection des données") %>.</p>
+
+  <h2>2. Les données que 50/50 enregistre</h2>
+  <ul>
+    <li><b>Votre compte :</b> prénom, adresse email, mot de passe (conservé sous forme chiffrée, jamais en clair), fuseau horaire, dates de création et de confirmation.</li>
+    <li><b>Votre foyer :</b> son nom, son fuseau horaire, ses membres, la couleur et les lettres de chaque membre, les invitations en cours (adresse email et prénom de la personne invitée).</li>
+    <li><b>Vos enregistrements :</b> pour chaque tâche faite, son nom et sa catégorie, la charge mentale et l'exécution, la durée, la date et l'heure. Ils sont rattachés à votre compte.</li>
+    <li><b>Vos préférences de tâches</b> (j'aime, neutre, je n'aime pas), utilisées pour proposer une répartition.</li>
+    <li><b>Vos pauses</b> (dates, et motif si vous en saisissez un) et vos réponses à la question d'absence.</li>
+    <li><b>Vos notifications :</b> les réglages que vous choisissez et l'historique des messages envoyés par l'appli.</li>
+  </ul>
+  <p>L'appli ne demande ni votre localisation, ni vos contacts, ni votre genre, ni aucune donnée de santé.</p>
+
+  <h2>3. Qui voit quoi</h2>
+  <ul>
+    <li><b>Les membres de votre foyer</b> voient votre prénom, votre part de charge mentale et d'exécution, le nombre de vos tâches et les bilans.</li>
+    <li><b>Personne d'autre</b> ne voit vos préférences de tâches. Le motif d'une pause n'est visible que par la personne concernée.</li>
+    <li><b>L'équipe 50/50</b> accède à un espace d'administration protégé par double authentification. Elle y voit les comptes, les foyers, les invitations et des chiffres agrégés par foyer. Elle ne voit ni le détail des enregistrements ni les préférences. Chaque action y est journalisée.</li>
+  </ul>
+
+  <h2>4. Pourquoi, et sur quelle base</h2>
+  <ul>
+    <li>Fournir le service que vous avez demandé : compte, foyer, enregistrements, bilans, niveaux, invitations. Base : l'exécution du contrat.</li>
+    <li>Envoyer les emails du service : confirmation, mot de passe oublié, invitations, et, selon vos réglages, bilan de la semaine et alertes. Base : l'exécution du contrat ; les messages facultatifs se règlent dans « Mon compte » et se coupent en un clic depuis l'email.</li>
+    <li>Protéger le service : limites d'envoi, prévention des abus. Base : l'intérêt légitime. <%= todo.("À VALIDER") %></li>
+  </ul>
+  <p>Vos données ne sont ni vendues ni utilisées pour de la publicité, et ne servent à aucun profilage commercial.</p>
+
+  <h2>5. Les enregistrements vous appartiennent</h2>
+  <ul>
+    <li>Quand vous quittez un foyer, vos enregistrements sont détachés du foyer et restent à vous.</li>
+    <li>Quand vous supprimez votre compte, vos enregistrements, vos préférences et vos pauses sont supprimés. Les bilans passés de votre foyer gardent leurs chiffres ; votre prénom y devient « Ancien membre ».</li>
+    <li>Quand la dernière personne quitte un foyer, le foyer est supprimé.</li>
+  </ul>
+
+  <h2>6. Cookies et traceurs</h2>
+  <p>50/50 ne pose que des cookies strictement nécessaires à son fonctionnement. Ils sont exemptés de consentement, c'est pourquoi l'appli ne vous demande rien : le bandeau vous informe, c'est tout.</p>
+  <ul>
+    <li><b>Session :</b> vous garde connecté pendant la visite.</li>
+    <li><b>Session d'une semaine :</b> vous évite de vous reconnecter chaque jour. Elle dure une semaine et s'efface à la déconnexion.</li>
+    <li><b>Introduction déjà vue :</b> retient que vous avez vu l'introduction.</li>
+    <li><b>Bandeau d'information :</b> retient que vous avez cliqué sur « OK » (12 mois).</li>
+  </ul>
+  <p>Il n'y a aucun outil de mesure d'audience, aucun traceur publicitaire, aucun réseau social intégré. <%= todo.("À VÉRIFIER avant publication : les polices Unbounded et Figtree se chargent aujourd'hui depuis Google Fonts, ce qui transmet l'adresse IP à Google. Les héberger sur nos serveurs supprime ce transfert") %></p>
+
+  <h2>7. Qui traite vos données pour nous</h2>
+  <ul>
+    <li><b>Hébergement :</b> <%= todo.("À COMPLÉTER : nom, adresse et pays de l'hébergeur") %>.</li>
+    <li><b>Envoi des emails :</b> <%= todo.("À COMPLÉTER : fournisseur d'envoi d'emails, pays") %>.</li>
+    <li><b>Notifications sur téléphone :</b> <%= todo.("À COMPLÉTER si elles sont activées : fournisseur de notifications") %>.</li>
+  </ul>
+  <p>Transferts hors de l'Union européenne : <%= todo.("À COMPLÉTER selon l'hébergeur et le fournisseur d'emails") %>.</p>
+
+  <h2>8. Combien de temps on garde</h2>
+  <ul>
+    <li>Compte, foyer et enregistrements : tant que le compte existe.</li>
+    <li>Invitations : <%= todo.("À DÉFINIR : durée de conservation après expiration ou refus") %>.</li>
+    <li>Journaux techniques du serveur : <%= todo.("À DÉFINIR") %>.</li>
+    <li>Sauvegardes : <%= todo.("À DÉFINIR") %>.</li>
+  </ul>
+
+  <h2>9. Vos droits</h2>
+  <p>Vous pouvez accéder à vos données, les corriger, les supprimer, les récupérer dans un format lisible, vous opposer à un traitement ou en demander la limitation. Le prénom se corrige dans « Mon compte », et le compte se supprime depuis le même écran. Pour tout le reste, écrivez à <%= todo.("À COMPLÉTER : adresse email de contact") %>. Vous pouvez aussi saisir la CNIL (cnil.fr).</p>
+
+  <h2>10. Sécurité</h2>
+  <p>Les mots de passe sont chiffrés. Les connexions passent par HTTPS. L'accès de l'équipe est limité et journalisé. <%= todo.("À VALIDER avec l'équipe technique avant publication") %></p>
+
+  <h2>11. Enfants</h2>
+  <p>Le service s'adresse aux adultes d'un foyer. <%= todo.("À DÉFINIR : âge minimum") %></p>
+
+  <h2>12. Changements</h2>
+  <p>Cette page porte sa date de mise à jour. Un changement important est annoncé dans l'appli. Les conditions d'utilisation sont sur la page <%= link_to t("legal.terms.title"), terms_path, class: "link" %>.</p>
+</article>

@@ -161,6 +161,17 @@ class Household < ApplicationRecord
     invitations.live.order(:id)
   end
 
+  # Members plus people invited and not yet in: the size the household is
+  # heading to (P1). The share of each is 100 / this number.
+  def expected_size
+    household_members.count + pending_invitations.count
+  end
+
+  # Six at most (decision 2026-11-08, the palette): invitations count.
+  def room_for_another_person?
+    expected_size < HouseholdMember::COLORS.size
+  end
+
   # The people a split is made for, in display order: members by arrival,
   # then (for the starting split) people invited but not yet in (D15).
   def split_participants(include_invitations: true)
@@ -170,8 +181,9 @@ class Household < ApplicationRecord
 
     free_colors = HouseholdMember::COLORS - members.map(&:color)
     participants + pending_invitations.each_with_index.map do |invitation, index|
-      SplitParticipant.for_invitation(invitation, color: free_colors[index] || HouseholdMember::COLORS.last,
-                                      user: invitation.invitee)
+      color = free_colors[index] || HouseholdMember::COLORS.last
+      color = invitation.color if invitation.color.present? && free_colors.include?(invitation.color)
+      SplitParticipant.for_invitation(invitation, color: color, user: invitation.invitee)
     end
   end
 
