@@ -262,3 +262,16 @@
 - **Accès :** modèle `AdminUser` séparé des comptes de l'app, double authentification obligatoire, pas d'inscription libre.
 - **Ce que voit l'équipe :** comptes, foyers, invitations, et des agrégats par foyer. Jamais le détail des enregistrements ni les préférences : ils appartiennent à leur auteur.
 - **Actions :** renvoyer ou annuler une invitation, débloquer un foyer, confirmer un email ; supprimer un compte arrive avec le lot 7. Chaque action est journalisée.
+
+## 2026-11-13 · Prénom de la personne invitée
+- **Décidé par :** la porteuse du projet.
+- **Règle :** l'écran d'invitation (B3) demande le prénom. Il s'affiche partout où la personne invitée apparaît avant d'avoir rejoint le foyer, et pré-remplit son inscription (modifiable).
+
+## 2026-11-13 · Catalogue et tâche perso
+- **Décidé par :** la porteuse du projet.
+- **Règle :** on garde le catalogue existant (49 tâches, 7 catégories), plus proche du réel que les chiffres de la maquette C1. Le formulaire de tâche perso reste tel que construit : catégorie « Personnalisées », champ « fois par période » en plus.
+
+## 2026-11-13 · Pas de bilan pour un foyer d'une personne ; semaine vide : email de retour
+- **Décidé par :** la porteuse du projet.
+- **Règle :** un foyer de moins de deux membres ne reçoit pas de bilan hebdomadaire. Une semaine où personne n'a rien enregistré, dans un foyer de deux membres ou plus, remplace le bilan par un court email qui invite à revenir sur l'app : le fait, une ligne sur ce que fait l'app, un seul bouton. Il prend la place du bilan dans le plafond hebdomadaire et suit le réglage « Bilan de la semaine ».
+- **Note :** l'entrée du 2026-11-08 sur les pratiques manipulatrices excluait toute relance pour enregistrer. Cet email reste hebdomadaire, factuel, sans culpabilisation ni urgence ; il remplace un bilan qui n'aurait rien dit, il ne s'ajoute pas.
