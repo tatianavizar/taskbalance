@@ -72,7 +72,7 @@ Ce que les écrans demandent et que le backlog ne prévoit pas, ou prévoit autr
 - **Préférences à trois choix (B10, C3, P7) — à faire passer en V1, S à M.**
   - Le backlog les range dans « Plus tard ».
   - Créer `chore_preferences` : une préférence par tâche, tâches perso comprises, visible de son autrice ou auteur seulement.
-- **Suppression d'une tâche perso (C7) — NEW, S.** Ajouter `chores.created_by_id`. Seule la personne qui l'a créée, ou celle qui gère le foyer, peut la supprimer.
+- **Suppression d'une tâche perso (C7) — NEW, S.** Ajouter `chores.created_by_id`. Tout membre du foyer peut la supprimer (décision D14, 2026-11-12) ; ses enregistrements restent, détachés.
 - **Tâches mensuelles et annuelles (C4b) — 2.2c, S.** Elles ont besoin d'une date d'ancrage pour savoir dans quelle semaine elles comptent.
 
 ### La semaine (D1 à D16, E1 à E16)
@@ -141,18 +141,12 @@ Les autres restent ouvertes. Chacune bloque le lot indiqué.
 |---|---|---|---|
 | D1 | Le bandeau « Annuler · 9 s » d'D8 est montré, mais l'annulation en 10 s a été rejetée dans les décisions, et le backlog la garde dans « Plus tard ». On la garde ? | D8 | Lot 4 |
 | D2 | D15 et D16 disent qu'une tâche réassignée « compte dans votre charge mentale cette semaine », alors que le bilan ne compte que ce qui est enregistré. On change le texte (« prévue ») ou la règle ? | D15, D16 | Lot 6 |
-| D3 | Une pause déclarée après coup rend neutre une semaine déjà définitive (E10, annulation d'une régression). On écrit l'exception à « un bilan définitif n'est jamais réécrit » ? | E10, F8 | Lot 5 |
 | D4 | Qui peut remettre l'écart à zéro : la personne qui le porte, ou celle qu'il avantage ? Le backlog dit les deux (constat 17 de l'audit). | C9 | Lot 6 |
-| D5 | La marge du niveau ultime : quelle formule, puisque la fenêtre de 52 semaines glisse ? | E9 | Lot 5 |
-| D6 | « Tout le foyer » comme assignation dans P8 : simple raccourci d'affichage quand tout le monde est assigné, ou erreur de maquette ? | P8 | Lot 2 |
 | D7 | I3 dit qu'une semaine déséquilibrée « ne fait pas reculer, sauf au niveau ultime ». Le backlog dit jamais. Quel texte ? | I2, I3 | Lot 10 |
 | D8 | H2 donne des textes différents selon la personne, alors que 3.7 dit « mêmes mots pour tous ». On reformule en « mêmes faits et mêmes chiffres » ? | H2 | Lot 8 |
 | D9 | L'email est un canal à part avec ses propres réglages (H4), ou toujours le repli du push (priorité 4) ? Que plafonne la limite « un bilan et une alerte par semaine », et par canal ou en tout ? | H1, H4 | Lot 8 |
 | D12 | Les renvois d'invitation : 3 envois ou 4 ? Comptés par invitation ou par email et foyer ? | B5, B13 | Lot 3 |
-| D14 | Qui peut modifier les tâches du foyer (C1, M1) ? Et que devient la répartition déjà validée quand on ajoute ou retire une tâche en cours de semaine ? | M1, C2, C5, C7 | Lot 2 |
-| D15 | Une personne invitée mais pas encore inscrite compte-t-elle dans la part juste de la répartition de départ (« À trois… 33 % ») ? | P1, C4 | Lot 2 |
 | D17 | Taille maximale du foyer ? | P2, P6 | Lot 10 |
-| D18 | Proposition de répartition calculée à partir des préférences : C4, C12 et B11 la montrent, le backlog la met dans « Plus tard » (L). En V1 ? | C4, B11 | Lot 2 |
 | D19 | Restent ouvertes, depuis le handoff : textes d'E4 et E15, repère à 50 % du temps, variantes d'E10, E4 et E2 pour un foyer de 3, chiffres divergents entre écrans (constat 20), CGU et politique de confidentialité. | — | Lot 10 |
 
 ## 5. Lots
@@ -204,6 +198,7 @@ Ordre conseillé. Chaque lot se termine sur des écrans utilisables de bout en b
 - 2.2d `chore_assignees`, au moins une personne assignée. M
 - Tâche perso récurrente, validations C6, suppression C7. S
 - `chore_preferences` à trois choix (B10, C3, P7). S à M
+- Proposition de répartition calculée à partir des préférences, en V1 (D18) : tâche aimée à qui l'aime, détestée à quelqu'un d'autre, puis équilibrage des occurrences vers la part juste ; modifiable. M
 - Avancement de la mise en place (`setup_step`). S
 - `week_plans` + validations : répartition de départ, proposée par la personne qui crée le foyer ou par la personne invitée, « Attendre » ou « Avancer » (C12, B11, B14). M
 - Réglages de la répartition C16, avec validation par tous et validation automatique. M

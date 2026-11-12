@@ -199,3 +199,24 @@
 - **Décidé par :** la porteuse du projet.
 - **Règle :** « il vous reste N semaines » : N est le nombre de semaines déséquilibrées consécutives que le foyer peut encore avoir avant de passer à 85 % ou moins, obtenu en simulant les semaines à venir comme déséquilibrées dans la fenêtre (depuis la première obtention du niveau ultime, 52 semaines au plus).
 - **Repose sur :** E9.
+
+## 2026-11-12 · D6 : « Tout le foyer » est un libellé
+- **Décidé par :** la porteuse du projet.
+- **Règle :** affiché quand tous les membres sont assignés à une tâche. En base, une assignation par membre ; chacun porte la tâche en entier. Il n'y a pas de pot commun.
+- **Repose sur :** P8.
+
+## 2026-11-12 · D14 : tâches du foyer modifiables par tout le monde, répartition verrouillée
+- **Décidé par :** la porteuse du projet.
+- **Règle :** tout membre peut ajouter, modifier et supprimer une tâche du foyer (remplace « la personne qui l'a créée ou celle qui gère le foyer » pour C7). Supprimer une tâche détache ses enregistrements, qui restent à leur auteur.
+- **En cours de semaine :** la répartition validée ne bouge pas. Une tâche ajoutée s'enregistre « hors répartition » et entre dans la proposition du lundi suivant ; une tâche retirée reste prévue jusqu'à dimanche. Le bilan ne compte que les enregistrements.
+- **Repose sur :** M1, C2, C5, C7.
+
+## 2026-11-12 · D15 : la personne invitée compte dans la répartition de départ
+- **Décidé par :** la porteuse du projet.
+- **Règle :** elle compte dans la part juste de la répartition de départ, marquée provisoire. Elle ne compte dans les bilans qu'une fois membre active du foyer.
+- **Repose sur :** P1, C4.
+
+## 2026-11-12 · D18 : proposition de répartition à partir des préférences en V1
+- **Décidé par :** la porteuse du projet.
+- **Règle :** algorithme simple et prévisible : tâche aimée à qui l'aime, détestée à quelqu'un d'autre, puis équilibrage des occurrences prévues vers la part juste. La proposition reste modifiable.
+- **Repose sur :** C4, C12, B11.

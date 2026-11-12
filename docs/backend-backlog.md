@@ -326,8 +326,6 @@ The whole UI and the 49-task catalogue are in English.
 | Item | Value | Effort |
 |---|---|---|
 | Undo window of 10 s after a log (D8) | Medium | S |
-| Three-choice preferences (like / neutral / dislike) | Low on its own | S |
-| Proposed split computed from preferences (C4) | Medium | L |
 | Journal CSV export (data portability) — **out of V1**, product decision 2026-11-08 | Medium | S |
 | Dormant households: email at 12 months of inactivity, then deletion 30 days later | Low before launch | M |
 | Wire `RecurringChoreScheduler` (it exists but is never called) | Medium | S |
