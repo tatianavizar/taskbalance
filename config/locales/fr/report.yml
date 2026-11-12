@@ -1,0 +1,341 @@
+fr:
+  week:
+    moment: "%{day} à %{hour}"
+
+  # Bilan (E1, E2, E7, E10, E14).
+  reports:
+    show:
+      title: "Bilan"
+      journal: "Mon journal"
+      empty: "Le premier bilan arrive lundi, une fois la semaine close."
+    period_label: "Période du bilan"
+    tabs:
+      week: "Semaine"
+      history: "4 semaines"
+    previous: "Semaine précédente"
+    next: "Semaine suivante"
+    status:
+      provisional: "Provisoire · définitif %{moment}"
+      final: "Définitif · clos le %{moment}"
+    outcome:
+      balanced: "équilibrée"
+      unbalanced: "non équilibrée"
+      neutral: "neutre"
+    corrected:
+      title: "Neutre · pause déclarée le %{date}"
+      body: "Une pause déclarée après la clôture couvre cette semaine : elle ne compte ni pour ni contre le foyer. Le bilan d'origine reste affiché, sans changement."
+      original: "Avant la pause, la semaine était %{outcome}."
+    neutral:
+      too_few_active_members:
+        title: "Semaine neutre : un seul membre actif"
+        body: "Il ne restait qu'un membre actif : il n'y a pas de partage à mesurer. La semaine ne fait ni progresser ni reculer le foyer."
+      member_arrived:
+        title: "Semaine neutre : une arrivée en cours de semaine"
+        body: "La semaine d'arrivée d'un membre ne compte pour personne : elle ne fait ni progresser ni reculer le foyer. Les enregistrements restent dans les journaux."
+      no_mental_logs:
+        title: "Semaine neutre : aucune charge mentale enregistrée"
+        body: "Du %{from} au %{to}, personne n'a enregistré de tâche mentale. Sans charge mentale, l'équilibre ne se mesure pas : la semaine ne compte ni pour ni contre le foyer. Penser, prévoir, décider : ça s'enregistre aussi."
+      no_execution_logs:
+        title: "Semaine neutre : aucune exécution enregistrée"
+        body: "Du %{from} au %{to}, personne n'a enregistré de tâche à faire. Sans exécution, l'équilibre ne se mesure pas : la semaine ne compte ni pour ni contre le foyer."
+      silent:
+        title: "Semaine neutre : rien d'enregistré"
+        body: "Du %{from} au %{to}, aucune tâche n'a été enregistrée. Sans enregistrement, rien ne se mesure : la semaine ne compte ni pour ni contre le foyer."
+      pause_declared:
+        title: "Semaine neutre : pause déclarée"
+        body: "Une pause couvre cette semaine."
+    balanced:
+      title: "Équilibrée"
+      title_pending: "Équilibrée pour l'instant"
+      body: "Chaque membre entre %{min} et %{max} %, sur les deux charges."
+    unbalanced:
+      title: "Non équilibrée"
+      title_pending: "Non équilibrée pour l'instant"
+    headline:
+      above:
+        mental: "%{name} porte %{share} % de la charge mentale"
+        execution: "%{name} porte %{share} % de l'exécution"
+      below:
+        mental: "%{name} ne porte que %{share} % de la charge mentale"
+        execution: "%{name} ne porte que %{share} % de l'exécution"
+    shift:
+      mental: "Il aurait suffi de confier %{count} des %{carried} tâches mentales de %{name} %{to}."
+      execution: "Il aurait suffi de confier %{count} des %{carried} tâches d'exécution de %{name} %{to}."
+      to_name: "à %{name}"
+      to_others: "aux autres membres"
+    lesson:
+      title: "À retenir pour la répartition de lundi"
+      mental_in_zone: "La charge mentale est dans la zone (%{carrier} : %{in_share} %), pas l'exécution (%{carrier} : %{off_share} %)."
+      execution_in_zone: "L'exécution est dans la zone (%{carrier} : %{in_share} %), pas la charge mentale (%{carrier} : %{off_share} %)."
+      mental_apart: "Les deux comptent séparément : répartir les tâches à faire ne suffit pas, il faut aussi répartir celles à planifier, organiser et décider."
+      execution_apart: "Les deux comptent séparément : planifier ne suffit pas, il faut aussi répartir les tâches à faire."
+      monday:
+        mental:
+          one: "Lundi : confier %{to} au moins %{count} tâche à charge mentale de %{carrier}."
+          other: "Lundi : confier %{to} au moins %{count} tâches à charge mentale de %{carrier}."
+        execution:
+          one: "Lundi : confier %{to} au moins %{count} tâche à faire de %{carrier}."
+          other: "Lundi : confier %{to} au moins %{count} tâches à faire de %{carrier}."
+    pauses:
+      title: "Pauses cette semaine"
+      range: "Du %{from} au %{to}"
+      open: "Depuis le %{from}"
+      declared_by: "déclarée par %{name}"
+      private: "La raison d'une pause n'est visible que par la personne concernée. Le foyer voit uniquement les dates."
+    time:
+      title: "Temps passé"
+      total: "%{time} au total"
+    level_change:
+      reached: "Niveau %{level} atteint à ce bilan"
+      ultimate_lost: "Retour au niveau %{level} à ce bilan"
+      ultimate_regained: "Niveau ultime retrouvé à ce bilan"
+      weeks:
+        one: "%{count} semaine équilibrée au total"
+        other: "%{count} semaines équilibrées au total"
+    outcome_short:
+      balanced: "Équilibrée"
+      unbalanced: "Non équilibrée"
+      neutral: "Neutre"
+      corrected: "Neutre · pause"
+    history:
+      range: "Sem. %{from} – %{to}"
+      subtitle: "Les 4 semaines jusqu'à celle choisie · part de la charge mentale portée par %{name}"
+      chart_title: "Part de la charge mentale"
+      chart_aria: "Part de la charge mentale : %{summary}. Zone équilibrée : %{zone}."
+      legend: "Bande grise : la zone équilibrée, de %{min} à %{max} %. En vert foncé, les semaines équilibrées ; en terracotta, les non équilibrées ; dans le tableau, une part hors zone est en encre."
+      mental: "Mentale"
+      execution: "Exéc."
+      time: "Temps"
+      open_week: "Voir le bilan : %{week}"
+
+  # Alertes de l'accueil et du Bilan (E3, E4, E5, E8, E13, E15, D13).
+  alerts:
+    pause_link: "Déclarer une pause ›"
+    pause_for_link: "Déclarer une pause pour %{name} ›"
+    blocked:
+      title_self: "Niveau %{level} : vous n'avez rien enregistré pendant %{weeks} semaines"
+      title_others:
+        one: "Niveau %{level} : %{names} n'a rien enregistré depuis %{weeks} semaines"
+        other: "Niveau %{level} : %{names} n'ont rien enregistré depuis %{weeks} semaines"
+      dates: "Du %{from} au %{to}."
+      question_self: "Une absence ?"
+      question_others: "Une absence de %{names} ?"
+      unblock_title: "Pour débloquer"
+      unblock_body: "Une semaine où chaque membre enregistre au moins une tâche. Enregistrer, consulter les bilans et modifier la répartition restent possibles : seule la progression est gelée."
+      since_monday: "%{name}, depuis lundi"
+      tasks:
+        one: "%{count} tâche"
+        other: "%{count} tâches"
+    first_empty:
+      title_self: "Semaine %{week} close sans aucune tâche de votre part"
+      title_others: "%{name} n'a enregistré aucune tâche en semaine %{week}"
+      dates: "Du %{from} au %{to}."
+      question_self: "Une absence ?"
+      tally_self: "Vos tâches enregistrées"
+      tally_others: "Les tâches enregistrées par %{name}"
+      short_week: "S%{number}"
+      others:
+        one: "En semaine %{week}, %{names} en a enregistré %{number}."
+        other: "En semaine %{week}, %{names} en ont enregistré %{number}."
+    unblocked:
+      title: "Progression débloquée."
+      body: "Chaque membre a enregistré des tâches : le foyer peut de nouveau progresser. Le compte des semaines sans saisie repart de zéro."
+      balanced: "La semaine est aussi équilibrée : elle compte."
+      link: "Voir le bilan"
+    level:
+      link: "Voir les niveaux"
+      reached:
+        title: "Niveau %{level} atteint"
+        body:
+          one: "%{count} semaine équilibrée au total."
+          other: "%{count} semaines équilibrées au total."
+      ultimate_lost:
+        title: "Retour au niveau %{level}"
+        body: "Le foyer a plus de %{quota} semaines non équilibrées sur sa fenêtre du niveau ultime. Le niveau ultime revient dès que le compte repasse à %{quota}."
+      ultimate_regained:
+        title: "Niveau ultime retrouvé"
+        body: "Le foyer repasse à %{quota} semaines non équilibrées ou moins."
+      regression_cancelled:
+        title: "Descente annulée : niveau %{level}"
+        body: "Une pause déclarée après coup annule la descente. Le niveau et le compteur de semaines équilibrées sont rétablis, la progression n'est plus bloquée."
+      membership_changed:
+        title: "Niveau remis à zéro"
+        body: "L'arrivée ou le départ d'un membre change le foyer : le niveau repart de zéro. Les bilans passés restent."
+
+  # La question d'absence (E11, P5).
+  absence:
+    title: "Absence de %{name} ?"
+    title_self: "Une absence de votre part ?"
+    deadline: "Réponses jusqu'à %{moment}"
+    you_answered: "vous avez répondu"
+    you_not_answered: "pas encore de réponse de votre part"
+    facts: "Aucune tâche enregistrée par %{name} depuis 2 semaines (%{from} – %{to})."
+    facts_self: "Aucune tâche enregistrée de votre part depuis 2 semaines (%{from} – %{to})."
+    no_pause: "Aucune pause déclarée."
+    weeks_label: "Tâches enregistrées pendant les deux semaines"
+    outcome:
+      awaiting: "Sans « Oui » d'ici %{moment}, le foyer redescend au niveau %{level} et sa progression est bloquée."
+      awaiting_level_zero: "Sans « Oui » d'ici %{moment}, la progression du foyer est bloquée."
+      away_declared: "Une pause est déclarée du %{from} au %{to}. Le foyer garde son niveau."
+      regression_cancelled: "Une pause a annulé la descente : le foyer est revenu au niveau %{level}."
+      regressed: "Le foyer est redescendu au niveau %{level} et sa progression est bloquée. Une pause peut encore annuler la descente jusqu'au prochain bilan définitif."
+      regression_due: "Le délai est passé : la décision s'applique au prochain calcul."
+    answers_title: "Réponses"
+    corrected_by: "Corrigée par %{name} (avant : %{was})"
+    answer:
+      "yes": "Oui"
+      "no": "Non"
+      none: "Pas encore répondu"
+    summary: "%{yes} oui · %{no} non · %{unanswered} sans réponse"
+    your_answer: "Votre réponse : %{answer}"
+    your_answer_none: "Votre réponse"
+    "yes": "Oui, absence"
+    "no": "Non, pas d'absence"
+    yes_effect: "Une pause est déclarée du %{from} au %{to}. Le foyer garde son niveau."
+    no_effect: "Si personne ne déclare l'absence d'ici %{moment}, le foyer redescend d'un niveau et sa progression est bloquée."
+    rule: "Répondre n'est pas obligatoire. Tout le foyer est interrogé, %{name} compris : un seul « Oui » suffit."
+    rule_self: "Répondre n'est pas obligatoire. Tout le foyer est interrogé : un seul « Oui », le vôtre ou celui d'un autre membre, suffit."
+    correct:
+      title: "%{name} a répondu « %{answer} » à votre sujet"
+      body: "Seule la personne concernée corrige une réponse donnée à son sujet, jusqu'à la fin du délai."
+      "yes": "Corriger : Oui, absence"
+      "no": "Corriger : Non, pas d'absence"
+    closed: "Les réponses sont closes depuis %{moment}."
+    flash:
+      answered:
+        "yes": "Réponse enregistrée. Une pause couvre les deux semaines."
+        "no": "Réponse enregistrée."
+      corrected:
+        "yes": "Réponse corrigée. Une pause couvre les deux semaines."
+        "no": "Réponse corrigée."
+    refusals:
+      invalid_answer: "Cette réponse n'existe pas : choisissez Oui ou Non."
+      closed: "Le délai est passé : les réponses sont closes."
+      not_a_member: "Seuls les membres du foyer répondent."
+      not_concerned: "Seule la personne concernée peut corriger cette réponse."
+      not_correctable: "Cette réponse ne peut pas être corrigée : la personne concernée change la sienne en répondant elle-même."
+    index:
+      title: "Questions d'absence"
+      none: "Aucune question d'absence n'est ouverte."
+
+  # Pauses (F6, F8, F10).
+  pauses:
+    declare_row: "Déclarer une pause"
+    range: "Du %{from} au %{to}"
+    open: "Depuis le %{from}, sans date de fin"
+    day: "jour %{day} sur %{total}"
+    day_open: "jour %{day}"
+    index:
+      title: "Pauses"
+      none: "Aucune pause déclarée dans le foyer."
+      current: "En cours et à venir"
+      past: "Passées"
+      declared_by: "déclarée par %{name}"
+      reason_private: "Votre raison, visible de vous seul : %{reason}"
+      privacy: "Le foyer voit les dates des pauses, jamais les raisons : une raison reste visible de la personne qui l'a écrite."
+      declare: "Déclarer une pause"
+    own:
+      title: "Vous êtes en pause"
+      note: "Vos semaines en pause ne comptent pas. Le foyer voit les dates, pas la raison."
+      stop_note: "Arrêter maintenant : la semaine en cours compte de nouveau, pour vous comme pour le foyer."
+      stop: "Arrêter la pause"
+      stop_confirm: "Arrêter la pause aujourd'hui ?"
+      edit: "Modifier la date de fin"
+    state:
+      current: "En cours"
+      upcoming: "À venir"
+      past: "Terminée"
+    new:
+      title: "Déclarer une pause"
+      title_for: "Absence de %{name}"
+      subtitle: "Vacances, maladie, déplacement : autant de pauses que nécessaire."
+      subtitle_for: "Une pause pour ses semaines sans saisie. Pas de motif : %{name} le donne, si besoin."
+      from: "Du"
+      to: "Au"
+      to_hint: "Date de fin facultative : sans elle, la pause dure jusqu'à son arrêt."
+      reason: "Raison (facultatif)"
+      reason_hint: "Visible uniquement par vous. Le foyer ne voit que les dates."
+      rule_not_empty: "Vos semaines en pause ne comptent pas comme des semaines sans saisie : le foyer ne redescend pas."
+      rule_two: "À deux, les semaines de pause sont neutres : le foyer ne progresse pas, et ne recule pas."
+      rule_more: "Pendant la pause, la part juste des autres membres se calcule sans vous."
+      rule_notified: "Les autres membres reçoivent une notification des dates. Vous pouvez arrêter la pause plus tôt à tout moment."
+      for_window: "Les semaines sans saisie qui ont déclenché la question d'absence peuvent toujours être mises en pause. Au-delà, %{days} jours en arrière au plus."
+      for_cancels: "La pause annule la descente : le foyer revient au niveau %{level}, compteur rétabli comme avant."
+      for_notified: "%{name} reçoit une notification des dates et peut arrêter la pause."
+      submit: "Commencer la pause"
+      submit_for: "Déclarer la pause"
+    edit:
+      title: "Modifier la fin de la pause"
+      subtitle: "Pause commencée le %{from}."
+      hint: "Aujourd'hui ou plus tard. Pour finir la pause plus tôt, arrêtez-la."
+      submit: "Enregistrer"
+    flash:
+      created: "Pause déclarée."
+      created_cancelling: "Pause déclarée. Elle annule la descente : le foyer revient au niveau %{level}."
+      updated: "Date de fin enregistrée."
+      stopped: "Pause arrêtée."
+    refused:
+      not_declarable: "Une pause pour un autre membre se déclare seulement après une descente de niveau, tant qu'elle peut être annulée."
+
+  # Niveaux (E8, E9, E13).
+  levels:
+    title: "Niveaux"
+    now:
+      ultimate: "Niveau ultime"
+      level: "Niveau %{level}"
+      ultimate_body: "Atteint le %{date}. Il se garde tant que le foyer a au plus %{quota} semaines non équilibrées sur les 52 dernières semaines."
+      zero_body: "Pas encore de semaine équilibrée comptée."
+      body:
+        one: "%{count} semaine équilibrée au total."
+        other: "%{count} semaines équilibrées au total."
+    window:
+      title: "Semaines non équilibrées, sur la fenêtre du niveau ultime"
+      unbalanced: "sur %{quota} au plus"
+      weeks: "Semaines sur la période"
+      neutral: "Neutres ou en pause, non comptées"
+      unbalanced_label: "Non équilibrées"
+    margin:
+      zero: "Il ne vous reste aucune semaine : une semaine non équilibrée de plus ramène le foyer au niveau %{level}. Il retrouve le niveau ultime dès que le compte repasse à %{quota}."
+      some:
+        one: "Il vous reste %{count} semaine non équilibrée avant de redescendre au niveau %{level}."
+        other: "Il vous reste %{count} semaines non équilibrées avant de redescendre au niveau %{level}."
+    change:
+      reached:
+        title: "Niveau %{level} atteint"
+        body:
+          one: "%{count} semaine équilibrée au total."
+          other: "%{count} semaines équilibrées au total."
+      ultimate_lost:
+        title: "Retour au niveau %{level}"
+        body: "Le foyer a eu plus de %{quota} semaines non équilibrées sur sa fenêtre du niveau ultime."
+        carrier: "Semaine %{week} non équilibrée : %{text}."
+      ultimate_regained:
+        title: "Niveau ultime retrouvé"
+        body: "Le foyer repasse à %{quota} semaines non équilibrées ou moins."
+      regressed:
+        title: "Descente au niveau %{level}"
+        body: "Un membre n'a rien enregistré pendant deux semaines, sans pause déclarée. La progression est bloquée."
+      regression_cancelled:
+        title: "Descente annulée : niveau %{level}"
+        body: "Une pause déclarée après coup a annulé la descente : le niveau et le compteur sont rétablis."
+      membership_changed:
+        title: "Niveau remis à zéro"
+        body: "Un membre est arrivé ou parti : le niveau repart de zéro. Les bilans passés restent."
+    regain:
+      title: "Pour retrouver le niveau ultime :"
+      body: "repasser à %{quota} semaines non équilibrées ou moins sur la fenêtre (aujourd'hui : %{count}). Il revient alors tout seul, sans repartir de zéro."
+    ladder_label: "Échelle des niveaux"
+    ultimate_letter: "U"
+    ultimate: "Niveau ultime"
+    ultimate_word: "ultime"
+    ultimate_lower: "le niveau ultime"
+    level: "Niveau %{level}"
+    level_lower: "niveau %{level}"
+    weeks:
+      one: "%{count} semaine"
+      other: "%{count} semaines"
+    next:
+      one: "Prochain : %{level}, dans %{count} semaine équilibrée."
+      other: "Prochain : %{level}, dans %{count} semaines équilibrées."
+    rule: "Les semaines non équilibrées ne font pas reculer. Seules deux semaines de suite sans saisie d'un membre font redescendre d'un niveau, sauf pause déclarée."
+    history: "Historique"

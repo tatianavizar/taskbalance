@@ -1,0 +1,23 @@
+<%# Le lien des notifications de la question d'absence : une question ouverte mène à son écran, plusieurs à cette liste. %>
+<% provide :chrome, "none" %>
+<% provide :title, t("absence.index.title") %>
+<div class="flex">
+  <%= back_button dashboard_path, label: t("common.close") %>
+</div>
+<h1 class="screen-title"><%= t("absence.index.title") %></h1>
+
+<% if @inquiries.any? %>
+  <div class="list-stack">
+    <% @inquiries.each do |inquiry| %>
+      <%= list_row title: t("absence.title", name: inquiry.concerned_first_name),
+            subtitle: t("absence.deadline", moment: moment_label(inquiry.deadline_at, @household.zone)),
+            href: absence_inquiry_path(inquiry) %>
+    <% end %>
+  </div>
+<% else %>
+  <%= callout do %><p class="m-0"><%= t("absence.index.none") %></p><% end %>
+  <div class="list-stack">
+    <%= list_row title: t("reports.show.title"), href: report_path %>
+    <%= list_row title: t("pauses.index.title"), href: member_pauses_path %>
+  </div>
+<% end %>

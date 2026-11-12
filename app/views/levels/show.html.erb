@@ -1,0 +1,101 @@
+<%# E8 : le niveau atteint et l'échelle. E9 : le niveau ultime et sa marge. E13 : le niveau ultime perdu.
+    Lu dans Household, Progression et l'historique des changements de niveau (LevelChange). %>
+<% provide :title, t("levels.title") %>
+<% s = @summary %>
+<% zone = @household.zone %>
+<% change = s.last_change %>
+<% quota = HouseholdRules::ULTIMATE_UNBALANCED_QUOTA %>
+<div class="flex items-center gap-2.5">
+  <%= back_button report_path %>
+  <h1 class="screen-title m-0"><%= t("levels.title") %></h1>
+</div>
+
+<div class="callout" id="level-now">
+  <h2 class="m-0 text-xl leading-[26px] font-semibold">
+    <%= s.ultimate? ? t("levels.now.ultimate") : t("levels.now.level", level: s.level) %>
+  </h2>
+  <p class="mt-1.5 mb-0 text-sm leading-5 tabular">
+    <% if s.ultimate? && @household.ultimate_reached_on %>
+      <%= t("levels.now.ultimate_body", date: l(@household.ultimate_reached_on, format: :day_month), quota: quota) %>
+    <% elsif s.level.zero? %>
+      <%= t("levels.now.zero_body") %>
+    <% else %>
+      <%= t("levels.now.body", count: s.weeks) %>
+    <% end %>
+  </p>
+</div>
+
+<%# --- Niveau ultime : le quota et la marge (E9) --------------------------------- %>
+<% if s.ultimate? %>
+  <section class="card tabular" aria-labelledby="window-title" id="level-window">
+    <b id="window-title" class="text-[13px]"><%= t("levels.window.title", quota: quota) %></b>
+    <div class="mt-1.5 flex items-baseline gap-2">
+      <b class="text-[22px]"><%= s.unbalanced_in_window %></b>
+      <span class="text-muted"><%= t("levels.window.unbalanced", quota: quota) %></span>
+    </div>
+    <dl class="mt-2 mb-0 text-sm">
+      <div class="flex justify-between min-h-[32px] items-center"><dt><%= t("levels.window.weeks") %></dt><dd class="m-0 font-bold"><%= s.weeks_in_window %></dd></div>
+      <div class="flex justify-between min-h-[32px] items-center"><dt><%= t("levels.window.neutral") %></dt><dd class="m-0 font-bold"><%= s.neutral_in_window %></dd></div>
+      <div class="flex justify-between min-h-[32px] items-center"><dt><%= t("levels.window.unbalanced_label") %></dt><dd class="m-0 font-bold"><%= s.unbalanced_in_window %></dd></div>
+    </dl>
+  </section>
+  <% margin = s.margin %>
+  <div class="alert-panel text-sm leading-5 tabular" id="level-margin">
+    <% drop_to = level_name(Progression::ULTIMATE - 1) %>
+    <%= margin.zero? ? t("levels.margin.zero", level: drop_to, quota: quota) : t("levels.margin.some", count: margin, level: drop_to) %>
+  </div>
+<% end %>
+
+<%# --- Le dernier changement ------------------------------------------------------ %>
+<% if change %>
+  <% report_headline = (s.carrier_of(change) if change.ultimate_lost?) %>
+  <section class="card" aria-labelledby="last-change-title" id="level-last-change">
+    <b id="last-change-title"><%= t("levels.change.#{change.reason}.title", level: level_name(change.to_level)) %></b>
+    <span class="block text-[13px] leading-[18px] text-muted"><%= l(change.created_at.in_time_zone(zone).to_date, format: :day_month) %></span>
+    <p class="mt-1.5 mb-0 text-sm leading-5 tabular">
+      <%= t("levels.change.#{change.reason}.body", level: level_name(change.to_level), from: level_name(change.from_level), count: change.balanced_weeks_count_after, quota: quota) %>
+      <% if report_headline %>
+        <%= t("levels.change.ultimate_lost.carrier", week: change.household_week.week.number,
+              text: t("reports.headline.#{report_headline.kind}.#{report_headline.dimension}", name: report_headline.member.first_name, share: report_headline.share)) %>
+      <% end %>
+    </p>
+    <% if change.ultimate_lost? && !s.ultimate? %>
+      <p class="mt-1.5 mb-0 text-sm leading-5"><b><%= t("levels.regain.title") %></b> <%= t("levels.regain.body", quota: quota, count: s.unbalanced_in_window) %></p>
+    <% end %>
+  </section>
+<% end %>
+
+<%# --- L'échelle ------------------------------------------------------------------------ %>
+<ol class="card m-0 p-0 list-none tabular" style="padding:6px 16px" aria-label="<%= t("levels.ladder_label") %>" id="level-ladder">
+  <% s.ladder.each_with_index do |row, i| %>
+    <li class="grid items-center gap-3 min-h-[50px] text-sm <%= "border-t border-divider" if i.positive? %>" style="grid-template-columns:36px minmax(0,1fr) auto"
+        <%= tag.attributes("aria-current": ("step" if row[:current])) %>>
+      <span class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-[13px] box-border <%= row[:current] ? "text-white" : (row[:reached] ? "text-mint" : "text-muted") %>"
+            style="<%= row[:current] ? "background:var(--color-self)" : (row[:reached] ? "background:var(--color-ink)" : "border:1.5px dashed var(--color-muted)") %>">
+        <%= row[:level] == Progression::ULTIMATE ? t("levels.ultimate_letter") : row[:level] %>
+      </span>
+      <span class="<%= "font-bold" if row[:current] %>"><%= row[:level] == Progression::ULTIMATE ? t("levels.ultimate") : t("levels.level", level: row[:level]) %></span>
+      <span class="<%= row[:current] ? "font-bold" : "text-muted" %>"><%= t("levels.weeks", count: row[:weeks]) %></span>
+    </li>
+  <% end %>
+</ol>
+
+<% if s.next_level %>
+  <p class="m-0 text-sm leading-5 tabular" id="level-next">
+    <%= t("levels.next", level: s.next_level == Progression::ULTIMATE ? t("levels.ultimate_lower") : t("levels.level_lower", level: s.next_level), count: s.weeks_to_next) %>
+  </p>
+<% end %>
+<p class="m-0 text-[13px] leading-[18px] text-muted"><%= t("levels.rule") %></p>
+
+<%# --- Historique ------------------------------------------------------------------------- %>
+<% if s.history.any? %>
+  <section class="flex flex-col gap-2" aria-labelledby="history-title">
+    <h2 id="history-title" class="m-0 text-[13px] font-bold text-muted font-sans"><%= t("levels.history") %></h2>
+    <div class="list-stack">
+      <% s.history.each do |entry| %>
+        <%= list_row title: t("levels.change.#{entry.reason}.title", level: level_name(entry.to_level)),
+              subtitle: l(entry.created_at.in_time_zone(zone).to_date, format: :day_month) %>
+      <% end %>
+    </div>
+  </section>
+<% end %>

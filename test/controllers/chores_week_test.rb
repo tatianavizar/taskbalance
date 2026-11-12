@@ -42,11 +42,113 @@ class ChoresWeekTest < ActionDispatch::IntegrationTest
     assert_select "form[action=?] button", complete_chore_occurrence_path(occurrence(@laundry, Date.new(2026, 11, 6)))
   end
 
-  test "a daily task lapses with its day, it is not late" do
+  test "a missed daily task stays late and is folded into one line with its count" do
     get chores_path
 
-    assert_select "form[action=?]", complete_chore_occurrence_path(occurrence(@cooking, Date.new(2026, 11, 3))), 0
-    assert_not response.body.include?("depuis le 3 nov")
+    assert_select "#section-late"
+    assert_text "Cook a meal · 2 en retard"
+    assert_text "la plus ancienne depuis le 2 nov"
+    assert_equal 1, response.body.scan("Cook a meal · ").size, "one line, not one per missed day"
+    # Today's and the following days' occurrences are not late.
+    board = TaskBoard.new(user: @alice)
+    assert_equal [ Date.new(2026, 11, 2), Date.new(2026, 11, 3) ], board.late.select { |e| e.chore == @cooking }.map(&:due_on)
+    assert_equal [ @cooking.id, @bills.id ].sort, board.late_groups.map { |g| g.chore.id }.sort
+  end
+
+  test "a missed daily occurrence is late on Thursday of its week and gone the next Monday" do
+    travel_to(paris(2026, 11, 5, 10)) # Thursday
+    RecurringChoreScheduler.sync_household(@household)
+    board = TaskBoard.new(user: @alice)
+    assert_equal [ Date.new(2026, 11, 2), Date.new(2026, 11, 3), Date.new(2026, 11, 4) ],
+                 board.late.select { |e| e.chore == @cooking }.map(&:due_on)
+    assert_equal 3, board.late_groups.find { |g| g.chore == @cooking }.count, "the folded count"
+
+    travel_to(paris(2026, 11, 9, 8)) # next Monday
+    RecurringChoreScheduler.sync_household(@household)
+    board = TaskBoard.new(user: @alice)
+    assert_empty board.late.select { |e| e.chore == @cooking }, "last week's daily occurrences dropped out"
+    assert_equal [ Date.new(2026, 11, 9) ], board.due_today.select { |e| e.chore == @cooking }.map(&:due_on)
+    get chores_path
+    assert_not response.body.include?("en retard")
+  end
+
+  test "the folded count stays within the week" do
+    travel_to(paris(2026, 11, 11, 10)) # Wednesday of the next week
+    RecurringChoreScheduler.sync_household(@household)
+    @household.chores.update_all(created_at: paris(2026, 11, 2, 9))
+
+    group = TaskBoard.new(user: @alice).late_groups.find { |g| g.chore == @cooking }
+    assert_equal 2, group.count, "Monday and Tuesday of the current week, not last week's seven"
+    assert_equal Date.new(2026, 11, 9), group.since
+  end
+
+  test "a weekly occurrence behaves the same: late until Sunday, gone the next Monday" do
+    travel_to(paris(2026, 11, 8, 20)) # Sunday, laundry was due Friday 6
+    RecurringChoreScheduler.sync_household(@household)
+    assert_includes TaskBoard.new(user: @alice).late.map(&:chore), @laundry
+
+    travel_to(paris(2026, 11, 9, 8))
+    RecurringChoreScheduler.sync_household(@household)
+    assert_not_includes TaskBoard.new(user: @alice).late.map(&:chore), @laundry
+  end
+
+  test "a monthly occurrence is still late the following week" do
+    travel_to(paris(2026, 11, 11, 10))
+    RecurringChoreScheduler.sync_household(@household)
+
+    late = TaskBoard.new(user: @alice).late.select { |e| e.chore == @bills }
+    assert_equal [ Date.new(2026, 11, 2) ], late.map(&:due_on)
+  end
+
+  test "the week is the household's, not UTC's: a Los Angeles household still has its Sunday" do
+    la_home, (la_user, _) = build_household("Lou", "Lee", zone: "America/Los_Angeles", joined_at: Time.utc(2026, 9, 1))
+    chore = la_home.chores.create!(task: tasks(:cook_meal), assignee_user_ids: [ la_user.id ], frequency: :daily)
+    la_home.chores.update_all(created_at: Time.utc(2026, 11, 2, 17))
+    # 03:00 UTC Monday 9 November: Monday in Paris, still Sunday 8 in Los Angeles.
+    travel_to(Time.utc(2026, 11, 9, 3))
+    ChoreOccurrence.where(chore_id: chore.id).delete_all
+    RecurringChoreScheduler.sync_household(la_home)
+    assert_equal 6, TaskBoard.new(user: la_user).late.count { |e| e.chore == chore }, "Mon 2 to Sat 7, Sunday is today"
+
+    # 08:00 UTC: Monday 00:00 in Los Angeles, the new week; last week's drop out.
+    travel_to(Time.utc(2026, 11, 9, 8))
+    RecurringChoreScheduler.sync_household(la_home)
+    assert_equal 0, TaskBoard.new(user: la_user).late.count { |e| e.chore == chore }
+  end
+
+  test "logging a late occurrence fulfils it, with the day it was really done, in that week" do
+    travel_to(paris(2026, 11, 11, 10))
+    RecurringChoreScheduler.sync_household(@household)
+    occ = occurrence(@bills, Date.new(2026, 11, 2)) # due in week 45, done in week 46
+
+    post complete_chore_occurrence_path(occ), params: { idempotency_key: "late-1" }
+
+    log = ChoreLog.find_by!(occurrence_id: occ.id)
+    assert_equal Time.current, log.completed_at
+    assert_equal Week.containing(Time.current, "Europe/Paris").monday, log.week.monday, "counts in the week it was done"
+    assert_not_equal occ.week_start, log.week.monday
+    assert_equal 1, WeeklyStats.new(@household, @household.current_week).member_for(@alice).logs_count
+    assert_equal 0, WeeklyStats.new(@household, Week.containing(Date.new(2026, 11, 2), "Europe/Paris")).member_for(@alice).logs_count
+    assert TaskBoard.new(user: @alice).late.none? { |e| e.chore == @bills }, "fulfilled, no longer late"
+  end
+
+  test "« Fait » on a folded line fulfils the oldest occurrence, one at a time" do
+    sign_in @bob
+    get chores_path
+    oldest = occurrence(@cooking, Date.new(2026, 11, 2))
+    assert_select "form[action=?] button", complete_chore_occurrence_path(oldest)
+
+    post complete_chore_occurrence_path(oldest), params: { idempotency_key: "x" }
+    get chores_path
+    assert_text "Cook a meal"
+    assert_not response.body.include?("2 en retard"), "one left, shown as a plain late line"
+    assert_text "depuis le 3 nov"
+    assert_select "form[action=?] button", complete_chore_occurrence_path(occurrence(@cooking, Date.new(2026, 11, 3)))
+  end
+
+  test "the detail's button logs the oldest open occurrence" do
+    get chore_path(@cooking.tap { |c| c.update!(assignee_user_ids: [ @alice.id ]) })
+    assert_select "a[href=?]", new_chore_log_path(chore_id: @cooking.id, occurrence_id: occurrence(@cooking, Date.new(2026, 11, 2)).id)
   end
 
   test "a monthly task of an earlier week stays late until it is done" do

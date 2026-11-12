@@ -1,5 +1,8 @@
 <%# Une ligne de la liste (D3). « Fait » en un geste : un bouton, pas de formulaire à remplir. %>
+<%# count > 1 : plusieurs occurrences en retard de la même tâche, repliées en une ligne. « Fait » remplit la plus ancienne. %>
 <% chore = entry.chore %>
+<% count = local_assigns[:count].to_i %>
+<% since = local_assigns[:since] || entry.due_on %>
 <div class="task-row">
   <%= link_to chore_path(chore), class: "flex flex-1 items-center gap-2.5 min-w-0 no-underline text-ink" do %>
     <% if entry.shared? %>
@@ -8,12 +11,12 @@
       <%= avatar(initials: entry.assignees.first.monogram, color: entry.assignees.first.color, pending: entry.assignees.first.provisional?, size: 30) %>
     <% end %>
     <span class="min-w-0">
-      <b class="font-semibold"><%= entry.name %></b><br>
+      <b class="font-semibold"><%= entry.name %><% if count > 1 %> · <%= t("chores.index.late_n", count: count) %><% end %></b><br>
       <span class="text-[13px] leading-[18px] text-muted">
         <%= loads_label(chore.mental_load, chore.execution_load) %>
         <% if entry.minutes %> · <%= minutes_label(entry.minutes) %><% end %>
         <% if late %>
-          · <b class="text-ink"><%= t("chores.index.since", date: l(entry.due_on, format: :short)) %></b>
+          · <b class="text-ink"><%= count > 1 ? t("chores.index.late_count", count: count, date: l(since, format: :short)) : t("chores.index.since", date: l(entry.due_on, format: :short)) %></b>
         <% elsif entry.due_on > board.today %>
           · <%= l(entry.due_on, format: "%a %-d") %>
         <% end %>

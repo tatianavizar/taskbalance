@@ -204,6 +204,22 @@ class HappyPathTest < ActionDispatch::IntegrationTest
     assert(week3_reports.all? { _1.channel.present? && _1.facts["provisional"] == false })
     assert_equal [ 1, 2 ], [ household.reload.level, household.balanced_weeks_count ], "week 3 counted too"
 
+    # --- The final report of week 2, on the Bilan tab (E14) ----------------------
+    # Read from the stored report, not recomputed: closed Monday 03:00, balanced
+    # for both, naming no one, and the level that closing gave.
+    get report_path(semaine: week2_start)
+    assert_response :success
+    assert_text "Définitif · clos le lundi 16 nov à 3:00"
+    assert_select "#report-outcome h2", "Équilibrée"
+    assert_select "#report-outcome", text: /Virginie|Karim/, count: 0
+    assert_select "section.card b", text: "50 %", count: 4
+    assert_select "#report-level-#{household.level_changes.reached.first.id}", text: /Niveau 1 atteint à ce bilan/
+    # The report notification opens on that week, not on the one in progress.
+    get notification_path(reports.find_by!(user: virginie))
+    assert_redirected_to report_path(semaine: week2_start)
+    get levels_path
+    assert_select "#level-now h2", "Niveau 1"
+
     get notifications_path
     assert_response :success
   ensure
