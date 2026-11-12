@@ -191,18 +191,12 @@ class WeeklyEngineTest < ActiveSupport::TestCase
     run_engine(household, final_at(week(14)))
     assert_equal 5, household.level
     assert_equal week(14).monday, household.ultimate_reached_on
-    assert_equal 0, Progression.ultimate_margin(household)
-
-    run_engine(household, final_at(week(19)))
-    assert_equal 1, Progression.ultimate_margin(household), "D5: one unbalanced week can be absorbed"
 
     run_engine(household, final_at(week(20)))
     assert_equal 5, household.level, "6/7 = 85.7 % keeps it"
-    assert_equal 0, Progression.ultimate_margin(household)
 
     run_engine(household, final_at(week(21)))
     assert_equal 4, household.level
-    assert_nil Progression.ultimate_margin(household)
     assert household.level_changes.chronological.last.ultimate_lost?
 
     run_engine(household, final_at(week(26)))

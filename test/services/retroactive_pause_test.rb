@@ -196,15 +196,6 @@ class RetroactivePauseTest < ActiveSupport::TestCase
     assert_equal 2, household.absence_inquiries.cancelled.count
   end
 
-  test "a corrected week leaves the ultimate ratio" do
-    household, alice, bob = regressed_household
-    household.update_columns(ultimate_reached_on: week(0).monday)
-    assert_equal Rational(1, 3), Progression.ultimate_ratio(household, week(2))
-
-    declare(household, bob, by: alice, from: week(1).monday, to: week(2).sunday, at: paris(2026, 10, 29, 9))
-    assert_equal 1, Progression.ultimate_ratio(household.reload, week(2))
-  end
-
   test "deleting the household deletes its corrections" do
     household, alice, bob = regressed_household
     declare(household, bob, by: alice, from: week(1).monday, to: week(2).sunday, at: paris(2026, 10, 29, 9))

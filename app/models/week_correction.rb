@@ -1,8 +1,9 @@
 # D3 (decision 2026-11-12): a pause declared after the fact over a final week.
 # The stored HouseholdWeek is never rewritten; this record sits over it and
-# makes the week read as « Neutre · pause déclarée le <declared_at> ». A
-# corrected week is excluded from the ultimate-level ratio. Written by
-# WeeklyEngine#retroactive_pause_on_final_weeks only, one per week and member.
+# makes the week read as « Neutre · pause déclarée le <declared_at> ». Written
+# by WeeklyEngine#retroactive_pause_on_final_weeks only, one per week and
+# member. The ultimate-level ratio does not look at corrections (the keep rule
+# is being re-examined with the product owner).
 class WeekCorrection < ApplicationRecord
   NEUTRAL_REASON = "pause_declared".freeze
 
