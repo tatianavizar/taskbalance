@@ -96,7 +96,8 @@ class LaunchScreensTest < ActionDispatch::IntegrationTest
     assert_includes text, "strictement nécessaires"
     assert_includes text, "[À COMPLÉTER : nom, adresse et pays de l'hébergeur]"
     assert_includes text, "confirmation, mot de passe oublié, invitations"
-    assert_includes text, "Google Fonts"
+    assert_includes text, "Les polices de caractères sont servies par l'appli elle-même"
+    assert_not_includes text, "Google Fonts"
     assert_no_match(/\p{L}·\p{L}/, response.body)
   end
 
