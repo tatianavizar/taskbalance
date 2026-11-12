@@ -11,7 +11,8 @@
 # email and household (partial unique index); closed rows stay as history.
 class Invitation < ApplicationRecord
   VALIDITY = 14.days
-  MAX_RESENDS = 3
+  # D12: three emails in total, the first send included, so two resends.
+  MAX_RESENDS = 2
   MIN_RESEND_GAP = 15.minutes
 
   belongs_to :household
@@ -185,6 +186,12 @@ class Invitation < ApplicationRecord
 
   # Same token, expiry reset, new email. Returns [:ok], the refusal
   # ([:wait, seconds] or [:limit]), or [:closed] when no longer pending.
+  # Who may resend: only the person who sent it (product decision). An admin
+  # back office can reuse or extend this one method later.
+  def resendable_by?(user)
+    user.present? && inviter_id.present? && inviter_id == user.id
+  end
+
   def resend!
     verdict = with_lock do
       next [ :closed ] unless usable?

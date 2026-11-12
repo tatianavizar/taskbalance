@@ -48,10 +48,11 @@ fr:
       resend: "Renvoyer"
       resend_wait: "Renvoyer · dans %{minutes} min"
       resend_limit: "Limite de renvois atteinte"
+      sender_only: "Seule la personne qui a envoyé l'invitation peut la renvoyer."
       cancel: "Annuler l'invitation"
       resends_used:
-        one: "%{count} renvoi sur %{max} utilisé. %{minutes} min minimum entre deux envois."
-        other: "%{count} renvois sur %{max} utilisés. %{minutes} min minimum entre deux envois."
+        one: "%{count} renvoi sur %{max} utilisé (3 envois au total, le premier compris). %{minutes} min minimum entre deux envois."
+        other: "%{count} renvois sur %{max} utilisés (3 envois au total, le premier compris). %{minutes} min minimum entre deux envois."
       declined_body: "%{email} n'a pas rejoint le foyer. Le foyer reste comme il était, et votre mise en place est conservée."
       footnote:
         pending: "Tant que personne n'a rejoint, les chiffres du foyer ne montrent que les vôtres, et le rappellent."

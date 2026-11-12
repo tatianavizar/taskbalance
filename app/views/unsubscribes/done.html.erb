@@ -1,0 +1,9 @@
+<% provide :chrome, "none" %>
+<% provide :title, t("notifications.unsubscribe.done_title") %>
+<% type = t("notifications.event_types.#{@event_type}") %>
+<h1 class="screen-title"><%= t("notifications.unsubscribe.done_title") %></h1>
+<%= callout do %>
+  <p class="m-0"><%= t("notifications.unsubscribe.done_body", type: type) %></p>
+<% end %>
+<%= button_to t("notifications.unsubscribe.undo"), resubscribe_path(@token), method: :post, class: "btn btn-secondary", form: { class: "m-0" } %>
+<%= link_to t("notifications.unsubscribe.settings"), account_path, class: "block text-center font-semibold py-3" %>
