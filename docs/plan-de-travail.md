@@ -37,6 +37,7 @@ Tailles pour une personne : **S** = moins d'une demi-journée, **M** = 1 à 3 jo
 - **1.2 :** « Fait par » est retiré. L'auteur d'un enregistrement est toujours `current_user`, et un `user_id` envoyé est ignoré. Tests mis à jour.
 - **Lot 0** (socle mobile) et **lot 1** (comptes, foyer, écrans A1–A10, B1, B2, F4, F7, intro I1–I3) : fusionnés dans `mobile-v1`.
 - **Lot 5a** (moteur : `WeeklyStats`, bilans, niveaux, pauses) : sur la branche `lot5a-engine`, en cours de reprise.
+- **Lot 2** (catalogue et mise en place) : sur la branche `lot2-catalogue`. Catalogue en français avec clé stable et valeurs par défaut, `Chore` (fréquence, occurrences, échéance, `created_by_id`, `active`), `chore_assignees`, tâche perso C5 à C7, `chore_preferences`, `setup_step`, `week_plans` avec la proposition D18, réglages C16. Reste pour le lot 3 : l'accès de la personne invitée avant l'adhésion (B10, B11, B14 sont prêts, l'accès est bouchonné dans `SplitAccess` et `Household#invitee_participant_for`), le transfert de ses assignations à l'adhésion (`ChoreAssignee.transfer_invitation!`) et le recalcul de la répartition provisoire (`WeekPlan#recompute!`).
 - **Tests :** dans le sandbox, lancer `PARALLEL_WORKERS=1 bin/rails test` (le socket DRb des tests parallèles y est bloqué).
 
 ## 3. Écarts entre les maquettes et le backlog

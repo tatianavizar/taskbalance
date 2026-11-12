@@ -135,6 +135,21 @@ class WeekPlanTest < ActiveSupport::TestCase
     assert_not plan.provisional?
   end
 
+  test "recompute! proposes again from the preferences and keeps the proposer's validation" do
+    plan = propose!
+    cooking = chores(:smith_cooking)
+    ChorePreference.create!(user: @bob, chore: cooking, choice: "like")
+    ChorePreference.create!(user: @alice, chore: cooking, choice: "dislike")
+
+    plan.recompute!
+
+    assert_equal [ "user:#{@bob.id}" ], cooking.reload.assignee_keys
+    assert_equal [ "user:#{@bob.id}" ], plan.assignments.find { |a| a["chore_id"] == cooking.id }["assignees"]
+    assert plan.approved_by?(@alice)
+    plan.approve!(by: @bob)
+    assert_raises(WeekPlan::Locked) { plan.recompute! }
+  end
+
   test "the week must start on a Monday" do
     plan = @household.week_plans.new(week_start: @week.monday + 1, status: :proposed, kind: :weekly)
     assert_not plan.valid?

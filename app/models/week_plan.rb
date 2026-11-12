@@ -25,6 +25,7 @@
 #   plan.split                     PlannedSplit (items, shares, exact?)
 #   plan.pending_participants      who has not validated yet
 #   plan.planned_chore_ids         chores in this week's split
+#   plan.recompute!               C12: again from the preferences (lot 3)
 #   plan.locked? / validated?
 class WeekPlan < ApplicationRecord
   class Locked < StandardError; end
@@ -142,6 +143,24 @@ class WeekPlan < ApplicationRecord
       validate_if_complete!
     end
     validated?
+  end
+
+  # C12 « Proposer maintenant »: the provisional split is recomputed once the
+  # invited person has given their preferences (lot 3 calls this). Every
+  # assignment is proposed again (D18), the proposer's validation stays, the
+  # others are asked again.
+  def recompute!
+    raise Locked if locked?
+    return self if awaiting_proposal?
+
+    transaction do
+      household.propose_split!
+      write_snapshot(by: proposed_by)
+      save!
+      approvals.where.not(user_id: proposed_by_id).delete_all
+      validate_if_complete!
+    end
+    self
   end
 
   # Lot 3: an invitation became a member account.
