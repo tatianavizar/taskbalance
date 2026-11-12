@@ -17,12 +17,13 @@ class Chore < ApplicationRecord
   belongs_to :household
   belongs_to :task, optional: true
   belongs_to :created_by, class_name: "User", optional: true
-  belongs_to :recurring_chore, optional: true
   # Logs outlive their chore: they belong to the user, not the household.
   has_many :chore_logs, dependent: :nullify
   has_many :chore_assignees, -> { order(:id) }, dependent: :delete_all, autosave: true, inverse_of: :chore
   has_many :assigned_users, through: :chore_assignees, source: :user
   has_many :chore_preferences, dependent: :delete_all
+  # Written by RecurringChoreScheduler; the database cascades the delete.
+  has_many :occurrences, class_name: "ChoreOccurrence", dependent: :delete_all
 
   enum :status, { pending: 0, in_progress: 1, completed: 2 }
 
@@ -34,6 +35,7 @@ class Chore < ApplicationRecord
   before_validation :normalise_custom_name
   before_validation :take_task_loads, if: :catalogue_chore?
   before_validation :default_anchor
+  after_commit :schedule_occurrences, on: [ :create, :update ]
 
   validates :household_id, presence: true
   validates :custom_name, length: { maximum: CUSTOM_NAME_MAX_LENGTH }
@@ -126,6 +128,16 @@ class Chore < ApplicationRecord
   end
 
   private
+
+  SCHEDULE_ATTRIBUTES = %w[frequency times_per_period anchor_on active].freeze
+
+  # Lot 4: the week's occurrences follow the chore as soon as it is made or
+  # its recurrence changes (the job only catches the weeks that begin).
+  def schedule_occurrences
+    return unless previously_new_record? || (saved_changes.keys & SCHEDULE_ATTRIBUTES).any?
+
+    RecurringChoreScheduler.sync_chore(self)
+  end
 
   # A custom chore is listed under « Personnalisées »; its category, when
   # none is given, is "other".

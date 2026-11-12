@@ -17,13 +17,3 @@ jones_cooking_carol:
   chore: jones_cooking
   user: carol
   created_at: <%= Time.current.to_fs(:db) %>
-
-smith_recurring_bob:
-  chore: smith_recurring
-  user: bob
-  created_at: <%= Time.current.to_fs(:db) %>
-
-smith_broken_alice:
-  chore: smith_from_broken_template
-  user: alice
-  created_at: <%= Time.current.to_fs(:db) %>

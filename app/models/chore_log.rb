@@ -6,8 +6,13 @@ class ChoreLog < ApplicationRecord
   belongs_to :user
   belongs_to :chore, optional: true
   belongs_to :household, optional: true
+  # The planned occurrence this log ticked off, if it came from « Fait » or
+  # from a task of the Tasks tab (lot 4). Nullified with the occurrence.
+  belongs_to :occurrence, class_name: "ChoreOccurrence", optional: true
 
   before_validation :snapshot_chore_details, on: :create
+  # The home and the Tasks tab refresh live for every member (lot 4).
+  after_commit :broadcast_home_refresh
 
   validates :chore_name, presence: true
   validates :time_spent, presence: true, numericality: { greater_than: 0 }
@@ -20,7 +25,42 @@ class ChoreLog < ApplicationRecord
     chore_id.nil? || household_id.nil?
   end
 
+  def author?(user)
+    user.present? && user_id == user.id
+  end
+
+  # The zone the day of this log is read in: its household's, else the
+  # author's (a detached log is still the author's).
+  def time_zone
+    household&.time_zone || user&.time_zone || "Europe/Paris"
+  end
+
+  def week
+    Week.containing(completed_at, time_zone)
+  end
+
+  # The local day it counts for.
+  def completed_on
+    completed_at.in_time_zone(time_zone).to_date
+  end
+
+  # False once the week's final report is stored (it is never rewritten, so a
+  # correction then only changes the journal), or when the log has no
+  # household left. WeeklyStats reads logs live only for the current week.
+  def counts_in_report?
+    return false if household_id.nil?
+
+    !HouseholdWeek.final.exists?(household_id: household_id, week_start: week.monday)
+  end
+
 private
+
+  def broadcast_home_refresh
+    id = household_id || household_id_before_last_save
+    return if id.nil?
+
+    Turbo::StreamsChannel.broadcast_refresh_to(Household.home_stream(id))
+  end
 
   def snapshot_chore_details
     return if chore.nil?

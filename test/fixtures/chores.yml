@@ -36,22 +36,3 @@ jones_cooking:
   mental_load: false
   execution_load: true
   frequency: 0
-
-smith_recurring:
-  household: smith_home
-  task: do_laundry
-  recurring_chore: smith_weekly_laundry
-  status: 0
-  mental_load: false
-  execution_load: true
-  due_date: <%= Date.today %>
-
-# A legacy catalogue chore with neither load, spawned from a broken template.
-smith_from_broken_template:
-  household: smith_home
-  task: cook_meal
-  recurring_chore: smith_broken_template
-  status: 0
-  mental_load: false
-  execution_load: false
-  due_date: <%= Date.today %>

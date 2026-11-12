@@ -252,3 +252,23 @@
   .slice-in { transform-origin: 20px 20px; animation: slice-in .9s cubic-bezier(.2,.8,.2,1) both; }
   .sway { animation: sway 2.2s .5s cubic-bezier(.4,0,.2,1) both; }
 }
+
+/* Lot 4: week, tasks, logging. */
+@layer components {
+  .chip { flex: none; display: inline-flex; align-items: center; min-height: 44px; padding: 0 14px; border-radius: 18px; font-size: 14px; font-weight: 600; background: var(--color-soft); color: var(--color-ink); text-decoration: none; }
+  .chip[aria-current="true"] { background: var(--color-ink); color: #fff; }
+  .chips { display: flex; gap: 8px; overflow-x: auto; margin-right: -20px; padding-right: 20px; scrollbar-width: none; }
+  .section-label { font-size: 13px; font-weight: 700; color: var(--color-muted); margin: 2px 0 -6px; }
+  .task-row { display: flex; align-items: center; gap: 10px; min-height: 60px; border-top: 1px solid var(--color-divider); color: var(--color-ink); text-decoration: none; }
+  .task-row:first-child { border-top: 0; }
+  .done-btn { flex: none; min-height: 44px; padding: 0 14px; border-radius: 17px; border: 1.5px solid var(--color-ink); background: transparent; font: 700 13px var(--font-sans); color: var(--color-ink); cursor: pointer; }
+  .stepper { display: flex; align-items: center; justify-content: space-between; gap: 6px; background: var(--color-surface); border: 1.5px solid var(--color-field); border-radius: 14px; min-height: 52px; padding: 0 6px; }
+  .stepper[data-invalid="true"] { border: 2px solid var(--color-ink); }
+  .stepper-btn { width: 44px; height: 40px; border-radius: 10px; border: 0; background: var(--color-soft); font: 700 20px var(--font-sans); color: var(--color-ink); cursor: pointer; }
+  .stepper-input { flex: 1; min-width: 0; border: 0; background: transparent; text-align: center; font: 700 18px var(--font-sans); color: var(--color-ink); font-variant-numeric: tabular-nums; }
+  .stepper-input:focus-visible { outline: 3px solid var(--color-ink); outline-offset: 2px; border-radius: 8px; }
+  .kv-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; min-height: 42px; border-top: 1px solid var(--color-divider); font-size: 14px; }
+  .kv-row:first-child { border-top: 0; }
+  .kv-row > span:first-child { color: var(--color-muted); }
+  .tabular { font-variant-numeric: tabular-nums; }
+}

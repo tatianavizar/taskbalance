@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_11_13_090800) do
+ActiveRecord::Schema[8.0].define(version: 2026_11_13_091100) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -28,7 +28,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_11_13_090800) do
     t.index ["absence_inquiry_id"], name: "index_absence_answers_on_absence_inquiry_id"
     t.index ["household_member_id"], name: "index_absence_answers_on_household_member_id"
     t.index ["member_pause_id"], name: "index_absence_answers_on_member_pause_id"
-    t.check_constraint "answer::text = ANY (ARRAY['yes'::character varying, 'no'::character varying]::text[])", name: "absence_answers_answer_values"
+    t.check_constraint "answer::text = ANY (ARRAY['yes'::character varying::text, 'no'::character varying::text])", name: "absence_answers_answer_values"
   end
 
   create_table "absence_inquiries", force: :cascade do |t|
@@ -80,10 +80,29 @@ ActiveRecord::Schema[8.0].define(version: 2026_11_13_090800) do
     t.datetime "completed_at", null: false
     t.string "chore_name"
     t.string "category"
+    t.bigint "occurrence_id"
+    t.string "idempotency_key"
+    t.boolean "off_split", default: false, null: false
     t.index ["chore_id"], name: "index_chore_logs_on_chore_id"
     t.index ["household_id", "completed_at"], name: "index_chore_logs_on_household_id_and_completed_at"
+    t.index ["occurrence_id"], name: "index_chore_logs_on_occurrence_id"
     t.index ["user_id", "completed_at"], name: "index_chore_logs_on_user_id_and_completed_at"
+    t.index ["user_id", "idempotency_key"], name: "index_chore_logs_unique_idempotency_key", unique: true, where: "(idempotency_key IS NOT NULL)"
     t.index ["user_id"], name: "index_chore_logs_on_user_id"
+  end
+
+  create_table "chore_occurrences", force: :cascade do |t|
+    t.bigint "household_id", null: false
+    t.bigint "chore_id", null: false
+    t.date "week_start", null: false
+    t.integer "slot", null: false
+    t.date "due_on", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["chore_id", "week_start", "slot"], name: "index_chore_occurrences_unique_slot", unique: true
+    t.index ["chore_id"], name: "index_chore_occurrences_on_chore_id"
+    t.index ["household_id", "due_on"], name: "index_chore_occurrences_on_household_id_and_due_on"
+    t.index ["household_id"], name: "index_chore_occurrences_on_household_id"
   end
 
   create_table "chore_preferences", force: :cascade do |t|
@@ -95,7 +114,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_11_13_090800) do
     t.index ["chore_id"], name: "index_chore_preferences_on_chore_id"
     t.index ["user_id", "chore_id"], name: "index_chore_preferences_on_user_id_and_chore_id", unique: true
     t.index ["user_id"], name: "index_chore_preferences_on_user_id"
-    t.check_constraint "choice::text = ANY (ARRAY['like'::character varying, 'neutral'::character varying, 'dislike'::character varying]::text[])", name: "chore_preferences_choice"
+    t.check_constraint "choice::text = ANY (ARRAY['like'::character varying::text, 'neutral'::character varying::text, 'dislike'::character varying::text])", name: "chore_preferences_choice"
   end
 
   create_table "chores", force: :cascade do |t|
@@ -108,7 +127,6 @@ ActiveRecord::Schema[8.0].define(version: 2026_11_13_090800) do
     t.boolean "execution_load", default: false, null: false
     t.integer "time_required"
     t.date "due_date"
-    t.bigint "recurring_chore_id"
     t.string "custom_name"
     t.string "category"
     t.integer "frequency", default: 1, null: false
@@ -119,7 +137,6 @@ ActiveRecord::Schema[8.0].define(version: 2026_11_13_090800) do
     t.index ["created_by_id"], name: "index_chores_on_created_by_id"
     t.index ["household_id", "active"], name: "index_chores_on_household_id_and_active"
     t.index ["household_id"], name: "index_chores_on_household_id"
-    t.index ["recurring_chore_id"], name: "index_chores_on_recurring_chore_id"
     t.index ["task_id"], name: "index_chores_on_task_id"
     t.check_constraint "times_per_period >= 1", name: "chores_times_per_period_positive"
   end
@@ -281,22 +298,6 @@ ActiveRecord::Schema[8.0].define(version: 2026_11_13_090800) do
     t.check_constraint "channel IS NULL OR suppressed_reason IS NULL", name: "notifications_sent_or_suppressed"
   end
 
-  create_table "recurring_chores", force: :cascade do |t|
-    t.bigint "household_id", null: false
-    t.bigint "task_id", null: false
-    t.bigint "assigned_to_id"
-    t.integer "frequency", null: false
-    t.integer "time_required"
-    t.boolean "mental_load", default: false, null: false
-    t.boolean "execution_load", default: false, null: false
-    t.boolean "active", default: true, null: false
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["household_id", "active"], name: "index_recurring_chores_on_household_id_and_active"
-    t.index ["household_id"], name: "index_recurring_chores_on_household_id"
-    t.index ["task_id"], name: "index_recurring_chores_on_task_id"
-  end
-
   create_table "split_setting_changes", force: :cascade do |t|
     t.bigint "household_id", null: false
     t.bigint "proposed_by_id"
@@ -308,7 +309,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_11_13_090800) do
     t.index ["household_id"], name: "index_split_setting_changes_on_household_id"
     t.index ["household_id"], name: "index_split_setting_changes_one_pending", unique: true, where: "((status)::text = 'pending'::text)"
     t.index ["proposed_by_id"], name: "index_split_setting_changes_on_proposed_by_id"
-    t.check_constraint "status::text = ANY (ARRAY['pending'::character varying, 'applied'::character varying, 'withdrawn'::character varying]::text[])", name: "split_setting_changes_status"
+    t.check_constraint "status::text = ANY (ARRAY['pending'::character varying::text, 'applied'::character varying::text, 'withdrawn'::character varying::text])", name: "split_setting_changes_status"
   end
 
   create_table "tasks", force: :cascade do |t|
@@ -382,8 +383,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_11_13_090800) do
     t.index ["household_id", "week_start"], name: "index_week_plans_on_household_id_and_week_start", unique: true
     t.index ["household_id"], name: "index_week_plans_on_household_id"
     t.index ["proposed_by_id"], name: "index_week_plans_on_proposed_by_id"
-    t.check_constraint "kind::text = ANY (ARRAY['starting'::character varying, 'weekly'::character varying]::text[])", name: "week_plans_kind"
-    t.check_constraint "status::text = ANY (ARRAY['awaiting_proposal'::character varying, 'proposed'::character varying, 'validated'::character varying]::text[])", name: "week_plans_status"
+    t.check_constraint "kind::text = ANY (ARRAY['starting'::character varying::text, 'weekly'::character varying::text])", name: "week_plans_kind"
+    t.check_constraint "status::text = ANY (ARRAY['awaiting_proposal'::character varying::text, 'proposed'::character varying::text, 'validated'::character varying::text])", name: "week_plans_status"
   end
 
   add_foreign_key "absence_answers", "absence_inquiries", on_delete: :cascade
@@ -395,13 +396,15 @@ ActiveRecord::Schema[8.0].define(version: 2026_11_13_090800) do
   add_foreign_key "chore_assignees", "chores", on_delete: :cascade
   add_foreign_key "chore_assignees", "invitations", on_delete: :cascade
   add_foreign_key "chore_assignees", "users", on_delete: :cascade
+  add_foreign_key "chore_logs", "chore_occurrences", column: "occurrence_id", on_delete: :nullify
   add_foreign_key "chore_logs", "chores", on_delete: :nullify
   add_foreign_key "chore_logs", "households", on_delete: :nullify
   add_foreign_key "chore_logs", "users"
+  add_foreign_key "chore_occurrences", "chores", on_delete: :cascade
+  add_foreign_key "chore_occurrences", "households", on_delete: :cascade
   add_foreign_key "chore_preferences", "chores", on_delete: :cascade
   add_foreign_key "chore_preferences", "users", on_delete: :cascade
   add_foreign_key "chores", "households"
-  add_foreign_key "chores", "recurring_chores"
   add_foreign_key "chores", "tasks", on_delete: :restrict, validate: false
   add_foreign_key "chores", "users", column: "created_by_id", on_delete: :nullify
   add_foreign_key "engine_events", "households", on_delete: :cascade
@@ -420,9 +423,6 @@ ActiveRecord::Schema[8.0].define(version: 2026_11_13_090800) do
   add_foreign_key "notification_preferences", "users", on_delete: :cascade
   add_foreign_key "notifications", "households", on_delete: :cascade
   add_foreign_key "notifications", "users", on_delete: :cascade
-  add_foreign_key "recurring_chores", "households"
-  add_foreign_key "recurring_chores", "tasks"
-  add_foreign_key "recurring_chores", "users", column: "assigned_to_id"
   add_foreign_key "split_setting_changes", "households", on_delete: :cascade
   add_foreign_key "split_setting_changes", "users", column: "proposed_by_id", on_delete: :nullify
   add_foreign_key "week_corrections", "household_weeks", on_delete: :cascade

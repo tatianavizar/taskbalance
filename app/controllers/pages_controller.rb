@@ -10,6 +10,7 @@ class PagesController < ApplicationController
   end
 
   def dashboard
-    @chores = current_user.chores
+    household = current_user.household
+    @home = HomeSummary.new(household: household, viewer: current_user) if household
   end
 end

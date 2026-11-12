@@ -18,6 +18,9 @@ class User < ApplicationRecord
   has_many :chores, through: :household       # all chores of the user's household
   has_many :chore_assignees, dependent: :delete_all
   has_many :assigned_chores, through: :chore_assignees, source: :chore
+  # The journal (E6): their logs across time, whatever became of the chore or
+  # the household. No `dependent`: a log is theirs, nothing here deletes it.
+  has_many :chore_logs
   # Private: only their author ever sees them.
   has_many :chore_preferences, dependent: :delete_all
 

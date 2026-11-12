@@ -47,6 +47,29 @@ module Recurrence
     end
   end
 
+  # The days of `week` an occurrence falls on, one date per occurrence, so
+  # `due_dates(...).size == occurrences(...)` (lot 4 writes one row each).
+  #
+  #   daily     every day, `times_per_period` times a day
+  #   weekly    `times_per_period` days spread over the week, the first on
+  #             the weekday of `base_on` (the anchor, else the day the chore
+  #             was made), so a weekly chore keeps its day from week to week
+  #   monthly, annually, once   the day it falls due, if inside the week
+  def self.due_dates(frequency:, times_per_period:, anchor_on:, week:, base_on: nil)
+    times = times_per_period.to_i.clamp(1, MAX_TIMES_PER_PERIOD)
+    days = week.date_range.to_a
+    case frequency.to_s
+    when "daily" then days.flat_map { |day| [ day ] * times }
+    when "weekly"
+      first = ((anchor_on || base_on || week.monday).cwday - 1)
+      Array.new(times) { |i| days[(first + (i * 7) / times) % 7] }.sort
+    when "monthly" then days.select { |day| monthly_due?(anchor_on, day) }
+    when "annually" then days.select { |day| yearly_due?(anchor_on, day) }
+    when "once" then anchor_on && week.date_range.cover?(anchor_on) ? [ anchor_on ] : []
+    else []
+    end
+  end
+
   # Due on the anchor's day of the month, from the anchor on. A 31st falls on
   # the last day of shorter months (Date#>> clamps).
   def self.monthly_due?(anchor, day)

@@ -6,7 +6,7 @@ class Household < ApplicationRecord
   has_many :household_members, dependent: :destroy
   has_many :users, through: :household_members
   has_many :chores, dependent: :destroy
-  has_many :recurring_chores, dependent: :destroy
+  has_many :chore_occurrences, dependent: :delete_all
   # Logs are the members' own data and survive the household being deleted.
   has_many :chore_logs, dependent: :nullify
   has_many :invitations, dependent: :destroy
@@ -173,6 +173,12 @@ class Household < ApplicationRecord
   # The starting split, if the set-up has made one.
   def starting_plan
     week_plans.starting.order(:week_start).last
+  end
+
+  # The stream the home and the Tasks tab listen to: a log, an edit or a
+  # deletion refreshes both for every member (lot 4).
+  def self.home_stream(household_or_id)
+    [ "household", household_or_id.respond_to?(:id) ? household_or_id.id : household_or_id, "home" ].join(":")
   end
 
   def week_plan_for(week = current_week)

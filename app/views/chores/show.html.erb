@@ -1,0 +1,65 @@
+<%# D5 : une tâche du foyer et son historique. %>
+<% provide :chrome, "none" %>
+<% provide :title, @chore.effective_name %>
+<% today = @household.today %>
+<div class="flex items-center">
+  <%= back_button chores_path, label: t("chores.show.back") %>
+  <span class="flex-1"></span>
+  <%= link_to t("chores.show.edit"), edit_chore_path(@chore), class: "font-semibold text-sm min-h-[44px] flex items-center" %>
+</div>
+
+<div>
+  <h1 class="screen-title"><%= @chore.effective_name %></h1>
+  <div class="flex items-center gap-2 mt-2">
+    <% if @open_occurrence && @open_occurrence.due_on < today %>
+      <%= status_pill t("chores.show.late_since", date: l(@open_occurrence.due_on, format: :short)), tone: :ink %>
+    <% elsif @open_occurrence %>
+      <%= status_pill t("chores.show.due", date: l(@open_occurrence.due_on, format: "%a %-d")), tone: :soft %>
+    <% elsif !@chore.active? %>
+      <%= status_pill t("chores.show.retired"), tone: :outline %>
+    <% end %>
+    <span class="text-[13px] text-muted"><%= category_label(@chore.effective_category) %></span>
+  </div>
+</div>
+
+<%= card do %>
+  <div class="kv-row"><span><%= t("chores.show.assignees") %></span><b><%= @participants.map(&:first_name).to_sentence.presence || "—" %></b></div>
+  <div class="kv-row"><span><%= t("chores.show.loads") %></span><b><%= loads_label(@chore.mental_load, @chore.execution_load) %></b></div>
+  <% if @chore.effective_time_required %>
+    <div class="kv-row"><span><%= t("chores.show.duration") %></span><b class="tabular"><%= minutes_label(@chore.effective_time_required) %></b></div>
+  <% end %>
+  <% if @chore.anchored? && @chore.anchor_on %>
+    <div class="kv-row"><span><%= t("chores.show.due_on") %></span><b><%= l(@chore.anchor_on, format: "%A %-d %b").upcase_first %></b></div>
+  <% end %>
+  <div class="kv-row"><span><%= t("chores.show.repeat") %></span><b><%= repeat_label(@chore) %></b></div>
+<% end %>
+
+<%= card do %>
+  <div class="flex justify-between items-center min-h-[42px]">
+    <b><%= t("chores.show.history") %></b>
+    <% if @first_logged_on %><span class="text-[13px] text-muted"><%= t("chores.show.since", date: l(@first_logged_on, format: :short)) %></span><% end %>
+  </div>
+  <% if @recent_logs.empty? %>
+    <p class="m-0 pb-2 text-sm text-muted"><%= t("chores.show.never_logged") %></p>
+  <% else %>
+    <% @recent_logs.each do |log| %>
+      <div class="kv-row tabular">
+        <span><%= l(log.completed_on, format: :short) %></span>
+        <span><%= log.user.first_name %> · <%= minutes_label(log.time_spent) %></span>
+      </div>
+    <% end %>
+  <% end %>
+<% end %>
+
+<% if @log_counts.any? %>
+  <%= callout do %>
+    <p class="m-0 text-sm leading-5"><%= t("chores.show.counts", total: @log_counts.values.sum, names: @log_counts.map { |name, n| t("chores.show.by_member", name: name, count: n) }.to_sentence) %></p>
+  <% end %>
+<% end %>
+
+<%# La réassignation ponctuelle (D15) arrive avec le lot 6. %>
+<%= sticky_cta do %>
+  <% if @chore.active? %>
+    <%= link_to t("chores.show.log"), new_chore_log_path(chore_id: @chore.id, occurrence_id: @open_occurrence&.id), class: "btn btn-primary" %>
+  <% end %>
+<% end %>
