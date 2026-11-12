@@ -8,7 +8,7 @@ class CreateInvitations < ActiveRecord::Migration[8.0]
     end
 
     add_index :invitations, :token, unique: true
-    add_index :invitations, [:email, :household_id], unique: true
+    add_index :invitations, [ :email, :household_id ], unique: true
     add_foreign_key :invitations, :households
   end
 end

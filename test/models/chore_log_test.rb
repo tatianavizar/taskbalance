@@ -83,7 +83,7 @@ class ChoreLogTest < ActiveSupport::TestCase
 
     kept = ChoreLog.where(user_id: @user.id)
     assert_equal 2, kept.count
-    assert_equal ["Cook a meal", "Do laundry"], kept.order(:chore_name).pluck(:chore_name)
+    assert_equal [ "Cook a meal", "Do laundry" ], kept.order(:chore_name).pluck(:chore_name)
   end
 
   # --- attribution ---

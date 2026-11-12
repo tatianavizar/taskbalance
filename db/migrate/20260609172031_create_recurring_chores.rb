@@ -13,6 +13,6 @@ class CreateRecurringChores < ActiveRecord::Migration[8.0]
     end
 
     add_foreign_key :recurring_chores, :users, column: :assigned_to_id
-    add_index :recurring_chores, [:household_id, :active]
+    add_index :recurring_chores, [ :household_id, :active ]
   end
 end
