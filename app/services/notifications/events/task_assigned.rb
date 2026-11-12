@@ -5,22 +5,24 @@ module Notifications
     class TaskAssigned < Event
       KIND = "task_assigned".freeze
 
-      def initialize(chore, assigned_by:)
+      # A chore has several assignees (chore_assignees): one event per person
+      # newly given the chore.
+      def initialize(chore, assignee:, assigned_by:)
         super(chore.household)
         @chore = chore
+        @assignee = assignee
         @assigned_by = assigned_by
       end
 
       def recipients
-        assignee = @chore.assigned_to
-        assignee && assignee != @assigned_by ? [ assignee ] : []
+        @assignee && @assignee != @assigned_by ? [ @assignee ] : []
       end
 
       def facts
         {
           "household_name" => household.name,
           "chore_name" => @chore.effective_name,
-          "due_on" => @chore.due_date&.iso8601,
+          "due_on" => (@chore.anchor_on || @chore.due_date)&.iso8601,
           "assigned_by" => person(@assigned_by)
         }
       end
@@ -28,7 +30,7 @@ module Notifications
       private
 
       # A chore handed back and forth is announced each time it changes hands.
-      def key_parts = [ "chore-#{@chore.id}", "user-#{@chore.assigned_to_id}", @chore.updated_at.to_i ]
+      def key_parts = [ "chore-#{@chore.id}", "user-#{@assignee&.id}", @chore.updated_at.to_i ]
     end
   end
 end

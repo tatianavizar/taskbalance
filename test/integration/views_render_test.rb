@@ -33,7 +33,7 @@ class ViewsRenderTest < ActionDispatch::IntegrationTest
       edit_household_path(@household), new_household_invitation_path(@household),
       new_chore_path(household_id: @household.id), edit_chore_path(chore), edit_chore_path(chores(:smith_custom)),
       new_chore_completion_path(chore), household_chores_setup_path(@household),
-      household_liking_session_path(@household), account_path, edit_first_name_path,
+      household_preferences_path(@household), household_split_path(@household, mode: "now"), household_split_settings_path(@household), account_path, edit_first_name_path,
       edit_email_path, edit_password_path, pending_user_confirmation_path ].each do |path|
       get path
       assert_response :success, path
@@ -44,7 +44,7 @@ class ViewsRenderTest < ActionDispatch::IntegrationTest
 
   test "a form with errors shows the dark summary and the inline error" do
     sign_in users(:alice)
-    post household_invitations_path(@household), params: { invitation: { email: "pas-un-email" } }
+    post household_invitations_path(@household), params: { invitation: { first_name: "Karim", email: "pas-un-email" } }
 
     assert_response :unprocessable_entity
     assert_select "input[aria-invalid=true]"

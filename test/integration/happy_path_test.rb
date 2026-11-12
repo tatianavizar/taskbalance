@@ -1,8 +1,10 @@
 require "test_helper"
 
 # Happy path through the real HTTP stack, no browser: two people sign up, one
-# creates the household and invites the other, both log tasks for a week, the
-# weekly job closes the week, and both get the same report.
+# creates the household, invites the other, chooses the tasks and proposes the
+# split; the other gives preferences, accepts the split and joins; both log
+# tasks for a week, the weekly job closes the week, and both get the same
+# report.
 class HappyPathTest < ActionDispatch::IntegrationTest
   include ActionMailer::TestHelper
 
@@ -23,24 +25,44 @@ class HappyPathTest < ActionDispatch::IntegrationTest
     post households_path, params: { household: { name: "Chez Virginie et Karim" } }
     household = virginie.reload.household
     assert household, "household not created"
-    assert_redirected_to household_path(household)
+    assert_redirected_to household_setup_path(household)
     assert household.household_members.find_by!(user: virginie).manager?
 
-    # Pick a catalogue task for the household
-    task = tasks(:cook_meal)
-    patch household_chores_setup_path(household), params: { task_ids: [ task.id ] }
-    assert_redirected_to household_path(household)
-    chore = household.chores.find_by!(task: task)
-
-    # --- Invitation --------------------------------------------------------------
+    # --- Set-up step 2: the partner (B3) ------------------------------------------
     assert_emails 1 do
-      post household_invitations_path(household), params: { invitation: { email: "karim@exemple.fr" } }
+      post household_invitations_path(household), params: { invitation: { first_name: "Karim", email: "karim@exemple.fr" } }
     end
     invitation = household.invitations.find_by!(email: "karim@exemple.fr")
     assert_predicate invitation, :pending?
+    get household_setup_path(household)
+    assert_select "h1", "Avec qui partagez-vous le foyer ?"
+    patch household_setup_path(household)
+    assert_equal "tasks", household.reload.setup_step
+
+    # --- Step 3: the household's tasks (C1) -----------------------------------------
+    task = tasks(:cook_meal)
+    patch household_chores_setup_path(household), params: { task_ids: [ task.id, tasks(:pay_bills).id ] }
+    assert_redirected_to household_setup_path(household)
+    chore = household.chores.find_by!(task: task)
+    assert chore.daily?, "catalogue defaults"
+
+    # --- Step 4: Karim has not joined, Virginie proposes now (C12, C4) --------------
+    get household_split_path(household)
+    assert_redirected_to choice_household_split_path(household)
+    get household_split_path(household, mode: "now")
+    assert_response :success
+    assert_select "input.assign-input[value=?]", "invitation:#{invitation.id}"
+    assert_text "Provisoire : elle sera recalculée quand Karim aura rejoint"
+    assignments = household.chores.active.to_h { |c| [ c.id, c.assignee_keys ] }
+    patch household_split_path(household), params: { commit_action: "validate", assignments: assignments }
+    assert_redirected_to dashboard_path
+    assert household.reload.setup_done?
+    plan = household.starting_plan
+    assert plan.proposed? && plan.provisional?, "D15: Karim counts in the starting split"
+    assert_equal "Répartition enregistrée. En attente de Karim.", flash[:notice]
     delete destroy_user_session_path
 
-    # --- Karim opens the link, signs up, claims, accepts -------------------------
+    # --- Karim opens the link and signs up: straight to his preferences (B10) ------
     get invitation_path(invitation.token)
     assert_response :success
     post user_registration_path, params: { invitation_token: invitation.token, user: {
@@ -49,14 +71,40 @@ class HappyPathTest < ActionDispatch::IntegrationTest
     } }
     karim = User.find_by!(email: "karim@exemple.fr")
     assert_nil karim.household, "an invitee must not join before accepting"
-
     post claim_invitation_path(invitation.token) unless invitation.reload.invitee_id == karim.id
     assert_equal karim.id, invitation.reload.invitee_id
-    post accept_invitation_path(invitation.token)
+
+    get invitation_path(invitation.token)
+    assert_redirected_to household_preferences_path(household)
+    follow_redirect!
+    assert_response :success
+    assert_text "Étape 1 sur 2"
+    patch household_preferences_path(household), params: { preferences: { chore.id => "like" } }
+    assert_redirected_to household_split_path(household)
+    assert_equal "like", ChorePreference.find_by!(user: karim, chore: chore).choice
+    # The provisional split is recomputed with his preferences (C12, D18).
+    assert_equal [ "invitation:#{invitation.id}" ], chore.reload.assignee_keys
+
+    # --- B11: the split Virginie proposed; Karim accepts it and joins ----------------
+    follow_redirect!
+    assert_response :success
+    assert_text "Proposée par Virginie"
+    assert_select "button", "Rejoindre le foyer"
+    assert_select "form[action=?]", decline_invitation_path(invitation.token)
+    shown = household.reload.starting_plan.assignments.to_h { |item| [ item["chore_id"], item["assignees"] ] }
+    patch household_split_path(household), params: { commit_action: "validate", assignments: shown }
+
     assert_redirected_to household_path(household)
     assert_equal household, karim.reload.household
     assert_predicate invitation.reload, :accepted?
     assert_equal 2, household.reload.household_members.count
+    # His assignments and his place in the split now belong to his account.
+    assert_equal [ "user:#{karim.id}" ], chore.reload.assignee_keys
+    plan = household.starting_plan
+    assert plan.validated?, "validated by both: Virginie when proposing, Karim when joining"
+    assert_not plan.provisional?
+    follow_redirect!
+    assert_text "Validée par tous les deux"
 
     # --- Both log the task during the week, through the completion form ----------
     travel_to(monday + 1.day)

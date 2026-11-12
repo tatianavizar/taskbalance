@@ -1,0 +1,10 @@
+<%# « Mise en place 2 sur 4 » : reprendre la mise en place là où on l'a laissée. %>
+<% unless household.setup_done? %>
+  <%= link_to household_setup_path(household), class: "card flex items-center gap-3 no-underline" do %>
+    <span class="flex-1">
+      <b class="block"><%= t("setup.progress", step: household.setup_step_number, total: Household::SETUP_STEP_LABELS.size) %></b>
+      <span class="text-[13px] text-muted"><%= t("households.new.steps")[household.setup_step_number - 1] %></span>
+    </span>
+    <span class="btn btn-primary btn-sm"><%= t("setup.resume") %></span>
+  <% end %>
+<% end %>

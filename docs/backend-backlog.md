@@ -165,6 +165,8 @@ Solid Queue is installed but `config/recurring.yml` is empty and no job exists.
 **Screens:** F6, F1.
 
 ### 2.2c Weekly proposed split and carried-over gap — high, M
+**Lot 2 built:** the metric (`PlannedSplit`), the D18 proposal (`SplitProposal`, with `targets` for the compensation), `week_plans` with two-state validation and the lock, the starting split (C4, C12), and the C16 settings with validation by all. **Left for lot 6:** the Monday proposal job, the carried gap and its cap, the reset (D4), the out-of-zone warning, one-off reassignment.
+
 **Fix:**
 - Propose a split of the week's tasks every Monday, with a home card (D11) and a notification.
 - **Shared tasks** (product decision 2026-11-08): a task assigned to several members counts in full for each of them. There is no "for the household" pool any more: every task has at least one assignee (multi-select).
@@ -188,7 +190,7 @@ Solid Queue is installed but `config/recurring.yml` is empty and no job exists.
 
 **Screens:** C8, C9, C12, D11, D15, D16.
 
-### 2.2d Several assignees per chore — medium, M
+### 2.2d Several assignees per chore — medium, M — done (lot 2)
 **Fix:**
 - A chore can be assigned to several members (product decision 2026-11-08). Replace `chores.assigned_to_id` with a `chore_assignees` join table; at least one assignee is required.
 - Each assignee logs their own completion; the split counts each assignee's planned occurrences.
@@ -255,7 +257,7 @@ Solid Queue is installed but `config/recurring.yml` is empty and no job exists.
 
 **Screen:** F2.
 
-### 3.4 Retire a catalogue chore without deleting it — high, M
+### 3.4 Retire a catalogue chore without deleting it — high, M — done (lot 2)
 `Households::ChoresSetupController#update` runs `destroy_all` on unticked catalogue chores, without warning.
 
 **Fix:**

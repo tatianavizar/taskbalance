@@ -1,3 +1,4 @@
+<% if @invitation.first_name.present? %><p><%= t("invitation_mailer.invite.greeting", name: @invitation.first_name) %></p><% end %>
 <h1><%= t("invitation_mailer.invite.heading", inviter: @inviter_name) %></h1>
 
 <p><%= t("invitation_mailer.invite.what") %></p>

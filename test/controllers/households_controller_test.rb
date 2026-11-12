@@ -37,7 +37,8 @@ class HouseholdsControllerTest < ActionDispatch::IntegrationTest
     end
 
     household = Household.find_by!(name: "Chez Dana")
-    assert_redirected_to household_path(household)
+    assert_redirected_to household_setup_path(household)
+    assert_equal "partner", household.setup_step
     assert dana.reload.household_membership.manager?
     assert_equal dana.time_zone, household.time_zone
   end
@@ -75,7 +76,7 @@ class HouseholdsControllerTest < ActionDispatch::IntegrationTest
   test "someone cannot invite into a household that is not theirs" do
     sign_in users(:carol)
     assert_no_difference "Invitation.count" do
-      post household_invitations_path(households(:smith_home)), params: { invitation: { email: "x@test.com" } }
+      post household_invitations_path(households(:smith_home)), params: { invitation: { first_name: "Karim", email: "x@test.com" } }
     end
     assert_response :not_found
   end

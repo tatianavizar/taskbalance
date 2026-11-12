@@ -35,7 +35,8 @@ class RecurringChoreScheduler
     @rc.chores.create!(
       household_id:      @rc.household_id,
       task_id:           @rc.task_id,
-      assigned_to_id:    @rc.assigned_to_id,
+      assignee_keys:     next_assignee_keys,
+      frequency:         @rc.frequency,
       time_required:     @rc.time_required,
       mental_load:       @rc.mental_load,
       execution_load:    @rc.execution_load,
@@ -52,6 +53,14 @@ class RecurringChoreScheduler
   end
 
 private
+
+  # The next occurrence goes to whoever carried the last one, else to the
+  # template's assignee.
+  def next_assignee_keys
+    last = @rc.chores.order(:id).last
+    keys = last ? last.assignee_keys : []
+    keys.presence || [ ("user:#{@rc.assigned_to_id}" if @rc.assigned_to_id) ].compact
+  end
 
   def next_due_date
     last_due = @rc.chores.maximum(:due_date) || Date.today

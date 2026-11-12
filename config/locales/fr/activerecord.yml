@@ -7,7 +7,8 @@ fr:
       user: Compte
       chore: Tâche
       task: Tâche du catalogue
-      liked_task: Préférence
+      chore_preference: Préférence
+      week_plan: Répartition
       chore_log: Enregistrement
       invitation: Invitation
     attributes:
@@ -28,19 +29,28 @@ fr:
         role: Rôle
         email: Email
       invitation:
+        first_name: Prénom
         email: Email
       chore:
         status: Statut
+        custom_name: Nom
+        category: Catégorie
         mental_load: Charge mentale
         execution_load: Exécution
+        loads: Ce qu'elle demande
+        time_required: Durée
+        frequency: Répétition
+        times_per_period: Nombre de fois
+        anchor_on: Échéance
+        assignees: Assignée à
       task:
         name: Nom de la tâche
         category: Catégorie
         priority: Priorité
         time_required: Durée (min)
         recurring: Récurrente
-      liked_task:
-        liked: Aimée
+      chore_preference:
+        choice: Préférence
       chore_log:
         mental_load: Charge mentale
         execution_load: Exécution
@@ -89,13 +99,41 @@ fr:
               household_full: Ce foyer a atteint sa taille maximale (6 personnes).
         chore:
           attributes:
-            base:
-              at_least_one_load: 'Cochez au moins une charge : mentale ou exécution.'
-              task_or_name_required: Donnez un nom à la tâche.
-        liked_task:
+            custom_name:
+              blank: "Donnez un nom à la tâche. Par exemple : Renouveler l'assurance habitation."
+              too_long: Le nom de la tâche ne peut pas dépasser %{count} caractères.
+            category:
+              inclusion: Choisissez une catégorie.
+            loads:
+              at_least_one: "Cochez au moins une charge : mentale, exécution, ou les deux."
+            time_required:
+              blank: Indiquez une durée d'au moins 1 minute.
+              not_a_number: Indiquez une durée d'au moins 1 minute.
+              not_an_integer: Indiquez la durée en minutes entières.
+              greater_than_or_equal_to: Indiquez une durée d'au moins 1 minute.
+              less_than_or_equal_to: Une tâche dure au plus %{count} minutes.
+            times_per_period:
+              not_a_number: Indiquez combien de fois par période.
+              greater_than_or_equal_to: Au moins 1 fois.
+              less_than_or_equal_to: "%{count} fois au maximum."
+              equal_to: Une tâche mensuelle, annuelle ou ponctuelle revient une fois par période.
+            frequency:
+              inclusion: Choisissez une répétition.
+            assignees:
+              blank: Assignez la tâche à au moins une personne.
+              not_in_household: Une personne choisie ne fait pas partie du foyer.
+        chore_assignee:
           attributes:
-            task_id:
+            base:
+              one_assignee: Une assignation désigne une seule personne.
+        chore_preference:
+          attributes:
+            chore_id:
               taken: Vous avez déjà donné votre préférence pour cette tâche.
+        week_plan:
+          attributes:
+            week_start:
+              not_a_monday: doit être un lundi
         chore_log:
           attributes:
             base:
@@ -104,6 +142,9 @@ fr:
               not_a_member: ne fait pas partie de ce foyer
         invitation:
           attributes:
+            first_name:
+              blank: Indiquez le prénom de la personne à inviter.
+              too_long: Le prénom ne peut pas dépasser %{count} caractères.
             email:
               blank: "Saisissez l'adresse de la personne à inviter."
               invalid: "Cette adresse n'est pas valide. Vérifiez qu'elle contient un @."

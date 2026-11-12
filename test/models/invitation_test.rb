@@ -9,7 +9,7 @@ class InvitationTest < ActiveSupport::TestCase
   end
 
   def invite(email, inviter: @alice)
-    Invitation.invite(household: @household, email: email, inviter: inviter)
+    Invitation.invite(household: @household, email: email, inviter: inviter, first_name: "Karim")
   end
 
   # ---- Creation -------------------------------------------------------------
@@ -348,14 +348,14 @@ class InvitationTest < ActiveSupport::TestCase
   test "the counter is per household: another household starts from zero" do
     @household.invitations.create!(email: "new@test.com", resend_count: 2)
 
-    other = Invitation.invite(household: households(:jones_home), email: "new@test.com", inviter: users(:carol))
+    other = Invitation.invite(household: households(:jones_home), email: "new@test.com", inviter: users(:carol), first_name: "Xavier")
 
     assert_predicate other, :persisted?
     assert_equal 0, other.resend_count
   end
 
   test "only the person who sent the invitation may resend it" do
-    invitation = Invitation.invite(household: @household, email: "new@test.com", inviter: @alice)
+    invitation = Invitation.invite(household: @household, email: "new@test.com", inviter: @alice, first_name: "Karim")
 
     assert invitation.resendable_by?(@alice)
     assert_not invitation.resendable_by?(users(:bob))

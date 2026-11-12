@@ -1,8 +1,10 @@
 <% provide :title, @household.name %>
 <div>
   <h1 class="screen-title"><%= @household.name %></h1>
-  <p class="screen-subtitle"><%= t("common.members_count", count: @household.users.size) %> · <%= t("chores.index.count", count: @household.chores.count) %></p>
+  <p class="screen-subtitle"><%= t("common.members_count", count: @household.users.size) %> · <%= t("chores.index.count", count: @household.chores.active.count) %></p>
 </div>
+
+<%= render "households/setup_card", household: @household %>
 
 <section class="flex flex-col gap-3" aria-labelledby="members-title">
   <h2 id="members-title" class="text-base font-bold m-0 font-sans"><%= t("households.show.members_title") %></h2>
@@ -24,18 +26,22 @@
     <div class="list-stack">
       <% invitations.each do |invitation| %>
         <% state = invitation.current_state %>
-        <%= list_row title: invitation.email, href: household_invitation_path(@household, invitation),
-              leading: avatar(initials: invitation.email.first.upcase, pending: true, size: 36),
+        <%= list_row title: invitation.display_name, subtitle: invitation.email, href: household_invitation_path(@household, invitation),
+              leading: avatar(initials: invitation.display_name.first.upcase, pending: true, size: 36),
               trailing: status_pill(t("invitations.show.pill.#{state}"), tone: (state == "pending" ? :outline : :soft)) %>
       <% end %>
     </div>
   </section>
 <% end %>
 
+<% plan = @household.week_plan_for %>
 <div class="list-stack">
   <%= list_row title: t("households.show.invite_link"), href: new_household_invitation_path(@household) %>
-  <%= list_row title: t("chores.setup.title"), href: household_chores_setup_path(@household) %>
-  <%= list_row title: t("chores.new.title"), href: new_chore_path(household_id: @household.id) %>
+  <%= list_row title: t("chores.setup.manage_title"), href: household_chores_setup_path(@household) %>
+  <%= list_row title: t("split.title"), href: household_split_path(@household),
+        subtitle: (validation_status(plan) if plan) %>
+  <%= list_row title: t("preferences.title"), href: household_preferences_path(@household) %>
+  <%= list_row title: t("split_settings.title"), href: household_split_settings_path(@household) %>
   <%= list_row title: t("common.edit"), href: edit_household_path(@household) %>
   <%= list_row title: t("auth.account.title"), href: account_path %>
 </div>

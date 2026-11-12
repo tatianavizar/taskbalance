@@ -6,10 +6,13 @@ class InvitationFlowTest < ActionDispatch::IntegrationTest
 
   setup do
     @household = households(:smith_home)
+    # The set-up is still under way: an invitee waits on B12 (lot 2 opens B10
+    # once it is done, see test/integration/invitee_setup_test.rb).
+    @household.update!(setup_step: "tasks")
     @alice = users(:alice)
     # dana@test.com has an account (and no household); newbie@test.com has none.
-    @invitation = Invitation.invite(household: @household, email: "dana@test.com", inviter: @alice)
-    @newcomer = Invitation.invite(household: @household, email: "newbie@test.com", inviter: @alice)
+    @invitation = Invitation.invite(household: @household, email: "dana@test.com", inviter: @alice, first_name: "Karim")
+    @newcomer = Invitation.invite(household: @household, email: "newbie@test.com", inviter: @alice, first_name: "Karim")
   end
 
   def sign_up_from_invitation(invitation, params = {})
@@ -184,7 +187,7 @@ class InvitationFlowTest < ActionDispatch::IntegrationTest
   end
 
   test "signed in with a household: the screen asks to leave it first and offers no way to continue" do
-    invitation = Invitation.invite(household: @household, email: users(:carol).email, inviter: @alice)
+    invitation = Invitation.invite(household: @household, email: users(:carol).email, inviter: @alice, first_name: "Carol")
     sign_in users(:carol)
 
     get invitation_path(invitation.token)

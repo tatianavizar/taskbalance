@@ -13,12 +13,21 @@ module ActiveSupport
 
     setup { Rails.cache.clear }
 
-    # Add more helper methods to be used by all tests here...
+    # A chore saved without validations, for a household with nobody to
+    # assign it to (a chore needs at least one assignee).
+    def insert_chore!(household, **attributes)
+      Chore.new(household: household, **attributes).tap { |chore| chore.save!(validate: false) }
+    end
   end
 end
 
 class ActionDispatch::IntegrationTest
   include Devise::Test::IntegrationHelpers
+
+  # The page contains `text`, HTML entities decoded (« l'a » is « l&#39;a »).
+  def assert_text(text)
+    assert_includes CGI.unescapeHTML(response.body), text
+  end
 
   # The message of an inline field error, without its "!" icon.
   def assert_field_error(message)

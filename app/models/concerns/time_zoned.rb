@@ -10,6 +10,10 @@ module TimeZoned
     ActiveSupport::TimeZone[time_zone]
   end
 
+  def today
+    zone.today
+  end
+
   def current_week
     Week.current(time_zone)
   end

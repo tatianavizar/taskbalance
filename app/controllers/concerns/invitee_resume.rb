@@ -16,11 +16,11 @@ module InviteeResume
     Invitation.live_for_invitee(user)
   end
 
-  # Lot 2 replaces the :preferences branch with B10, then B11 or B14. Until
-  # then both stages open the waiting screen (B12).
+  # :waiting opens B12; :preferences opens B10, which leads to B11 (a split
+  # was proposed) or B14 (the creator chose « Attendre »).
   def invitee_resume_path(invitation)
     case invitation.resume_stage
-    when :preferences then waiting_invitation_path(invitation.token)
+    when :preferences then household_preferences_path(invitation.household)
     else waiting_invitation_path(invitation.token)
     end
   end

@@ -254,9 +254,10 @@ class WeeklyStatsTest < ActiveSupport::TestCase
 
   test "logs of a deleted chore and of a custom chore count; logs detached from the household do not" do
     household, (alice, bob) = build_household("Alice", "Bob")
-    custom = household.chores.create!(custom_name: "Réparer la chaudière", category: "maintenance")
+    custom = household.chores.create!(custom_name: "Réparer la chaudière", category: "maintenance",
+                                      mental_load: true, time_required: 30, assignee_user_ids: [ alice.id ])
     log!(household, alice, at: @wednesday, chore: custom)
-    catalogue = household.chores.create!(task: tasks(:cook_meal))
+    catalogue = household.chores.create!(task: tasks(:cook_meal), assignee_user_ids: [ bob.id ])
     log!(household, bob, at: @wednesday, chore: catalogue)
     catalogue.destroy!
     ChoreLog.create!(user: bob, household: nil, chore_name: "Ailleurs", mental_load: true, execution_load: true, time_spent: 10, completed_at: @wednesday)

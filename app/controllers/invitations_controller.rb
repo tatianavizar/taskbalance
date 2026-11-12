@@ -58,12 +58,12 @@ class InvitationsController < ApplicationController
     end
   end
 
-  # B12: the setup is not finished. Also the placeholder for lot 2's B10 to B14.
+  # B12: the setup is not finished. Once it is, the invitee goes on to B10.
   def waiting
     return redirect_to(invitation_path(@invitation.token)) unless @invitation&.grants_setup_access_to?(current_user)
 
     @household = @invitation.household
-    @setup_ready = !@household.setting_up?
+    @setup_ready = @household.setup_ready_for_invitee?
   end
 
   private
@@ -93,7 +93,7 @@ class InvitationsController < ApplicationController
   end
 
   def render_join
-    render :join, locals: { invitation: @invitation, user: User.new(email: @invitation.email) }
+    render :join, locals: { invitation: @invitation, user: User.new(email: @invitation.email, first_name: @invitation.first_name) }
   end
 
   def render_invalid(reason, status: :ok)
