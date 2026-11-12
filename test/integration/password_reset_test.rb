@@ -95,7 +95,8 @@ class PasswordResetTest < ActionDispatch::IntegrationTest
   end
 
   test "reset requests are rate limited per IP, known or not" do
-    5.times { |i| request_reset("someone#{i}@test.com") }
+    9.times { |i| request_reset("someone#{i}@test.com") }
+    assert_redirected_to sent_user_password_path
     request_reset("one-more@test.com")
     assert_redirected_to new_user_password_path
     assert_predicate flash[:alert], :present?

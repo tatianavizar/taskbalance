@@ -166,7 +166,7 @@
 
 ## 2026-11-12 · Mot de passe trop court : rappeler le minimum
 - **Décidé par :** la porteuse du projet.
-- **Règle :** l'erreur dit « 6 caractères minimum. », comme l'aide sous le champ.
+- **Règle :** l'erreur dit « 8 caractères minimum. », comme l'aide sous le champ.
 - **Rejeté :** « 3 caractères sur 6 » (maquette A3) et « Trop court : … ».
 
 ## 2026-11-12 · Écarts de maquette acceptés sur les écrans de compte

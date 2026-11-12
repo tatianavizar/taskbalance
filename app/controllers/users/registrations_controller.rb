@@ -1,7 +1,8 @@
 class Users::RegistrationsController < Devise::RegistrationsController
   # Sign-up is an email-sending endpoint: limit it per IP, and per address so
-  # nobody can flood someone's inbox with "you already have an account" mails.
-  rate_limit to: 10, within: 1.hour, only: :create, name: "sign-up-ip",
+  # nobody can flood someone's inbox with "you already have an account" mails
+  # (9 per connection, 3 per address, per hour; decision of 2026-11-08).
+  rate_limit to: 9, within: 1.hour, only: :create, name: "sign-up-ip",
              with: -> { rate_limited_redirect }
   rate_limit to: 3, within: 1.hour, only: :create, name: "sign-up-email",
              by: -> { sign_up_rate_limit_key },
@@ -20,6 +21,13 @@ class Users::RegistrationsController < Devise::RegistrationsController
   # The account screen (F4) replaces Devise's single edit form.
   def edit
     redirect_to account_path
+  end
+
+  # And its update (PUT/PATCH /users): first name, email and password each
+  # have their own screen there, with their own limits. Nothing is changed
+  # and no mail is sent from here.
+  def update
+    redirect_to account_path, status: :see_other
   end
 
   # F5, sent from AccountsController#delete_account: password and a ticked

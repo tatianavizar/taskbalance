@@ -18,7 +18,7 @@ class AuthScreensTest < ActionDispatch::IntegrationTest
     assert_select "h1", "Créer un compte"
     assert_select ".field-hint", /Visible par les membres de votre foyer/
     assert_select ".field-hint", /Un lien de confirmation part à cette adresse/
-    assert_select ".field-hint", "6 caractères minimum."
+    assert_select ".field-hint", "8 caractères minimum."
     assert_match "Vos enregistrements vous appartiennent", response.body
     assert_select "input[type=hidden][name='user[time_zone]']"
   end
@@ -29,7 +29,7 @@ class AuthScreensTest < ActionDispatch::IntegrationTest
     assert_response :unprocessable_entity
     assert_select ".alert-box", /1 champ à corriger/
     assert_select "input[aria-invalid=true]", 1
-    assert_field_error "6 caractères minimum."
+    assert_field_error "8 caractères minimum."
   end
 
   test "the browser time zone is kept when valid and ignored when unknown" do

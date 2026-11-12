@@ -2,9 +2,13 @@ class Users::PasswordsController < Devise::PasswordsController
   # Seconds before the "resend" button comes back (the server limits sends too).
   RESEND_DELAY = 60
 
-  # Reset mails: 5 per IP per hour, and 3 per address per hour (nobody can bury
-  # an inbox). The answer stays generic (config.paranoid).
-  rate_limit to: 5, within: 1.hour, only: :create, name: "password-reset-ip",
+  # The zone of the expiry hour on the "check your emails" screen.
+  DEFAULT_ZONE = "Europe/Paris".freeze
+
+  # Reset mails: 9 per connection per hour, and 3 per address per hour (nobody
+  # can bury an inbox; decision of 2026-11-08). The answer stays generic
+  # (config.paranoid).
+  rate_limit to: 9, within: 1.hour, only: :create, name: "password-reset-ip",
              with: -> { rate_limited_redirect }
   rate_limit to: 3, within: 1.hour, only: :create, name: "password-reset-email",
              by: -> { params.dig(:user, :email).to_s.strip.downcase },
@@ -36,12 +40,10 @@ class Users::PasswordsController < Devise::PasswordsController
 
     @email = pending["email"]
     sent_at = Time.zone.at(pending["sent_at"])
-    # The expiry hour is read in the account's zone when there is one. An
-    # unknown address gets the default zone, so the screen reveals nothing but
-    # this hour.
-    zone = ActiveSupport::TimeZone[User.find_by(email: @email.downcase)&.time_zone.to_s] ||
-           ActiveSupport::TimeZone["Europe/Paris"]
-    @expires_at = (sent_at + Devise.reset_password_within).in_time_zone(zone)
+    # Always the default zone, and no account is looked up: reading the hour in
+    # the account's own zone would tell a visitor that the address has an
+    # account, and where its owner lives.
+    @expires_at = (sent_at + Devise.reset_password_within).in_time_zone(DEFAULT_ZONE)
     @resend_in = [ (sent_at + RESEND_DELAY.seconds - Time.current).ceil, 0 ].max
   end
 
