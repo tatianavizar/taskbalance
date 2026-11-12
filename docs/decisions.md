@@ -357,3 +357,10 @@
 - **Pause :** elle ne peut ni commencer ni s'étendre sur une semaine locale (fuseau du foyer) où la personne a déjà enregistré une tâche, semaine en cours comprise. Fin de la pause d'un dimanche qui neutralise une semaine faible. Le message pointe le lundi suivant (« Vous avez déjà enregistré une tâche cette semaine : la pause peut commencer lundi 16 novembre. », avec le prénom pour une pause déclarée pour quelqu'un d'autre). Une saisie faite après la déclaration, dans une semaine déjà couverte, ne l'annule pas.
 - **« Oui » à la question d'absence :** la pause ne couvre que les semaines sans saisie (une saisie antidatée est possible) ; si les deux semaines ont des saisies, la réponse est refusée.
 - **Foyer supprimé :** notification dans l'app seulement, jamais d'email. Sans foyer, la personne la lit sur son écran d'arrivée (une fois, puis elle est marquée lue).
+
+## 2026-11-13 · Choix confirmés : blocage de connexion, équipe, notifications
+- **Blocage de connexion :** les sessions déjà ouvertes restent ouvertes pendant un blocage. Réinitialiser son mot de passe ne lève pas un blocage.
+- **Équipe (back-office) :** un admin créé depuis « Équipe » reçoit un mot de passe généré, montré une seule fois. Pas encore d'écran pour le changer.
+- **Notification de déblocage (`alert_block_lifted`) :** elle compte dans la limite d'une alerte par semaine. Si la personne a déjà reçu une alerte cette semaine, elle est dans l'app seulement, sans email.
+- **Foyer supprimé :** l'avis s'affiche une fois sur l'écran sans foyer, puis il est marqué lu.
+- **Rails :** passage en 8.1 (8.0 n'a plus de correctifs de sécurité depuis le 7 novembre 2026).
