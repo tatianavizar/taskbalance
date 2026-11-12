@@ -76,10 +76,8 @@
 
   <%= level_progress level: home.level, done: home.balanced_weeks, total: home.next_threshold, href: report_path %>
 
-  <%# D11 : la répartition de la semaine (lot 6). Le partial pages/_split_card, s'il existe, s'affiche ici. %>
-  <% if lookup_context.exists?("split_card", [ "pages" ], true) %>
-    <%= render "pages/split_card", household: current_household, week: week %>
-  <% end %>
+  <%# D11 : la répartition de la semaine (lot 6). %>
+  <%= render "households/splits/home_card", household: current_household %>
 
   <%= sticky_cta do %>
     <%= link_to t("home.log"), new_chore_log_path, class: "btn btn-primary" %>

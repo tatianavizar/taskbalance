@@ -22,6 +22,9 @@ class Household < ApplicationRecord
   # Split (lot 2): week plans and pending changes of the split settings.
   has_many :week_plans, dependent: :delete_all
   has_many :split_setting_changes, dependent: :delete_all
+  # Lot 6: the carried-over gap ledger (SplitGap) and one-off handovers.
+  has_many :split_gap_entries, dependent: :delete_all
+  has_many :task_handovers, dependent: :delete_all
 
   # Set-up checklist (« Mise en place 2 sur 4 »): the step to resume at.
   # Step 1, naming the household, is done once it exists.
@@ -208,9 +211,10 @@ class Household < ApplicationRecord
   end
 
   # Assigns chores from the proposal (D18). `keep`: chore ids whose
-  # assignees stay. Returns the proposal.
-  def propose_split!(keep: [])
-    proposal = SplitProposal.for_household(self, keep: keep)
+  # assignees stay. `targets`: compensated targets (lot 6, SplitGap).
+  # Returns the proposal.
+  def propose_split!(keep: [], targets: nil, participants: split_participants)
+    proposal = SplitProposal.for_household(self, keep: keep, targets: targets.presence, participants: participants)
     assign_chores!(proposal.except(*keep))
     proposal
   end

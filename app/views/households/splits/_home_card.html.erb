@@ -1,0 +1,20 @@
+<%# D11 : carte d'accueil de la répartition de la semaine (lot 6). Rendue dans l'emplacement que le lot 4 réserve sur l'accueil.
+    Deux états de validation seulement ; la part prévue de la personne qui regarde ; les tâches qu'on lui propose (D16). %>
+<% week = household.current_week %>
+<% plan = household.week_plan_for(week) %>
+<% offers = household.task_handovers.pending.for_week(week).where(to_user: current_user).includes(:chore, :from_user) %>
+<% if plan && !plan.awaiting_proposal? && plan.participant?(current_user) %>
+  <% mine = plan.split.share_of("user:#{current_user.id}")&.average %>
+  <% to_validate = plan.proposed? && !plan.approved_by?(current_user) %>
+  <section class="card flex flex-col gap-2" aria-labelledby="week-split-title">
+    <h2 id="week-split-title" class="m-0 text-[15px] font-bold font-sans"><%= t("split.home.title", number: week.number) %></h2>
+    <p class="m-0"><%= status_pill validation_status(plan), tone: (plan.validated? ? :soft : :outline) %></p>
+    <p class="m-0 text-sm"><%= t("split.home.mine", percent: share_percent(mine)) %></p>
+    <% offers.each do |offer| %>
+      <%= link_to t("handovers.section.offered_to_me", name: offer.from_user.first_name, chore: offer.chore.effective_name),
+                  household_handover_path(household, offer), class: "text-sm font-semibold" %>
+    <% end %>
+    <%= link_to t(to_validate ? "split.home.validate" : "split.home.open"), household_split_path(household),
+                class: "btn #{to_validate ? "btn-primary" : "btn-secondary"} btn-sm" %>
+  </section>
+<% end %>

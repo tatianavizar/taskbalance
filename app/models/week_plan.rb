@@ -33,6 +33,9 @@ class WeekPlan < ApplicationRecord
 
   belongs_to :household
   belongs_to :proposed_by, class_name: "User", optional: true
+  # Lot 6: the member who carried the surplus saved this split out of the
+  # zone « sans reporter l'écart » (carry_gap false; SplitGap skips the week).
+  belongs_to :gap_waived_by, class_name: "User", optional: true
   has_many :approvals, as: :approvable, dependent: :delete_all
 
   enum :status, { awaiting_proposal: "awaiting_proposal", proposed: "proposed", validated: "validated" },

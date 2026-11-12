@@ -109,6 +109,17 @@ Rails.application.routes.draw do
       get :choice
       post :wait
       post :approve
+      # Lot 6 : parts en direct (rien n'est enregistré), C9 remise à zéro de l'écart
+      post :preview
+      post :reset_gap
+    end
+    # D15, D16 : réassignation ponctuelle d'une tâche, pour la semaine
+    resources :handovers, only: [ :new, :create, :show ], controller: "households/handovers" do
+      member do
+        post :accept
+        post :refuse
+        post :cancel
+      end
     end
     # C16 : réglages de la répartition
     resource :split_settings, only: [ :show, :update ], controller: "households/split_settings" do

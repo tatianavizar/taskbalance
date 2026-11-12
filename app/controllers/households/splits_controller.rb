@@ -11,6 +11,14 @@ module Households
   #            « Mettre à jour les parts » only recomputes the shares.
   #   approve  validates the split as it is.
   #   wait     C12 « Attendre ».
+  #   preview  (lot 6) the shares of the form as it stands, as a Turbo Stream
+  #            replacing the bar. Saves nothing: only « Valider » persists.
+  #   reset_gap  C9: the carried gap back to zero, by the member who carried
+  #            the surplus only (D4).
+  #
+  # An edit that takes a share out of the zone is saved with a warning
+  # (lot 6). The member above the zone may save it « sans reporter l'écart »
+  # (carry_gap=0): that week's real gap is then not carried.
   class SplitsController < ApplicationController
     include SplitAccess
 
@@ -27,6 +35,22 @@ module Households
       return redirect_to(choice_household_split_path(@household)) if choice_needed? && params[:mode] != "now"
 
       load_split
+    end
+
+    def preview
+      return head(:conflict) if @plan&.locked?
+
+      load_split
+      @split = split_with(@split, submitted_assignments)
+      render turbo_stream: turbo_stream.replace("planned_bar", partial: "households/splits/planned_bar",
+                                                locals: { split: @split, viewer: current_participant, waivable: true })
+    end
+
+    def reset_gap
+      SplitGap.reset!(@household, by: current_user)
+      redirect_to household_split_path(@household), notice: t("split.gap.flash.reset")
+    rescue SplitGap::NotACarrier
+      redirect_to household_split_path(@household), alert: t("split.gap.flash.not_carrier")
     end
 
     def update
@@ -49,8 +73,9 @@ module Households
       end
       return join_household if current_participant.provisional?
 
+      waive_gap_if_asked
       @household.complete_setup_step!("split")
-      redirect_to dashboard_path, notice: validation_notice
+      redirect_to dashboard_path, notice: validation_notice, alert: zone_warning
     rescue ActiveRecord::RecordInvalid => e
       load_split
       @error = e.record.errors[:assignees].first || e.record.errors.full_messages.first
@@ -107,7 +132,39 @@ module Households
       end
     end
 
+    # The split as the form stands: the submitted assignees over the household's.
+    def split_with(split, assignments)
+      keys = split.participant_keys
+      items = split.items.map do |item|
+        assignments.key?(item.chore_id) ? item.with(assignees: assignments[item.chore_id] & keys) : item
+      end
+      PlannedSplit.new(items: items, participants: split.participants, week: split.week)
+    end
+
+    # carry_gap=0 from the member above the zone (the one carrying the
+    # surplus, decision 2026-11-08 and D4): the week's gap is not carried.
+    def waive_gap_if_asked
+      return unless params[:carry_gap] == "0" && @plan
+      return unless @plan.split.above_zone.any? { |participant| participant.user_id == current_user.id }
+
+      @plan.update!(carry_gap: false, gap_waived_by: current_user)
+    end
+
+    # Saved, with a warning, when a bar is out of the zone.
+    def zone_warning
+      return unless @plan
+
+      outside = @plan.split.outside_zone
+      return if outside.empty?
+
+      zone = HouseholdRules.zone(@plan.participant_list.size)
+      shares = outside.map { |p| "#{p.first_name} #{helpers.share_percent(@plan.split.share_of(p.key).average)}" }
+      key = @plan.carry_gap ? "split.zone.saved_outside" : "split.zone.saved_outside_waived"
+      t(key, min: zone.min, max: zone.max, shares: shares.to_sentence)
+    end
+
     def load_split
+      @gap_balances = SplitGap.balances(@household)
       @locked = @plan&.locked?
       @split =
         if @plan && !@plan.awaiting_proposal? && @locked

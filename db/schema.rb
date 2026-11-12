@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_11_13_091100) do
+ActiveRecord::Schema[8.0].define(version: 2026_11_13_090900) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -80,29 +80,10 @@ ActiveRecord::Schema[8.0].define(version: 2026_11_13_091100) do
     t.datetime "completed_at", null: false
     t.string "chore_name"
     t.string "category"
-    t.bigint "occurrence_id"
-    t.string "idempotency_key"
-    t.boolean "off_split", default: false, null: false
     t.index ["chore_id"], name: "index_chore_logs_on_chore_id"
     t.index ["household_id", "completed_at"], name: "index_chore_logs_on_household_id_and_completed_at"
-    t.index ["occurrence_id"], name: "index_chore_logs_on_occurrence_id"
     t.index ["user_id", "completed_at"], name: "index_chore_logs_on_user_id_and_completed_at"
-    t.index ["user_id", "idempotency_key"], name: "index_chore_logs_unique_idempotency_key", unique: true, where: "(idempotency_key IS NOT NULL)"
     t.index ["user_id"], name: "index_chore_logs_on_user_id"
-  end
-
-  create_table "chore_occurrences", force: :cascade do |t|
-    t.bigint "household_id", null: false
-    t.bigint "chore_id", null: false
-    t.date "week_start", null: false
-    t.integer "slot", null: false
-    t.date "due_on", null: false
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["chore_id", "week_start", "slot"], name: "index_chore_occurrences_unique_slot", unique: true
-    t.index ["chore_id"], name: "index_chore_occurrences_on_chore_id"
-    t.index ["household_id", "due_on"], name: "index_chore_occurrences_on_household_id_and_due_on"
-    t.index ["household_id"], name: "index_chore_occurrences_on_household_id"
   end
 
   create_table "chore_preferences", force: :cascade do |t|
@@ -127,6 +108,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_11_13_091100) do
     t.boolean "execution_load", default: false, null: false
     t.integer "time_required"
     t.date "due_date"
+    t.bigint "recurring_chore_id"
     t.string "custom_name"
     t.string "category"
     t.integer "frequency", default: 1, null: false
@@ -137,6 +119,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_11_13_091100) do
     t.index ["created_by_id"], name: "index_chores_on_created_by_id"
     t.index ["household_id", "active"], name: "index_chores_on_household_id_and_active"
     t.index ["household_id"], name: "index_chores_on_household_id"
+    t.index ["recurring_chore_id"], name: "index_chores_on_recurring_chore_id"
     t.index ["task_id"], name: "index_chores_on_task_id"
     t.check_constraint "times_per_period >= 1", name: "chores_times_per_period_positive"
   end
@@ -208,6 +191,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_11_13_091100) do
     t.boolean "weekly_proposal_enabled", default: true, null: false
     t.boolean "gap_carry_over_enabled", default: true, null: false
     t.boolean "auto_validate_splits", default: false, null: false
+    t.date "gap_folded_through"
   end
 
   create_table "invitations", force: :cascade do |t|
@@ -298,6 +282,37 @@ ActiveRecord::Schema[8.0].define(version: 2026_11_13_091100) do
     t.check_constraint "channel IS NULL OR suppressed_reason IS NULL", name: "notifications_sent_or_suppressed"
   end
 
+  create_table "recurring_chores", force: :cascade do |t|
+    t.bigint "household_id", null: false
+    t.bigint "task_id", null: false
+    t.bigint "assigned_to_id"
+    t.integer "frequency", null: false
+    t.integer "time_required"
+    t.boolean "mental_load", default: false, null: false
+    t.boolean "execution_load", default: false, null: false
+    t.boolean "active", default: true, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["household_id", "active"], name: "index_recurring_chores_on_household_id_and_active"
+    t.index ["household_id"], name: "index_recurring_chores_on_household_id"
+    t.index ["task_id"], name: "index_recurring_chores_on_task_id"
+  end
+
+  create_table "split_gap_entries", force: :cascade do |t|
+    t.bigint "household_id", null: false
+    t.bigint "user_id"
+    t.string "kind", null: false
+    t.date "week_start", null: false
+    t.decimal "amount", precision: 8, scale: 3, null: false
+    t.bigint "reset_by_id"
+    t.datetime "created_at", null: false
+    t.index ["household_id", "user_id"], name: "index_split_gap_entries_on_household_id_and_user_id"
+    t.index ["household_id"], name: "index_split_gap_entries_on_household_id"
+    t.index ["reset_by_id"], name: "index_split_gap_entries_on_reset_by_id"
+    t.index ["user_id"], name: "index_split_gap_entries_on_user_id"
+    t.check_constraint "kind::text = ANY (ARRAY['week'::character varying, 'reset'::character varying]::text[])", name: "split_gap_entries_kind"
+  end
+
   create_table "split_setting_changes", force: :cascade do |t|
     t.bigint "household_id", null: false
     t.bigint "proposed_by_id"
@@ -310,6 +325,25 @@ ActiveRecord::Schema[8.0].define(version: 2026_11_13_091100) do
     t.index ["household_id"], name: "index_split_setting_changes_one_pending", unique: true, where: "((status)::text = 'pending'::text)"
     t.index ["proposed_by_id"], name: "index_split_setting_changes_on_proposed_by_id"
     t.check_constraint "status::text = ANY (ARRAY['pending'::character varying::text, 'applied'::character varying::text, 'withdrawn'::character varying::text])", name: "split_setting_changes_status"
+  end
+
+  create_table "task_handovers", force: :cascade do |t|
+    t.bigint "household_id", null: false
+    t.bigint "chore_id", null: false
+    t.bigint "from_user_id", null: false
+    t.bigint "to_user_id", null: false
+    t.date "week_start", null: false
+    t.string "status", default: "pending", null: false
+    t.datetime "responded_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["chore_id", "week_start", "from_user_id"], name: "index_task_handovers_live", unique: true, where: "((status)::text = ANY ((ARRAY['pending'::character varying, 'accepted'::character varying])::text[]))"
+    t.index ["chore_id"], name: "index_task_handovers_on_chore_id"
+    t.index ["from_user_id"], name: "index_task_handovers_on_from_user_id"
+    t.index ["household_id"], name: "index_task_handovers_on_household_id"
+    t.index ["to_user_id"], name: "index_task_handovers_on_to_user_id"
+    t.check_constraint "from_user_id <> to_user_id", name: "task_handovers_two_people"
+    t.check_constraint "status::text = ANY (ARRAY['pending'::character varying, 'accepted'::character varying, 'refused'::character varying, 'cancelled'::character varying]::text[])", name: "task_handovers_status"
   end
 
   create_table "tasks", force: :cascade do |t|
@@ -380,6 +414,10 @@ ActiveRecord::Schema[8.0].define(version: 2026_11_13_091100) do
     t.jsonb "shares", default: {}, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.jsonb "targets", default: {}, null: false
+    t.boolean "carry_gap", default: true, null: false
+    t.bigint "gap_waived_by_id"
+    t.index ["gap_waived_by_id"], name: "index_week_plans_on_gap_waived_by_id"
     t.index ["household_id", "week_start"], name: "index_week_plans_on_household_id_and_week_start", unique: true
     t.index ["household_id"], name: "index_week_plans_on_household_id"
     t.index ["proposed_by_id"], name: "index_week_plans_on_proposed_by_id"
@@ -396,16 +434,14 @@ ActiveRecord::Schema[8.0].define(version: 2026_11_13_091100) do
   add_foreign_key "chore_assignees", "chores", on_delete: :cascade
   add_foreign_key "chore_assignees", "invitations", on_delete: :cascade
   add_foreign_key "chore_assignees", "users", on_delete: :cascade
-  add_foreign_key "chore_logs", "chore_occurrences", column: "occurrence_id", on_delete: :nullify
   add_foreign_key "chore_logs", "chores", on_delete: :nullify
   add_foreign_key "chore_logs", "households", on_delete: :nullify
   add_foreign_key "chore_logs", "users"
-  add_foreign_key "chore_occurrences", "chores", on_delete: :cascade
-  add_foreign_key "chore_occurrences", "households", on_delete: :cascade
   add_foreign_key "chore_preferences", "chores", on_delete: :cascade
   add_foreign_key "chore_preferences", "users", on_delete: :cascade
   add_foreign_key "chores", "households"
-  add_foreign_key "chores", "tasks", on_delete: :restrict, validate: false
+  add_foreign_key "chores", "recurring_chores"
+  add_foreign_key "chores", "tasks", on_delete: :restrict
   add_foreign_key "chores", "users", column: "created_by_id", on_delete: :nullify
   add_foreign_key "engine_events", "households", on_delete: :cascade
   add_foreign_key "household_members", "households"
@@ -423,13 +459,24 @@ ActiveRecord::Schema[8.0].define(version: 2026_11_13_091100) do
   add_foreign_key "notification_preferences", "users", on_delete: :cascade
   add_foreign_key "notifications", "households", on_delete: :cascade
   add_foreign_key "notifications", "users", on_delete: :cascade
+  add_foreign_key "recurring_chores", "households"
+  add_foreign_key "recurring_chores", "tasks"
+  add_foreign_key "recurring_chores", "users", column: "assigned_to_id"
+  add_foreign_key "split_gap_entries", "households", on_delete: :cascade
+  add_foreign_key "split_gap_entries", "users", column: "reset_by_id", on_delete: :nullify
+  add_foreign_key "split_gap_entries", "users", on_delete: :nullify
   add_foreign_key "split_setting_changes", "households", on_delete: :cascade
   add_foreign_key "split_setting_changes", "users", column: "proposed_by_id", on_delete: :nullify
+  add_foreign_key "task_handovers", "chores", on_delete: :cascade
+  add_foreign_key "task_handovers", "households", on_delete: :cascade
+  add_foreign_key "task_handovers", "users", column: "from_user_id", on_delete: :cascade
+  add_foreign_key "task_handovers", "users", column: "to_user_id", on_delete: :cascade
   add_foreign_key "week_corrections", "household_weeks", on_delete: :cascade
   add_foreign_key "week_corrections", "households", on_delete: :cascade
   add_foreign_key "week_corrections", "member_pauses", on_delete: :nullify
   add_foreign_key "week_corrections", "users", column: "declared_by_id", on_delete: :nullify
   add_foreign_key "week_corrections", "users", on_delete: :nullify
   add_foreign_key "week_plans", "households", on_delete: :cascade
+  add_foreign_key "week_plans", "users", column: "gap_waived_by_id", on_delete: :nullify
   add_foreign_key "week_plans", "users", column: "proposed_by_id", on_delete: :nullify
 end

@@ -186,6 +186,14 @@ fr:
         title: "%{name} vous a assigné une tâche : %{chore}."
         due: "À faire pour le %{date}."
 
+      task_offered:
+        title: "%{name} vous propose une tâche : %{chore}."
+        line: "Pour la semaine %{week} seulement. Si vous acceptez, elle est prévue dans votre charge mentale cette semaine ; la répartition validée ne change pas."
+
+      task_offer_answered:
+        accepted: "%{name} prend « %{chore} » cette semaine."
+        refused: "%{name} ne prend pas « %{chore} » cette semaine."
+
       monday_split:
         title: "La répartition de la semaine %{week} est prête."
         counts: "Tâches prévues : %{counts}."
