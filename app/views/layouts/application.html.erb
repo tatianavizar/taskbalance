@@ -29,7 +29,7 @@
     <% with_chrome = chrome? %>
     <% with_header = with_chrome && current_household.present? %>
     <div class="app-shell <%= "with-tabs" if with_chrome %> <%= "no-header" unless with_header %>">
-      <%= app_header(current_household.name) if with_header %>
+      <%= app_header(current_household.name, unread: Notification.unread_count_for(current_user)) if with_header %>
 
       <main class="app-main <%= "app-main-padded-tabs" if with_chrome %>">
         <% flash.each do |type, message| %>
