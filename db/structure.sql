@@ -1,3 +1,4 @@
+\restrict YK6o0ilwRj9b10GANcPmNhH6wSbDKDxsdr6qF1bUCdIjEKr6fSTP3hoiOAHkjZ0
 
 -- Dumped from database version 16.14 (Homebrew)
 -- Dumped by pg_dump version 16.14 (Homebrew)
@@ -157,7 +158,9 @@ CREATE TABLE public.admin_users (
     updated_at timestamp(6) without time zone NOT NULL,
     session_version integer DEFAULT 0 NOT NULL,
     enrolment_nonce character varying,
-    deactivated_at timestamp(6) without time zone
+    deactivated_at timestamp(6) without time zone,
+    role character varying DEFAULT 'admin'::character varying NOT NULL,
+    CONSTRAINT admin_users_role_values CHECK (((role)::text = ANY ((ARRAY['admin'::character varying, 'superadmin'::character varying])::text[])))
 );
 
 
@@ -2519,7 +2522,7 @@ ALTER TABLE ONLY public.split_setting_changes
 --
 
 ALTER TABLE ONLY public.chores
-    ADD CONSTRAINT fk_rails_e36dfa813c FOREIGN KEY (task_id) REFERENCES public.tasks(id) ON DELETE RESTRICT NOT VALID;
+    ADD CONSTRAINT fk_rails_e36dfa813c FOREIGN KEY (task_id) REFERENCES public.tasks(id) ON DELETE RESTRICT;
 
 
 --
@@ -2558,10 +2561,12 @@ ALTER TABLE ONLY public.week_plans
 -- PostgreSQL database dump complete
 --
 
+\unrestrict YK6o0ilwRj9b10GANcPmNhH6wSbDKDxsdr6qF1bUCdIjEKr6fSTP3hoiOAHkjZ0
 
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20261113100200'),
 ('20261113100100'),
 ('20261113100000'),
 ('20261113092400'),

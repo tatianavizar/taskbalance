@@ -73,6 +73,9 @@ ActiveAdmin.register Household do
         column("Prénom") { |member| link_to member.user.first_name, admin_user_path(member.user) }
         column("Rôle") { |member| BackOffice::Labels.role(member.role) }
         column("Arrivée") { |member| l(member.created_at, format: :long) }
+        if authorized?(:individual_data, User)
+          column("Données individuelles") { |member| link_to "Consulter", individual_data_admin_user_path(member.user) }
+        end
       end
     end
 

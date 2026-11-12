@@ -5,8 +5,8 @@ module BackOfficeHelpers
 
   # `enrolled: false` gives an admin whose enrolment link was issued (as
   # `admin:bootstrap` does); the token is in `@enrolment_tokens[admin.id]`.
-  def create_admin(enrolled: true, email: "team@cinquante.test")
-    admin = AdminUser.create!(email: email, password: ADMIN_PASSWORD, password_confirmation: ADMIN_PASSWORD)
+  def create_admin(enrolled: true, email: "team@cinquante.test", role: "admin")
+    admin = AdminUser.create!(email: email, password: ADMIN_PASSWORD, password_confirmation: ADMIN_PASSWORD, role: role)
     if enrolled
       admin.update!(otp_secret: AdminUser.generate_otp_secret, otp_required_for_login: true)
     else
@@ -34,9 +34,9 @@ module BackOfficeHelpers
     post admin_user_session_path, params: { admin_user: { email: admin.email, password: password, otp_attempt: code } }
   end
 
-  # An enrolled admin, signed in with a code.
-  def sign_in_team!
-    admin = create_admin
+  # An enrolled admin (plain by default), signed in with a code.
+  def sign_in_team!(role: "admin", email: "team@cinquante.test")
+    admin = create_admin(role: role, email: email)
     sign_in_admin(admin)
     admin
   end

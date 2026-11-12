@@ -1,5 +1,7 @@
 # Comptes de l'app, en lecture seule. On ne montre ni enregistrement, ni
-# préférence, ni notification : ils appartiennent à leur auteur. Actions :
+# préférence, ni notification : ils appartiennent à leur auteur. Seule
+# exception, pour un superadmin : la page « Données individuelles »
+# (BackOffice::IndividualData), chaque consultation journalisée. Actions :
 # confirmer l'email, débloquer la connexion, supprimer le compte
 # (BackOffice::Actions, journalisées).
 ActiveAdmin.register User do
@@ -69,6 +71,18 @@ ActiveAdmin.register User do
   action_item :confirm_pending_email, only: :show, if: -> { !resource.deleted? && resource.unconfirmed_email.present? } do
     link_to "Confirmer le changement vers #{resource.unconfirmed_email}", confirm_pending_email_admin_user_path(resource, email: resource.unconfirmed_email), method: :post,
             data: { confirm: "Remplacer l'adresse de connexion #{resource.email} par #{resource.unconfirmed_email} ? La personne se connectera avec la nouvelle." }
+  end
+
+  action_item :individual_data, only: :show, if: -> { authorized?(:individual_data, resource) } do
+    link_to "Données individuelles", individual_data_admin_user_path(resource)
+  end
+
+  # Superadmin only (BackOffice::Authorization refuses `resource` to an admin
+  # before anything is read). Opening it writes the journal row.
+  member_action :individual_data, method: :get do
+    response.headers["Cache-Control"] = "no-store"
+    @individual_data = BackOffice::IndividualData.open(current_admin_user, resource)
+    @page_title = "Données individuelles · #{resource.first_name}"
   end
 
   action_item :unlock_account, only: :show, if: -> { !resource.deleted? && resource.sign_in_locked? } do

@@ -1,0 +1,87 @@
+<%# Superadmin only (BackOffice::IndividualData). Opening this page wrote a row in the journal. %>
+<% data = @individual_data %>
+<div class="space-y-6" data-test="individual-data">
+  <div class="callout p-4 text-sm">
+    Données individuelles de <strong><%= data.user.first_name %></strong>
+    (<%= data.household ? data.household.name : "sans foyer" %>). Cette consultation est inscrite au journal.
+  </div>
+
+  <section class="panel">
+    <h3 class="panel-title">Enregistrements (<%= data.logs_count %><%= ", les #{data.logs.size} plus récents" if data.logs_count > data.logs.size %>)</h3>
+    <div class="panel-body">
+      <table class="index_table" data-test="logs">
+        <thead><tr><th>Le</th><th>Tâche</th><th>Catégorie</th><th>Charge mentale</th><th>Exécution</th><th>Durée (min)</th><th>Hors répartition</th></tr></thead>
+        <tbody>
+          <% data.logs.each do |log| %>
+            <tr>
+              <td><%= l(log.completed_at.in_time_zone(data.user.zone), format: :long) %></td>
+              <td><%= log.chore_name.presence || "—" %></td>
+              <td><%= log.category.presence || "—" %></td>
+              <td><%= log.mental_load ? "Oui" : "Non" %></td>
+              <td><%= log.execution_load ? "Oui" : "Non" %></td>
+              <td><%= log.time_spent %></td>
+              <td><%= log.off_split ? "Oui" : "Non" %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h3 class="panel-title">Préférences (<%= data.preferences.size %>)</h3>
+    <div class="panel-body">
+      <table class="index_table" data-test="preferences">
+        <thead><tr><th>Tâche</th><th>Choix</th></tr></thead>
+        <tbody>
+          <% data.preferences.each do |preference| %>
+            <tr>
+              <td><%= preference.chore.effective_name %></td>
+              <td><%= { "like" => "J'aime", "neutral" => "Neutre", "dislike" => "Je n'aime pas" }.fetch(preference.choice, preference.choice) %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h3 class="panel-title">Parts par semaine (foyer actuel, <%= BackOffice::IndividualData::WEEK_LIMIT %> semaines au plus)</h3>
+    <div class="panel-body">
+      <table class="index_table" data-test="shares">
+        <thead><tr><th>Semaine</th><th>Statut</th><th>Enregistrements</th><th>Part mentale</th><th>Part exécution</th><th>Pause</th></tr></thead>
+        <tbody>
+          <% data.shares.each do |row| %>
+            <% week, snapshot = row[:week], row[:snapshot] %>
+            <tr>
+              <td><%= week.week_start %></td>
+              <td><%= week.final? ? "Définitif" : "Provisoire" %></td>
+              <td><%= snapshot["logs_count"] %></td>
+              <td><%= snapshot["mental_share"] %> %</td>
+              <td><%= snapshot["execution_share"] %> %</td>
+              <td><%= snapshot["paused"] ? "Oui" : "Non" %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h3 class="panel-title">Écart reporté (<%= data.gap_entries.size %> lignes)</h3>
+    <div class="panel-body">
+      <table class="index_table" data-test="gap-entries">
+        <thead><tr><th>Semaine</th><th>Type</th><th>Écart (points)</th></tr></thead>
+        <tbody>
+          <% data.gap_entries.each do |entry| %>
+            <tr>
+              <td><%= entry.week_start %></td>
+              <td><%= entry.kind_week? ? "Semaine close" : "Remise à zéro" %></td>
+              <td><%= entry.amount.to_s("F") %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>

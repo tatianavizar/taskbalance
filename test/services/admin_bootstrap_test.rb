@@ -8,7 +8,7 @@ class AdminBootstrapTest < ActiveSupport::TestCase
 
   setup do
     Rails.application.load_tasks unless Rake::Task.task_defined?("admin:bootstrap")
-    @env = ENV.to_h.slice("ADMIN_EMAIL", "ADMIN_PASSWORD")
+    @env = ENV.to_h.slice("ADMIN_EMAIL", "ADMIN_PASSWORD", "ROLE")
     @stdin = $stdin
     $stdin = StringIO.new
   end
@@ -17,6 +17,7 @@ class AdminBootstrapTest < ActiveSupport::TestCase
     $stdin = @stdin
     ENV.delete("ADMIN_EMAIL")
     ENV.delete("ADMIN_PASSWORD")
+    ENV.delete("ROLE")
     @env.each { |key, value| ENV[key] = value }
   end
 
@@ -43,6 +44,34 @@ class AdminBootstrapTest < ActiveSupport::TestCase
     token = out[%r{/admin/two_factor/link/(\S+)}, 1]
     assert_equal admin, AdminUser.find_by_token_for(:enrolment, token)
     assert_equal "console", AdminAction.find_by!(action: "admin.bootstrapped").admin_email
+    assert admin.superadmin?, "the first account manages the others"
+    assert_equal "superadmin", AdminAction.find_by!(action: "admin.bootstrapped").detail["role"]
+  end
+
+  test "ROLE=admin creates a plain admin; an existing account keeps its role unless ROLE is given" do
+    ENV["ADMIN_EMAIL"] = "plain@cinquante.test"
+    ENV["ADMIN_PASSWORD"] = PASSWORD
+    ENV["ROLE"] = "admin"
+    run_task "admin:bootstrap"
+    admin = AdminUser.find_by!(email: "plain@cinquante.test")
+    assert admin.admin?
+
+    ENV.delete("ROLE")
+    run_task "admin:bootstrap"
+    assert admin.reload.admin?
+
+    ENV["ROLE"] = "superadmin"
+    run_task "admin:bootstrap"
+    assert admin.reload.superadmin?
+    assert_equal "superadmin", AdminAction.order(:id).last.detail["role"]
+  end
+
+  test "an unknown ROLE is refused before anything is written" do
+    ENV["ADMIN_EMAIL"] = "team@cinquante.test"
+    ENV["ADMIN_PASSWORD"] = PASSWORD
+    ENV["ROLE"] = "owner"
+    assert_raises(SystemExit) { capture_io { run_task "admin:bootstrap" } }
+    assert_equal 0, AdminUser.count
   end
 
   test "running it again resets the password, creates nobody, and leaves an enrolled second factor alone" do
