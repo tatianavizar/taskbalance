@@ -10,9 +10,26 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_11_12_110000) do
+ActiveRecord::Schema[8.0].define(version: 2026_11_12_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+
+  create_table "absence_answers", force: :cascade do |t|
+    t.bigint "absence_inquiry_id", null: false
+    t.bigint "household_member_id", null: false
+    t.string "answer", null: false
+    t.datetime "answered_at", null: false
+    t.bigint "member_pause_id"
+    t.string "original_answer"
+    t.datetime "corrected_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["absence_inquiry_id", "household_member_id"], name: "idx_on_absence_inquiry_id_household_member_id_d7a225158d", unique: true
+    t.index ["absence_inquiry_id"], name: "index_absence_answers_on_absence_inquiry_id"
+    t.index ["household_member_id"], name: "index_absence_answers_on_household_member_id"
+    t.index ["member_pause_id"], name: "index_absence_answers_on_member_pause_id"
+    t.check_constraint "answer::text = ANY (ARRAY['yes'::character varying, 'no'::character varying]::text[])", name: "absence_answers_answer_values"
+  end
 
   create_table "absence_inquiries", force: :cascade do |t|
     t.bigint "household_id", null: false
@@ -64,6 +81,21 @@ ActiveRecord::Schema[8.0].define(version: 2026_11_12_110000) do
     t.index ["household_id"], name: "index_chores_on_household_id"
     t.index ["recurring_chore_id"], name: "index_chores_on_recurring_chore_id"
     t.index ["task_id"], name: "index_chores_on_task_id"
+  end
+
+  create_table "engine_events", force: :cascade do |t|
+    t.bigint "household_id", null: false
+    t.string "name", null: false
+    t.string "subject_type"
+    t.bigint "subject_id"
+    t.jsonb "payload", default: {}, null: false
+    t.datetime "occurred_at", null: false
+    t.datetime "delivered_at"
+    t.datetime "created_at", null: false
+    t.index ["household_id", "occurred_at"], name: "index_engine_events_on_household_id_and_occurred_at"
+    t.index ["household_id"], name: "index_engine_events_on_household_id"
+    t.index ["occurred_at"], name: "index_engine_events_undelivered", where: "(delivered_at IS NULL)"
+    t.index ["subject_type", "subject_id"], name: "index_engine_events_on_subject"
   end
 
   create_table "household_members", force: :cascade do |t|
@@ -231,6 +263,9 @@ ActiveRecord::Schema[8.0].define(version: 2026_11_12_110000) do
     t.index ["user_id"], name: "index_week_corrections_on_user_id"
   end
 
+  add_foreign_key "absence_answers", "absence_inquiries", on_delete: :cascade
+  add_foreign_key "absence_answers", "household_members", on_delete: :cascade
+  add_foreign_key "absence_answers", "member_pauses", on_delete: :nullify
   add_foreign_key "absence_inquiries", "household_members", on_delete: :cascade
   add_foreign_key "absence_inquiries", "households", on_delete: :cascade
   add_foreign_key "chore_logs", "chores", on_delete: :nullify
@@ -240,6 +275,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_11_12_110000) do
   add_foreign_key "chores", "recurring_chores"
   add_foreign_key "chores", "tasks", on_delete: :restrict, validate: false
   add_foreign_key "chores", "users", column: "assigned_to_id"
+  add_foreign_key "engine_events", "households", on_delete: :cascade
   add_foreign_key "household_members", "households"
   add_foreign_key "household_members", "users"
   add_foreign_key "household_weeks", "households", on_delete: :cascade

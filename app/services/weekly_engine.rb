@@ -133,6 +133,22 @@ class WeeklyEngine
     correction
   end
 
+  # A "yes" that declared `pause` was withdrawn (answer corrected to "no" by
+  # the member concerned, or changed by its author) and no "yes" is left:
+  # the pause goes, with the corrections it laid over final weeks, the
+  # inquiry is open again until its deadline, and the streak is recomputed.
+  def pause_withdrawn(pause, inquiry, now: Time.current)
+    household.with_lock do
+      membership = pause.household_member
+      WeekCorrection.where(member_pause_id: pause.id).delete_all
+      pause.destroy!
+      inquiry.reload
+      resolve_inquiry!(inquiry, "pending", now, outcome: "reopened") if inquiry.paused? && !inquiry.covered_by_pause?
+      recompute_streak!(membership)
+      refresh_state!
+    end
+  end
+
   private
 
   def correctable?(household_week, membership, now)
@@ -147,7 +163,7 @@ class WeeklyEngine
   end
 
   def cancel_regression!(inquiry, now)
-    inquiry.update!(status: "cancelled", resolved_at: now)
+    resolve_inquiry!(inquiry, "cancelled", now)
     return unless household.blocked?
     # Another member's regression applied during the same block still stands.
     return if household.absence_inquiries.regressed.where(deadline_at: household.blocked_at..).exists?
@@ -253,16 +269,33 @@ class WeeklyEngine
 
       streak = member.paused || !member.empty? ? 0 : membership.empty_weeks_streak + 1
       membership.update!(empty_weeks_streak: streak) if streak != membership.empty_weeks_streak
-      open_inquiry(membership, week, result) if streak == 2
+      open_inquiry(membership, week, now, result) if streak == 2
     end
   end
 
-  def open_inquiry(membership, week, result)
+  def open_inquiry(membership, week, now, result)
     inquiry = household.absence_inquiries.find_or_create_by!(household_member: membership, last_week_start: week.monday) do |i|
       i.first_week_start = week.previous.monday
       i.deadline_at = AbsenceInquiry.deadline_for(week)
     end
-    result.inquiries_opened << inquiry if inquiry.previously_new_record?
+    return unless inquiry.previously_new_record?
+
+    result.inquiries_opened << inquiry
+    EngineEvent.record!(household: household, name: "absence_inquiry.opened", subject: inquiry, at: now,
+                        **inquiry_payload(inquiry), first_week_start: inquiry.first_week_start,
+                        last_week_start: inquiry.last_week_start, deadline_at: inquiry.deadline_at)
+  end
+
+  # Every inquiry status change goes through here, so lot 8 gets one event each.
+  def resolve_inquiry!(inquiry, status, at, outcome: status)
+    inquiry.update!(status: status, resolved_at: (at unless status == "pending"))
+    EngineEvent.record!(household: household, name: "absence_inquiry.resolved", subject: inquiry, at: at,
+                        **inquiry_payload(inquiry), outcome: outcome)
+  end
+
+  def inquiry_payload(inquiry)
+    member = inquiry.household_member
+    { inquiry_id: inquiry.id, household_member_id: member.id, user_id: member.user_id, first_name: member.user.first_name }
   end
 
   def resolve_due_inquiries(before, result)
@@ -278,12 +311,12 @@ class WeeklyEngine
   end
 
   def resolve_as_paused(inquiry, at)
-    inquiry.update!(status: "paused", resolved_at: at)
+    resolve_inquiry!(inquiry, "paused", at)
     inquiry.household_member.update!(empty_weeks_streak: 0)
   end
 
   def regress!(inquiry)
-    inquiry.update!(status: "regressed", resolved_at: inquiry.deadline_at)
+    resolve_inquiry!(inquiry, "regressed", inquiry.deadline_at)
     return if household.blocked?
 
     from = household.level
