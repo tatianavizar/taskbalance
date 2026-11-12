@@ -21,6 +21,8 @@
 #                             absence_inquiry_id (every LevelChange, any origin)
 #   member_pause.declared     household_member_id, user_id, starts_on, ends_on,
 #                             declared_by_id (every pause path)
+#   household.admin_unblocked admin_user_id, level, balanced_weeks_count (the back
+#                             office lifted the block; no subject, nothing is sent)
 #
 # Notifications::Dispatcher.deliver_pending drains it: an event is marked
 # delivered only after the Notifier ran for it, so a crashed dispatch is
@@ -29,7 +31,7 @@ class EngineEvent < ApplicationRecord
   NAMES = %w[
     absence_inquiry.opened absence_answer.given absence_answer.corrected absence_inquiry.resolved
     household_week.provisional household_week.final member.first_empty_week household.unblocked
-    level.changed member_pause.declared
+    level.changed member_pause.declared household.admin_unblocked
   ].freeze
 
   belongs_to :household

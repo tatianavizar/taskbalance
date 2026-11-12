@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_11_13_091400) do
+ActiveRecord::Schema[8.0].define(version: 2026_11_13_092100) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -45,6 +45,32 @@ ActiveRecord::Schema[8.0].define(version: 2026_11_13_091400) do
     t.index ["household_member_id", "last_week_start"], name: "idx_on_household_member_id_last_week_start_004aa25e77", unique: true
     t.index ["household_member_id"], name: "index_absence_inquiries_on_household_member_id"
     t.index ["status", "deadline_at"], name: "index_absence_inquiries_on_status_and_deadline_at"
+  end
+
+  create_table "admin_actions", force: :cascade do |t|
+    t.bigint "admin_user_id"
+    t.string "admin_email", null: false
+    t.string "action", null: false
+    t.string "record_type"
+    t.bigint "record_id"
+    t.jsonb "detail", default: {}, null: false
+    t.datetime "created_at", null: false
+    t.index ["admin_user_id"], name: "index_admin_actions_on_admin_user_id"
+    t.index ["created_at"], name: "index_admin_actions_on_created_at"
+    t.index ["record_type", "record_id"], name: "index_admin_actions_on_record_type_and_record_id"
+  end
+
+  create_table "admin_users", force: :cascade do |t|
+    t.string "email", null: false
+    t.string "encrypted_password", null: false
+    t.text "otp_secret"
+    t.integer "consumed_timestep"
+    t.boolean "otp_required_for_login", default: false, null: false
+    t.integer "failed_attempts", default: 0, null: false
+    t.datetime "locked_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["email"], name: "index_admin_users_on_email", unique: true
   end
 
   create_table "approvals", force: :cascade do |t|
@@ -432,6 +458,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_11_13_091400) do
   add_foreign_key "absence_answers", "member_pauses", on_delete: :nullify
   add_foreign_key "absence_inquiries", "household_members", on_delete: :cascade
   add_foreign_key "absence_inquiries", "households", on_delete: :cascade
+  add_foreign_key "admin_actions", "admin_users", on_delete: :nullify
   add_foreign_key "approvals", "users", on_delete: :cascade
   add_foreign_key "chore_assignees", "chores", on_delete: :cascade
   add_foreign_key "chore_assignees", "invitations", on_delete: :cascade

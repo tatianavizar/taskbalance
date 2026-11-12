@@ -1,5 +1,6 @@
 class User < ApplicationRecord
   include TimeZoned
+  include BackOfficeSearchable
 
   FIRST_NAME_MAX_LENGTH = 50
 
@@ -23,6 +24,9 @@ class User < ApplicationRecord
   has_many :chore_logs
   # Private: only their author ever sees them.
   has_many :chore_preferences, dependent: :delete_all
+
+  # What the back office may filter on (never a log, a preference or a household figure).
+  self.ransackable_attribute_names = %w[first_name email confirmed_at created_at deleted_at]
 
   before_validation { self.first_name = first_name.to_s.strip.presence }
 

@@ -12,10 +12,11 @@
 #   bin/rails active_admin:css       # builds app/assets/builds/active_admin.css
 #   bin/rails tailwindcss:build      # app CSS, then this one (also assets:precompile)
 module ActiveAdminAssets
-  OUT_DIR = "tmp/active_admin".freeze
+  # (`unless`: the file may be loaded twice, e.g. by tests that call load_tasks.)
+  OUT_DIR = "tmp/active_admin".freeze unless const_defined?(:OUT_DIR)
 
   # Values the gem's plugin reads from Tailwind's default theme (it only uses these).
-  PRELUDE = <<~JS.freeze
+  PRELUDE = <<~JS.freeze unless const_defined?(:PRELUDE)
     const plugin = (callback) => callback;
     const spacing = { 2: '0.5rem', 3: '0.75rem', 8: '2rem' };
     const borderWidth = { DEFAULT: '1px' };
@@ -54,7 +55,7 @@ module ActiveAdminAssets
       @source "#{gem}/app/views";
       @source "#{root.join("app/admin")}";
       @source "#{root.join("app/views/active_admin")}";
-      @source "#{root.join("app/views/admin")}";
+      @source "#{root.join("app/views/back_office")}";
       @source "#{root.join("app/views/layouts")}";
       @import "#{root.join("app/assets/tailwind/active_admin.css")}";
     CSS

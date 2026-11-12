@@ -1,5 +1,6 @@
 class Household < ApplicationRecord
   include TimeZoned
+  include BackOfficeSearchable
 
   NAME_MAX_LENGTH = 60
 
@@ -38,6 +39,8 @@ class Household < ApplicationRecord
     setting_up: "setting_up", solo: "solo", active: "active",
     warned: "warned", blocked: "blocked", dormant: "dormant"
   }, default: "solo", validate: true
+
+  self.ransackable_attribute_names = %w[name state time_zone level blocked_at created_at]
 
   before_validation { self.name = name.to_s.strip.presence }
 
@@ -98,6 +101,22 @@ class Household < ApplicationRecord
       update!(state: "solo")
     elsif count >= 2 && solo?
       update!(state: "active")
+    end
+  end
+
+  # Back office: the team lifts a block by hand (docs/decisions.md, 2026-11-13).
+  # Only the state and the date go back; the level and the balanced-weeks
+  # counter are the engine's and stay as they are. Recorded as an EngineEvent
+  # (`household.admin_unblocked`, nothing is sent for it) next to the engine's
+  # own. Returns false when the household is not blocked.
+  def admin_unblock!(by:)
+    with_lock do
+      return false unless blocked?
+
+      update!(state: household_members.count >= 2 ? "active" : "solo", blocked_at: nil)
+      EngineEvent.record!(household: self, name: "household.admin_unblocked",
+                          admin_user_id: by.id, level: level, balanced_weeks_count: balanced_weeks_count)
+      true
     end
   end
 

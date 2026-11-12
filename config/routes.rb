@@ -17,6 +17,17 @@ Rails.application.routes.draw do
     get "users/confirmation/pending", to: "users/confirmations#pending", as: :pending_user_confirmation
   end
 
+  # Back-office (ActiveAdmin 4) : l'équipe 50/50, comptes AdminUser séparés de
+  # ceux de l'app, double authentification obligatoire. Pas d'inscription, pas de
+  # mot de passe oublié (voir `bin/rails admin:bootstrap`).
+  devise_for :admin_users, ActiveAdmin::Devise.config.merge(
+    controllers: ActiveAdmin::Devise.controllers.merge(sessions: "back_office/sessions")
+  )
+  scope "admin", module: "back_office", as: "back_office" do
+    resource :two_factor, only: [ :show, :create ]
+  end
+  ActiveAdmin.routes(self)
+
   # Vérification de santé du serveur
   get "up" => "rails/health#show", as: :rails_health_check
 
