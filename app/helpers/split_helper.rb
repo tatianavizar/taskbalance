@@ -1,6 +1,10 @@
 # Wording of the split screens (C4 to C16, B10 to B14). Percentages only,
 # never « points » (decision 2026-11-08).
 module SplitHelper
+  # From this many people, a task is assigned from a bottom sheet (P6, C14)
+  # instead of one chip per person (decision 2026-11-08).
+  SHEET_FROM = 3
+
   # A share for display: rounded, « — » when nothing is planned on it.
   def share_percent(value)
     value.nil? ? "—" : "#{value.round} %"

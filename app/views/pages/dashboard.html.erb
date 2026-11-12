@@ -74,7 +74,7 @@
     <% b = home.balance(dimension) %>
     <%= balance title: t("home.dimension.#{dimension}"),
           count: (b.total.zero? ? t("home.count_none") : t("home.count", count: b.count.to_i, total: b.total)),
-          name: current_user.first_name, share: b.share, others: b.others, balanced: b.in_zone, fair: b.fair %>
+          name: current_user.first_name, share: b.share, others: b.others, balanced: b.in_zone, fair: b.fair, zone: b.zone %>
   <% end %>
 
   <%= level_progress level: home.level, done: home.balanced_weeks, total: home.next_threshold, href: report_path %>
