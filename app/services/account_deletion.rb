@@ -9,7 +9,9 @@
 #      handed over, manager role passed on; the last one out deletes it);
 #   2. their logs: see `dispose_of_logs!` (product decision, below);
 #   3. what is theirs only goes: chore preferences, notifications and their
-#      settings, validations; invitations addressed to them are cancelled;
+#      settings, validations; invitations addressed to them are cancelled,
+#      and every invitation that named them (by account or by address, in any
+#      state) gets the anonymised address and « Ancien membre »;
 #   4. past snapshots that name them (household_weeks members and pauses,
 #      week plans, week corrections, other people's notifications, the
 #      engine outbox) keep their figures and read « Ancien membre »;
@@ -58,14 +60,15 @@ class AccountDeletion
     return false if errors.any?
 
     old_email = user.email
+    anonymous_email = "ancien-membre-#{user.id}-#{SecureRandom.hex(8)}@#{ANONYMOUS_EMAIL_DOMAIN}"
     User.transaction do
       user.lock!
       user.household_membership&.leave!
       dispose_of_logs!
-      cancel_invitations!(old_email)
+      anonymise_invitations!(old_email, anonymous_email)
       drop_personal_data!
       anonymise_snapshots!
-      anonymise_account!
+      anonymise_account!(anonymous_email)
     end
     true
   end
@@ -81,8 +84,14 @@ class AccountDeletion
 
   private
 
-  def cancel_invitations!(email)
-    Invitation.live.where(invitee_id: user.id).or(Invitation.live.where(email: email)).find_each(&:cancel!)
+  # Every state: an accepted, declined or expired invitation is history, but it
+  # still holds the real address and first name. Nothing stays pending first,
+  # so the one-pending-per-address index cannot trip on the shared address.
+  def anonymise_invitations!(old_email, anonymous_email)
+    invitations = Invitation.where(invitee_id: user.id).or(Invitation.where(email: old_email.to_s.downcase))
+    Invitation.expire_overdue!(invitations)
+    invitations.live.find_each(&:cancel!)
+    invitations.update_all(email: anonymous_email, first_name: ANONYMOUS_FIRST_NAME)
   end
 
   def drop_personal_data!
@@ -139,11 +148,11 @@ class AccountDeletion
     end
   end
 
-  def anonymise_account!
+  def anonymise_account!(anonymous_email)
     user.password = SecureRandom.base58(48)
     user.update_columns(
       first_name: ANONYMOUS_FIRST_NAME,
-      email: "ancien-membre-#{user.id}-#{SecureRandom.hex(8)}@#{ANONYMOUS_EMAIL_DOMAIN}",
+      email: anonymous_email,
       encrypted_password: user.encrypted_password,
       unconfirmed_email: nil, confirmation_token: nil,
       reset_password_token: nil, reset_password_sent_at: nil, remember_created_at: nil,
