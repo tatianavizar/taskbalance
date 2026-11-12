@@ -16,6 +16,8 @@ class Household < ApplicationRecord
   has_many :level_changes, dependent: :delete_all
   has_many :absence_inquiries, dependent: :delete_all
   has_many :week_corrections, dependent: :delete_all
+  # Outbox for lot 8 (EngineEvent): nothing is sent from here.
+  has_many :engine_events, dependent: :delete_all
   has_many :member_pauses, through: :household_members
 
   # setting_up is set by the setup flow (lot 2); solo/active follow the member
