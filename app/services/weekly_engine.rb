@@ -295,7 +295,7 @@ class WeeklyEngine
       streak = member.paused || !member.empty? ? 0 : membership.empty_weeks_streak + 1
       membership.update!(empty_weeks_streak: streak) if streak != membership.empty_weeks_streak
       first_empty_week(membership, member, record, now, result) if streak == 1
-      open_inquiry(membership, week, now, result) if streak == 2
+      open_inquiry(membership, week, now, result) if streak == HouseholdRules::EMPTY_WEEKS_FOR_INQUIRY
     end
   end
 

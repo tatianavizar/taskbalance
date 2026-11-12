@@ -55,7 +55,7 @@
         <div class="font-display text-xl font-semibold leading-[26px] tabular"><%= t("home.headline.#{headline.kind}.#{headline.dimension}", name: headline.member.first_name, share: headline.share) %></div>
         <p class="mt-1.5 mb-0 text-sm leading-5">
           <%= t("home.headline.#{headline.kind}_body", bound: (headline.kind == :above ? headline.zone.end : headline.zone.begin)) %>
-          <%= link_to t("home.how"), intro_path(1), class: "font-bold" %>
+          <%= link_to t("home.how"), rules_path, class: "font-bold" %>
         </p>
       <% end %>
     </div>

@@ -1,0 +1,37 @@
+fr:
+  rules:
+    title: "Comment on calcule ?"
+    heading: "Les règles, en un écran"
+    account_hint: "Zone, niveaux, absences et pauses"
+    intro_link: "Revoir l'introduction"
+    moment: "%{day} %{hour}:00"
+    balanced:
+      term: "Semaine équilibrée"
+      body_html: "La part de chaque membre est dans la zone, sur la charge mentale <b>et</b> sur l'exécution. La part juste est 100 divisés par le nombre de membres, arrondie. Le temps est affiché, jamais compté."
+      caption: "Part juste et zone équilibrée selon le nombre de membres"
+      members: "Membres"
+      fair: "Part juste"
+      zone: "Zone"
+      range: "de %{min} à %{max} %"
+      exact: "La zone se juge sur la part exacte, avant arrondi : %{below} % est hors de la zone de %{min} à %{max} %."
+    levels:
+      term: "Niveaux"
+      body: "Les niveaux 1 à 4, puis le niveau ultime, demandent %{weeks} semaines équilibrées cumulées. Une semaine non équilibrée arrête la montée, sans faire reculer."
+    ultimate:
+      term: "Ultime"
+      body: "Le foyer garde le niveau ultime avec au plus %{quota} semaines non équilibrées sur les %{window} dernières, à partir de son obtention. Au-delà, retour au niveau 4, et le niveau ultime revient dès que le compte repasse à %{quota}. Les semaines neutres ne comptent pas."
+    empty:
+      term: "Sans saisie"
+      body: "Constaté le lundi, une fois la semaine close. 1 semaine : alerte à tout le foyer. %{weeks} semaines de suite : tout le foyer est interrogé, la personne absente comprise, et un seul « Oui » déclare la pause. Réponse avant %{deadline}. Sans « Oui » : un niveau de moins, et la progression est bloquée jusqu'à une semaine où chaque membre enregistre."
+    pauses:
+      term: "Pauses"
+      body: "Autant que nécessaire, dates visibles, motif privé. Une semaine touchée par une pause, même d'un jour, ne compte pas. Après coup : seulement sur des semaines sans saisie, %{days} jours en arrière au plus, sauf celles qui ont déclenché la question d'absence. Une pause annule une descente, sans accord à demander."
+    closing:
+      term: "Clôture"
+      body: "Le bilan de %{provisional} est provisoire ; la semaine se clôt %{final}. Une semaine compte si tous les membres étaient là depuis son lundi. Une tâche enregistrée ensuite pour une semaine close va dans le journal, sans changer le bilan."
+    split:
+      term: "Répartition"
+      body: "Proposée chaque lundi, puis fixe. L'écart de la semaine passée est compensé dans la limite de la zone ; le reste est reporté."
+    composition:
+      term: "Arrivée, départ"
+      body: "Quand un membre arrive ou part, le niveau repart de zéro. L'historique des bilans reste."

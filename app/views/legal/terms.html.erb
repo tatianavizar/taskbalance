@@ -1,0 +1,60 @@
+<%# Conditions générales d'utilisation : brouillon. Les mots entre crochets sont à remplir avant la publication. %>
+<% provide :chrome, "none" %>
+<% provide :title, t("legal.terms.title") %>
+<% todo = ->(text) { tag.span("[#{text}]", class: "legal-todo") } %>
+<div class="flex items-center gap-2.5">
+  <%= back_button(@back_path) %>
+  <span class="font-bold"><%= t("legal.terms.title") %></span>
+</div>
+
+<h1 class="screen-title"><%= t("legal.terms.heading") %></h1>
+<%= render "legal/draft_notice" %>
+<p class="m-0 text-[13px] leading-[18px] text-muted"><%= t("legal.updated", date: "12 novembre 2026") %></p>
+
+<article class="legal" id="terms">
+  <h2>1. Qui édite 50/50</h2>
+  <p>50/50 est édité par <%= todo.("À COMPLÉTER : nom ou raison sociale") %>, <%= todo.("À COMPLÉTER : forme juridique") %>, dont le siège est situé <%= todo.("À COMPLÉTER : adresse") %>. Numéro d'immatriculation : <%= todo.("À COMPLÉTER") %>. Contact : <%= todo.("À COMPLÉTER : adresse email de contact") %>. Responsable de la publication : <%= todo.("À COMPLÉTER") %>.</p>
+
+  <h2>2. Ce que fait le service</h2>
+  <p>50/50 rend visible la répartition des tâches domestiques d'un foyer. Chaque membre enregistre ses propres tâches, en distinguant la charge mentale (penser, planifier, décider) et l'exécution (faire). L'appli calcule la part de chaque membre, les bilans de la semaine et les niveaux du foyer. Les règles de calcul sont décrites sur l'écran « Comment on calcule ? ».</p>
+
+  <h2>3. Le compte</h2>
+  <ul>
+    <li>Un compte demande un prénom, une adresse email et un mot de passe.</li>
+    <li>Un compte appartient à une seule personne et à un seul foyer. Un foyer compte six personnes au plus.</li>
+    <li>L'adresse email est confirmée par un lien envoyé par email. La confirmation ne bloque pas la création du foyer.</li>
+    <li>Vous gardez votre mot de passe pour vous. Vous pouvez le changer depuis « Mon compte ».</li>
+  </ul>
+
+  <h2>4. Comment utiliser 50/50</h2>
+  <ul>
+    <li>Chaque membre enregistre ses propres tâches. On n'enregistre pas à la place d'une autre personne.</li>
+    <li>Les enregistrements doivent correspondre à ce qui a été fait. Le service ne vérifie pas : il affiche ce que le foyer déclare.</li>
+    <li>50/50 n'est pas un outil de surveillance. On ne l'utilise pas pour contrôler une personne qui n'a pas rejoint le foyer.</li>
+    <li>Les invitations s'envoient à des personnes qui en connaissent la raison. Une invitation vaut 14 jours et se refuse librement.</li>
+  </ul>
+
+  <h2>5. Ce que voit le foyer</h2>
+  <p>Les membres d'un foyer voient les parts de chacun, le nombre de tâches enregistrées et les bilans. Les préférences de tâches et le motif d'une pause restent privés : seule la personne concernée les voit. Le détail est dans la politique de confidentialité.</p>
+
+  <h2>6. Les enregistrements restent à la personne qui les crée</h2>
+  <p>Un enregistrement appartient à la personne qui l'a enregistré. Quand elle quitte un foyer, ses enregistrements la suivent : ils sont détachés du foyer et restent les siens. Quand elle supprime son compte, ils sont supprimés. Les bilans passés d'un foyer gardent leurs chiffres ; le prénom de la personne y devient « Ancien membre ».</p>
+
+  <h2>7. Niveaux et bilans</h2>
+  <p>Les niveaux, les bilans et les alertes sont calculés automatiquement à partir des enregistrements. Ils décrivent la répartition déclarée, ils ne la jugent pas. Les règles peuvent évoluer ; un changement de règle est annoncé dans l'appli avant son application. <%= todo.("À VALIDER : engagement de préavis") %></p>
+
+  <h2>8. Fin du compte</h2>
+  <ul>
+    <li>Vous supprimez votre compte quand vous le voulez, depuis « Mon compte ».</li>
+    <li>L'éditeur peut suspendre ou fermer un compte en cas d'usage contraire à ces conditions, après en avoir informé la personne par email, sauf urgence. <%= todo.("À VALIDER") %></li>
+  </ul>
+
+  <h2>9. Disponibilité et responsabilité</h2>
+  <p>Le service est fourni tel quel. L'éditeur s'efforce de le garder disponible, sans garantie d'accès continu. <%= todo.("À COMPLÉTER : limitation de responsabilité, à rédiger avec un conseil juridique") %></p>
+
+  <h2>10. Données personnelles</h2>
+  <p>Le traitement des données personnelles est décrit dans la <%= link_to t("legal.privacy.title"), privacy_path, class: "link" %>.</p>
+
+  <h2>11. Modification des conditions, droit applicable</h2>
+  <p>Ces conditions peuvent changer. La version en vigueur est celle de cette page, avec sa date de mise à jour. Droit applicable et juridiction compétente : <%= todo.("À COMPLÉTER avec un conseil juridique") %>.</p>
+</article>

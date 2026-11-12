@@ -1,0 +1,75 @@
+<%# I4 : « Comment on calcule ? ». Tous les chiffres viennent de HouseholdRules. %>
+<% provide :chrome, "none" %>
+<% provide :title, t("rules.title") %>
+<% two = HouseholdRules.zone(2) %>
+<% deadline_day = t("date.day_names")[(1 + HouseholdRules::ABSENCE_DEADLINE_DAY_OFFSET) % 7] %>
+<% deadline = t("rules.moment", day: deadline_day, hour: HouseholdRules::ABSENCE_DEADLINE_HOUR) %>
+<% thresholds = HouseholdRules::LEVEL_THRESHOLDS %>
+<div class="flex items-center gap-2.5">
+  <%= back_button(@back_path, label: t("common.close")) %>
+  <span class="font-bold"><%= t("rules.title") %></span>
+</div>
+
+<h1 class="screen-title"><%= t("rules.heading") %></h1>
+
+<dl class="card m-0 !py-1" id="rules">
+  <div class="rule-row" id="rule-balanced">
+    <dt class="font-bold"><%= t("rules.balanced.term") %></dt>
+    <dd class="m-0">
+      <%= t("rules.balanced.body_html") %>
+      <table class="w-full mt-2 text-sm tabular" id="rules-zones">
+        <caption class="sr-only"><%= t("rules.balanced.caption") %></caption>
+        <thead>
+          <tr class="text-left text-muted">
+            <th scope="col" class="font-semibold py-1"><%= t("rules.balanced.members") %></th>
+            <th scope="col" class="font-semibold py-1"><%= t("rules.balanced.fair") %></th>
+            <th scope="col" class="font-semibold py-1"><%= t("rules.balanced.zone") %></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @sizes.each do |row| %>
+            <tr class="border-t border-divider">
+              <th scope="row" class="font-semibold text-left py-1.5"><%= row[:members] %></th>
+              <td class="py-1.5"><%= row[:fair] %> %</td>
+              <td class="py-1.5"><%= t("rules.balanced.range", min: row[:zone].min, max: row[:zone].max) %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+      <p class="m-0 mt-2 text-[13px] leading-[18px] text-muted"><%= t("rules.balanced.exact", below: "#{two.min - 0.5}".tr(".", ","), min: two.min, max: two.max) %></p>
+    </dd>
+  </div>
+  <div class="rule-row" id="rule-levels">
+    <dt class="font-bold"><%= t("rules.levels.term") %></dt>
+    <dd class="m-0"><%= t("rules.levels.body", weeks: "#{thresholds[0...-1].join(", ")} puis #{thresholds.last}") %></dd>
+  </div>
+  <div class="rule-row" id="rule-ultimate">
+    <dt class="font-bold"><%= t("rules.ultimate.term") %></dt>
+    <dd class="m-0"><%= t("rules.ultimate.body", quota: HouseholdRules::ULTIMATE_UNBALANCED_QUOTA, window: HouseholdRules::ULTIMATE_WINDOW_WEEKS) %></dd>
+  </div>
+  <div class="rule-row" id="rule-empty">
+    <dt class="font-bold"><%= t("rules.empty.term") %></dt>
+    <dd class="m-0"><%= t("rules.empty.body", weeks: HouseholdRules::EMPTY_WEEKS_FOR_INQUIRY, deadline: deadline) %></dd>
+  </div>
+  <div class="rule-row" id="rule-pauses">
+    <dt class="font-bold"><%= t("rules.pauses.term") %></dt>
+    <dd class="m-0"><%= t("rules.pauses.body", days: HouseholdRules::PAUSE_RETROACTIVE_DAYS) %></dd>
+  </div>
+  <div class="rule-row" id="rule-closing">
+    <dt class="font-bold"><%= t("rules.closing.term") %></dt>
+    <dd class="m-0"><%= t("rules.closing.body", provisional: t("rules.moment", day: t("date.day_names")[0], hour: HouseholdRules::REPORT_PROVISIONAL_HOUR),
+                           final: t("rules.moment", day: t("date.day_names")[1], hour: HouseholdRules::REPORT_FINAL_HOUR)) %></dd>
+  </div>
+  <div class="rule-row" id="rule-split">
+    <dt class="font-bold"><%= t("rules.split.term") %></dt>
+    <dd class="m-0"><%= t("rules.split.body") %></dd>
+  </div>
+  <div class="rule-row" id="rule-composition">
+    <dt class="font-bold"><%= t("rules.composition.term") %></dt>
+    <dd class="m-0"><%= t("rules.composition.body") %></dd>
+  </div>
+</dl>
+
+<% unless user_signed_in? %>
+  <%= link_to t("rules.intro_link"), intro_path(1), class: "link self-start inline-flex items-center min-h-[44px]" %>
+<% end %>

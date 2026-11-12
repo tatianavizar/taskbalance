@@ -24,6 +24,16 @@ Rails.application.routes.draw do
   get "intro", to: redirect("/intro/1"), as: :intro_start
   get "intro/:step", to: "intro#show", as: :intro, constraints: { step: /\d+/ }
 
+  # Comment on calcule ? (I4) : les règles, publiques, lues dans HouseholdRules.
+  get "regles", to: "rules#show", as: :rules
+
+  # Pages légales (brouillon) : conditions d'utilisation et confidentialité.
+  get "cgu", to: "legal#terms", as: :terms
+  get "confidentialite", to: "legal#privacy", as: :privacy
+
+  # « OK » du bandeau cookies : retient qu'il a été lu, dans un cookie nécessaire.
+  resource :cookie_notice, path: "cookies", only: [ :create ]
+
   # Compte (F4) : prénom, email et mot de passe se modifient chacun sur leur écran.
   get "compte" => "accounts#show", as: :account
   scope "compte", controller: "accounts" do

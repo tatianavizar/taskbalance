@@ -18,6 +18,20 @@ module HouseholdRules
   # many weeks.
   ULTIMATE_WINDOW_WEEKS = 52
 
+  # A member who logs nothing for this many consecutive counting weeks opens
+  # the absence question (E11, P5).
+  EMPTY_WEEKS_FOR_INQUIRY = 2
+  # The answers to the absence question are open until Wednesday (2 days after
+  # the Monday of the closing) at this hour, household time zone.
+  ABSENCE_DEADLINE_DAY_OFFSET = 2
+  ABSENCE_DEADLINE_HOUR = 20
+  # The week report is provisional from Sunday 20:00 and final on the
+  # following Monday at 3:00, household time zone.
+  REPORT_PROVISIONAL_HOUR = 20
+  REPORT_FINAL_HOUR = 3
+  # A pause can start this many days back at most (D3).
+  PAUSE_RETROACTIVE_DAYS = 14
+
   # Fair share of one member, in %, for a household of `members` people
   # (100 / members, rounded half up). nil for an empty household.
   def self.fair_share(members)
