@@ -1,0 +1,5 @@
+<div class="dots" role="img" aria-label="<%= t("components.progress_dots.aria", current: current, total: total) %>">
+  <% (1..total).each do |n| %>
+    <span class="dot <%= "dot-current" if n == current %>" aria-hidden="true"></span>
+  <% end %>
+</div>

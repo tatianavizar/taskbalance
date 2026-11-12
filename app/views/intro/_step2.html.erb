@@ -1,0 +1,31 @@
+<% provide :title, strip_tags(t("intro.progress.title_html").gsub("<br>", " ")) %>
+<% zone = HouseholdRules.zone(2) %>
+<% zone3 = HouseholdRules.zone(3) %>
+<h1 class="intro-title rise delay-1"><%= t("intro.progress.title_html") %></h1>
+
+<div class="rise delay-2 rounded-[22px] p-[18px]" style="background: #18261f">
+  <div class="flex justify-between text-sm">
+    <b><%= t("intro.progress.balanced") %></b>
+    <span class="text-mint"><%= t("intro.progress.zone", min: zone.min, max: zone.max) %></span>
+  </div>
+  <div class="zone-track my-[18px]" role="img" aria-label="<%= t("intro.progress.zone_aria", min: zone.min, max: zone.max) %>">
+    <div class="zone-band" style="left: <%= zone.min %>%; width: <%= zone.max - zone.min %>%"></div>
+    <div class="zone-fill sway" style="width: 52%"></div>
+  </div>
+  <div class="text-sm leading-5"><%= t("intro.progress.zone_body_html", min: zone.min, max: zone.max, min3: zone3.min, max3: zone3.max) %></div>
+</div>
+
+<div class="rise delay-3">
+  <div class="font-bold mb-3"><%= t("intro.progress.levels") %></div>
+  <div class="grid grid-cols-5 gap-2 text-center">
+    <% HouseholdRules::LEVEL_THRESHOLDS.each_with_index do |weeks, i| %>
+      <% ultimate = i == HouseholdRules::LEVEL_THRESHOLDS.size - 1 %>
+      <div>
+        <div class="level-dot" <%= tag.attributes(style: ("background: var(--color-self); color: #fff; font-size: 15px" if ultimate)) %>><%= ultimate ? t("intro.progress.ultimate_short") : i + 1 %></div>
+        <div class="text-xs leading-4 mt-1.5" style="color: #c3d9cc"><%= t("intro.progress.weeks", count: weeks) %></div>
+      </div>
+    <% end %>
+  </div>
+</div>
+
+<p class="m-0 text-sm leading-5 rise delay-3" style="color: #d6e6dd"><%= t("intro.progress.note", rate: HouseholdRules::ULTIMATE_KEEP_RATE) %></p>

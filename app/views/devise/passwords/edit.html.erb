@@ -1,14 +1,37 @@
 <% provide :chrome, "none" %>
-<% provide :title, t("devise.passwords.edit.change_your_password") %>
-<h1 class="screen-title"><%= t("devise.passwords.edit.change_your_password") %></h1>
+<% if @reset_link_expired %>
+  <%# A9: expired, already used or unknown link. The password has not changed. %>
+  <% provide :title, t("auth.reset_expired.title") %>
+  <div class="pt-1"><%= logo %></div>
+  <h1 class="screen-title"><%= t("auth.reset_expired.title") %></h1>
+  <div class="alert-box !rounded-[18px] !p-[18px]" role="alert">
+    <%= t("auth.reset_expired.body", hours: Devise.reset_password_within.in_hours.to_i) %>
+    <% if @reset_link_sent_at %>
+      <% sent_at = @reset_link_sent_at.in_time_zone(@reset_link_zone || "Europe/Paris") %>
+      <%= t("auth.reset_expired.sent_at", date: l(sent_at.to_date, format: :short), time: l(sent_at, format: :hour)) %>
+    <% end %>
+  </div>
+  <p class="m-0 text-sm leading-5 text-muted"><%= t("auth.reset_expired.note") %></p>
+  <div class="mt-auto flex flex-col gap-3 pb-2">
+    <%= link_to t("auth.reset_expired.new_link"), new_password_path(resource_name), class: "btn btn-primary" %>
+    <%= link_to t("auth.reset_expired.back"), new_session_path(resource_name), class: "btn btn-secondary" %>
+  </div>
+<% else %>
+  <% provide :title, t("auth.reset_form.title") %>
+  <div class="pt-1"><%= logo %></div>
+  <div>
+    <h1 class="screen-title"><%= t("auth.reset_form.title") %></h1>
+    <p class="screen-subtitle"><%= t("auth.reset_form.subtitle", email: @reset_email) %></p>
+  </div>
 
-<%= form_for(resource, as: resource_name, url: password_path(resource_name), html: { method: :put, class: "flex flex-col gap-4 flex-1" }) do |f| %>
-  <%= f.error_summary %>
-  <%= f.hidden_field :reset_password_token, value: resource.reset_password_token %>
-  <%= f.field :password, as: :password, label: t("devise.passwords.edit.new_password"), autofocus: true, autocomplete: "new-password",
-        hint: (t("auth.password_hint", count: @minimum_password_length) if @minimum_password_length) %>
-  <%= f.field :password_confirmation, as: :password, label: t("devise.passwords.edit.confirm_new_password"), autocomplete: "new-password" %>
-  <%= sticky_cta do %>
-    <%= f.submit t("devise.passwords.edit.change_my_password") %>
+  <%= form_for(resource, as: resource_name, url: password_path(resource_name), html: { method: :put, class: "flex flex-col gap-4 flex-1" }) do |f| %>
+    <%= f.error_summary %>
+    <%= f.hidden_field :reset_password_token, value: params[:reset_password_token] || params.dig(:user, :reset_password_token) %>
+    <%= f.field :password, as: :password, label: t("auth.reset_form.new_password"), autofocus: true, autocomplete: "new-password",
+          hint: (t("auth.password_hint", count: @minimum_password_length) if @minimum_password_length) %>
+    <%= f.field :password_confirmation, as: :password, label: t("auth.reset_form.confirm"), autocomplete: "new-password" %>
+    <%= sticky_cta do %>
+      <%= f.submit t("auth.reset_form.submit") %>
+    <% end %>
   <% end %>
 <% end %>

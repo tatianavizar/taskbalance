@@ -12,6 +12,17 @@ class Users::RegistrationsController < Devise::RegistrationsController
     super
   end
 
+  # The account screen (F4) replaces Devise's single edit form.
+  def edit
+    redirect_to account_path
+  end
+
+  # Account deletion (F5) is lot 7: it must anonymise and keep the logs, which
+  # belong to their author. Until then Devise's DELETE /users is closed.
+  def destroy
+    raise ActionController::RoutingError, "Account deletion is not available yet"
+  end
+
   def create
     build_resource(sign_up_params)
     skip_confirmation_if_invited(resource)
@@ -40,6 +51,23 @@ class Users::RegistrationsController < Devise::RegistrationsController
       set_minimum_password_length
       respond_with resource
     end
+  end
+
+  protected
+
+  # A new account lands on "confirm your email" (A10) until it is confirmed,
+  # which never blocks anything (decision of 2026-11-08). An invited address
+  # arrives confirmed and goes straight to the app.
+  def after_sign_up_path_for(resource)
+    resource.confirmed? ? dashboard_path : pending_user_confirmation_path
+  end
+
+  # The browser sends its zone; a name the server does not know is dropped so
+  # that the account keeps the default instead of failing on a hidden field.
+  def sign_up_params
+    permitted = super
+    permitted.delete(:time_zone) unless TZInfo::Timezone.all_identifiers.include?(permitted[:time_zone])
+    permitted
   end
 
   private

@@ -19,4 +19,9 @@ end
 
 class ActionDispatch::IntegrationTest
   include Devise::Test::IntegrationHelpers
+
+  # The message of an inline field error, without its "!" icon.
+  def assert_field_error(message)
+    assert_select ".field-error span:not([aria-hidden])", message
+  end
 end

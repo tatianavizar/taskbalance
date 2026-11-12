@@ -4,12 +4,22 @@
 <h1 class="screen-title"><%= t("auth.sign_in") %></h1>
 
 <%= form_for(resource, as: resource_name, url: session_path(resource_name), html: { class: "flex flex-col gap-4 flex-1" }) do |f| %>
-  <%= f.field :email, as: :email, autofocus: true, autocomplete: "email" %>
-  <%= f.field :password, as: :password, autocomplete: "current-password" %>
-  <div class="flex justify-between items-center min-h-[44px]">
-    <%= f.checkbox_field :remember_me if devise_mapping.rememberable? %>
-    <%= link_to t("devise.passwords.new.forgot_your_password"), new_password_path(resource_name), class: "font-semibold text-sm" %>
-  </div>
+  <% if @auth_failed %>
+    <div class="alert-box" role="alert">
+      <b><%= t("auth.sign_in_form.failed_title") %></b><br><%= t("auth.sign_in_form.failed_body") %>
+    </div>
+  <% end %>
+  <%= f.field :email, as: :email, autofocus: true, autocomplete: "email", "aria-invalid": (@auth_failed ? "true" : nil) %>
+  <%= f.field :password, as: :password, autocomplete: "current-password", "aria-invalid": (@auth_failed ? "true" : nil) %>
+
+  <% if @auth_failed %>
+    <%= link_to t("auth.sign_in_form.failed_link"), new_password_path(resource_name), class: "font-semibold text-sm flex items-center min-h-[44px]" %>
+    <p class="m-0 text-[13px] leading-[18px] text-muted"><%= t("auth.sign_in_form.failed_note") %></p>
+  <% else %>
+    <div class="flex justify-end items-center min-h-[44px]">
+      <%= link_to t("devise.passwords.new.forgot_your_password"), new_password_path(resource_name), class: "font-semibold text-sm" %>
+    </div>
+  <% end %>
 
   <%= sticky_cta do %>
     <%= f.submit t("auth.sign_in") %>

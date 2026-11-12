@@ -6,12 +6,15 @@
   <p class="screen-subtitle"><%= t("auth.sign_up.subtitle") %></p>
 </div>
 
-<%= form_for(resource, as: resource_name, url: registration_path(resource_name), html: { class: "flex flex-col gap-4 flex-1" }) do |f| %>
+<%= form_for(resource, as: resource_name, url: registration_path(resource_name),
+      html: { class: "flex flex-col gap-4 flex-1", data: { controller: "time-zone" } }) do |f| %>
   <%= f.error_summary %>
-  <%= f.field :first_name, autofocus: true, autocomplete: "given-name" %>
-  <%= f.field :email, as: :email, autocomplete: "email" %>
+  <%= f.hidden_field :time_zone, data: { time_zone_target: "input" } %>
+  <%= f.field :first_name, autofocus: true, autocomplete: "given-name", hint: t("auth.sign_up.first_name_hint") %>
+  <%= f.field :email, as: :email, autocomplete: "email", hint: t("auth.sign_up.email_hint") %>
   <%= f.field :password, as: :password, autocomplete: "new-password",
         hint: (t("auth.password_hint", count: @minimum_password_length) if @minimum_password_length) %>
+  <p class="m-0 text-[13px] leading-[18px] text-muted"><%= t("auth.sign_up.ownership") %></p>
 
   <%= sticky_cta do %>
     <%= f.submit t("auth.sign_up.submit") %>

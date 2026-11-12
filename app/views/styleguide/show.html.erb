@@ -64,6 +64,22 @@
   <%= level_progress level: 1, done: 1, total: 3, href: "#" %>
 </section>
 
+<section class="flex flex-col gap-3" id="sg-progress">
+  <h2 class="text-base font-bold m-0 font-sans">Points de l'intro, étapes de la mise en place</h2>
+  <%= progress_dots current: 1, total: 3 %>
+  <%= progress_dots current: 3, total: 3 %>
+  <%= step_progress steps: t("households.new.steps"), current: 1 %>
+  <%= step_progress steps: t("households.new.steps"), current: 3 %>
+  <p class="text-[13px] text-muted m-0">Les écrans de l'intro prennent un fond coloré avec <code>provide :body_class, "theme-mint"</code> ou <code>"theme-ink"</code>.</p>
+</section>
+
+<section class="flex flex-col gap-3" id="sg-countdown">
+  <h2 class="text-base font-bold m-0 font-sans">Renvoi avec compte à rebours</h2>
+  <div data-controller="countdown" data-countdown-seconds-value="42" data-countdown-wait-label-value="Renvoyer le lien · possible dans %s s">
+    <button type="button" class="btn btn-secondary" data-countdown-target="button">Renvoyer le lien</button>
+  </div>
+</section>
+
 <section class="flex flex-col gap-3" id="sg-cta">
   <h2 class="text-base font-bold m-0 font-sans">CTA collé en bas, confirmation</h2>
   <%= button_to "Ouvrir la confirmation", "#", method: :get, class: "btn btn-secondary", id: "open-confirm",

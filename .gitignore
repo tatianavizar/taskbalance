@@ -83,3 +83,4 @@ id_ed25519
 
 # Agent worktrees
 /.worktrees/
+/.claude/worktrees/

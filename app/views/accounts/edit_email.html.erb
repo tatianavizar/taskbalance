@@ -1,0 +1,14 @@
+<% provide :chrome, "none" %>
+<% provide :title, t("auth.account.edit_email.title") %>
+<%= back_button account_path %>
+<h1 class="screen-title"><%= t("auth.account.edit_email.title") %></h1>
+
+<%= form_with model: current_user, scope: :user, url: edit_email_path, method: :patch, html: { class: "flex flex-col gap-4 flex-1" } do |f| %>
+  <%= f.error_summary %>
+  <%= f.field :email, as: :email, label: t("auth.account.edit_email.new_email"), autofocus: true, autocomplete: "email",
+        hint: t("auth.account.edit_email.hint") %>
+  <%= f.field :current_password, as: :password, autocomplete: "current-password", value: nil %>
+  <%= sticky_cta do %>
+    <%= f.submit t("auth.account.edit_email.submit") %>
+  <% end %>
+<% end %>

@@ -9,11 +9,31 @@ Rails.application.routes.draw do
   devise_for :users, controllers: {
     registrations: "users/registrations",
     passwords: "users/passwords",
-    confirmations: "users/confirmations"
+    confirmations: "users/confirmations",
+    sessions: "users/sessions"
   }
+  devise_scope :user do
+    get "users/password/sent", to: "users/passwords#sent", as: :sent_user_password
+    get "users/confirmation/pending", to: "users/confirmations#pending", as: :pending_user_confirmation
+  end
 
   # Vérification de santé du serveur
   get "up" => "rails/health#show", as: :rails_health_check
+
+  # Intro avant l'inscription (I1 à I3)
+  get "intro", to: redirect("/intro/1"), as: :intro_start
+  get "intro/:step", to: "intro#show", as: :intro, constraints: { step: /\d+/ }
+
+  # Compte (F4) : prénom, email et mot de passe se modifient chacun sur leur écran.
+  get "compte" => "accounts#show", as: :account
+  scope "compte", controller: "accounts" do
+    get "prenom", action: :edit_first_name, as: :edit_first_name
+    patch "prenom", action: :update_first_name
+    get "email", action: :edit_email, as: :edit_email
+    patch "email", action: :update_email
+    get "mot-de-passe", action: :edit_password, as: :edit_password
+    patch "mot-de-passe", action: :update_password
+  end
 
   get "dashboard" => "pages#dashboard", as: :dashboard
   get "bilan" => "reports#show", as: :report

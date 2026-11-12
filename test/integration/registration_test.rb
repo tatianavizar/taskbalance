@@ -143,4 +143,13 @@ class RegistrationTest < ActionDispatch::IntegrationTest
     put user_registration_path, params: { user: { first_name: "Alicia", current_password: "password123" } }
     assert_equal "Alicia", users(:alice).reload.first_name
   end
+
+  test "DELETE /users is closed until account deletion (lot 7) exists" do
+    sign_in users(:alice)
+
+    assert_no_difference "User.count" do
+      delete user_registration_path
+    end
+    assert_response :not_found
+  end
 end

@@ -25,10 +25,6 @@ fr:
       other: "<b>%{count} champs à corriger</b> avant de continuer."
   app:
     name: "50/50"
-    home:
-      tagline: "La répartition réelle des tâches de votre foyer, en chiffres."
-      sign_up: "Créer un compte"
-      log_in: "J'ai déjà un compte"
   reports:
     show:
       title: "Bilan"
