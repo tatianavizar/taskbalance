@@ -12,9 +12,22 @@
 #                             original_answer, answer, corrected_by_user_id
 #   absence_inquiry.resolved  inquiry_id, household_member_id, user_id, outcome
 #                             (paused | regressed | cancelled | reopened)
+#   household_week.provisional / household_week.final   week_start, outcome
+#   member.first_empty_week   household_member_id, user_id, first_name, week_start (E3)
+#   household.unblocked       week_start (subject: the final week that lifted it)
+#   level.changed             level_change_id, reason, from_level, to_level,
+#                             absence_inquiry_id (every LevelChange, any origin)
+#   member_pause.declared     household_member_id, user_id, starts_on, ends_on,
+#                             declared_by_id (every pause path)
+#
+# Notifications::Dispatcher.deliver_pending drains it: an event is marked
+# delivered only after the Notifier ran for it, so a crashed dispatch is
+# replayed by the next one, and the Notifier's dedup_key stops duplicates.
 class EngineEvent < ApplicationRecord
   NAMES = %w[
     absence_inquiry.opened absence_answer.given absence_answer.corrected absence_inquiry.resolved
+    household_week.provisional household_week.final member.first_empty_week household.unblocked
+    level.changed member_pause.declared
   ].freeze
 
   belongs_to :household

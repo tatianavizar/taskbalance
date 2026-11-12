@@ -28,21 +28,37 @@
 # Inquiry deadline without a covering pause: one level down, counter at the
 # threshold of the new level, household blocked. Already blocked: no second drop.
 class WeeklyEngine
+  # What one run did, for the caller. Notifications do not read it: they
+  # drain the engine_events outbox (EngineEvent), which survives a crash.
+  # - unblocked: the HouseholdWeek whose final report lifted the block, or nil.
+  # - first_empty_weeks: [{ household_member_id:, household_week: }] for each
+  #   member whose streak reached 1 (E3).
   Result = Struct.new(:provisional_weeks, :final_weeks, :level_changes,
-                      :inquiries_opened, :inquiries_resolved, :unblocked) do
+                      :inquiries_opened, :inquiries_resolved, :unblocked, :first_empty_weeks) do
     def initialize(*)
-      super([], [], [], [], [], false)
+      super([], [], [], [], [], nil, [])
     end
   end
 
   SILENT_WEEKS_FOR_DORMANT = 3 # default, not yet validated (backlog 2.2)
 
+  # Runs every household. With a block, yields (household, result) after each
+  # successful run; a failing run is reported and skipped. The block's own
+  # errors are the caller's to handle. Returns [[household, result], ...].
   def self.run_all(now: Time.current)
+    runs = []
     Household.find_each do |household|
-      new(household).run(now: now)
-    rescue StandardError => e
-      Rails.error.report(e, context: { household_id: household.id })
+      result =
+        begin
+          new(household).run(now: now)
+        rescue StandardError => e
+          Rails.error.report(e, context: { household_id: household.id })
+          next
+        end
+      runs << [ household, result ]
+      yield household, result if block_given?
     end
+    runs
   end
 
   attr_reader :household
@@ -79,6 +95,9 @@ class WeeklyEngine
   def pause_declared(pause, now: Time.current)
     correction = Correction.new
     household.with_lock do
+      EngineEvent.record!(household: household, name: "member_pause.declared", subject: pause, at: now,
+                          household_member_id: pause.household_member_id, user_id: pause.household_member.user_id,
+                          starts_on: pause.starts_on, ends_on: pause.ends_on, declared_by_id: pause.declared_by_id)
       household.absence_inquiries.pending.where(household_member_id: pause.household_member_id).find_each do |inquiry|
         next unless inquiry.weeks.any? { |week| pause.covers?(week) }
 
@@ -231,9 +250,9 @@ class WeeklyEngine
       next if household.household_weeks.exists?(week_start: week.monday)
 
       stats = WeeklyStats.new(household, week)
-      result.provisional_weeks << household.household_weeks.create!(
-        stats.to_snapshot.merge(status: "provisional", computed_at: now)
-      )
+      record = household.household_weeks.create!(stats.to_snapshot.merge(status: "provisional", computed_at: now))
+      result.provisional_weeks << record
+      record_week_event("household_week.provisional", record, now)
     end
   end
 
@@ -244,14 +263,16 @@ class WeeklyEngine
 
     record.update!(stats.to_snapshot.merge(status: "final", computed_at: now, finalized_at: now))
     result.final_weeks << record
+    record_week_event("household_week.final", record, now)
 
-    update_streaks(stats, week, now, result)
-    unblock_if_everyone_logged(stats, result)
+    update_streaks(stats, record, now, result)
+    unblock_if_everyone_logged(stats, record, now, result)
     progress(stats, record, week, result)
     refresh_state!
   end
 
-  def update_streaks(stats, week, now, result)
+  def update_streaks(stats, record, now, result)
+    week = record.week
     return if stats.members.size < 2
 
     active = stats.active_members
@@ -269,6 +290,7 @@ class WeeklyEngine
 
       streak = member.paused || !member.empty? ? 0 : membership.empty_weeks_streak + 1
       membership.update!(empty_weeks_streak: streak) if streak != membership.empty_weeks_streak
+      first_empty_week(membership, member, record, now, result) if streak == 1
       open_inquiry(membership, week, now, result) if streak == 2
     end
   end
@@ -328,14 +350,29 @@ class WeeklyEngine
     change
   end
 
-  def unblock_if_everyone_logged(stats, result)
+  def unblock_if_everyone_logged(stats, record, now, result)
     return unless household.blocked?
 
     active = stats.active_members
     return unless active.any? && active.none?(&:empty?)
 
     household.update!(state: "active", blocked_at: nil)
-    result.unblocked = true
+    result.unblocked = record
+    EngineEvent.record!(household: household, name: "household.unblocked", subject: record, at: now,
+                        week_start: record.week_start)
+  end
+
+  # E3: the member's first empty final week in a row.
+  def first_empty_week(membership, member, record, now, result)
+    result.first_empty_weeks << { household_member_id: membership.id, household_week: record }
+    EngineEvent.record!(household: household, name: "member.first_empty_week", subject: record, at: now,
+                        household_member_id: membership.id, user_id: membership.user_id,
+                        first_name: member.first_name, week_start: record.week_start)
+  end
+
+  def record_week_event(name, record, now)
+    EngineEvent.record!(household: household, name: name, subject: record, at: now,
+                        week_start: record.week_start, outcome: record.outcome)
   end
 
   def progress(stats, record, week, result)
