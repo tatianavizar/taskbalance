@@ -59,17 +59,23 @@ class AccountDeletion
     errors.add(:confirmed, :accepted) unless ActiveModel::Type::Boolean.new.cast(confirmed)
     return false if errors.any?
 
-    old_email = user.email
-    anonymous_email = "ancien-membre-#{user.id}-#{SecureRandom.hex(8)}@#{ANONYMOUS_EMAIL_DOMAIN}"
-    User.transaction do
-      user.lock!
-      user.household_membership&.leave!
-      dispose_of_logs!
-      anonymise_invitations!(old_email, anonymous_email)
-      drop_personal_data!
-      anonymise_snapshots!
-      anonymise_account!(anonymous_email)
-    end
+    perform
+    true
+  end
+
+  # Back office entry point (docs/decisions.md, 2026-11-13): the 50/50 team
+  # deletes an account on request. No password, since the person is not
+  # there; instead the admin types the account's email, which must match.
+  # Everything else is `perform`, the same steps and the same log policy as
+  # the person's own deletion. An account already deleted is refused.
+  # `save` (the person's path) is unchanged and still needs their password.
+  def save_as_admin(typed_email:)
+    errors.clear
+    errors.add(:base, "Ce compte est déjà supprimé.") if user.deleted?
+    errors.add(:base, "L'email saisi ne correspond pas à celui du compte.") unless typed_email.to_s.strip.casecmp?(user.email)
+    return false if errors.any?
+
+    perform
     true
   end
 
@@ -83,6 +89,20 @@ class AccountDeletion
   end
 
   private
+
+  def perform
+    old_email = user.email
+    anonymous_email = "ancien-membre-#{user.id}-#{SecureRandom.hex(8)}@#{ANONYMOUS_EMAIL_DOMAIN}"
+    User.transaction do
+      user.lock!
+      user.household_membership&.leave!
+      dispose_of_logs!
+      anonymise_invitations!(old_email, anonymous_email)
+      drop_personal_data!
+      anonymise_snapshots!
+      anonymise_account!(anonymous_email)
+    end
+  end
 
   # Every state: an accepted, declined or expired invitation is history, but it
   # still holds the real address and first name. Nothing stays pending first,

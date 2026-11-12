@@ -44,6 +44,15 @@ GEM
       erubi (~> 1.11)
       rails-dom-testing (~> 2.2)
       rails-html-sanitizer (~> 1.6)
+    activeadmin (4.0.0.beta23)
+      arbre (~> 2.0)
+      csv
+      formtastic (>= 6.0)
+      formtastic_i18n (>= 0.7)
+      inherited_resources (~> 2.0)
+      kaminari (>= 1.2.1)
+      railties (>= 7.2)
+      ransack (>= 4.0)
     activejob (8.0.1)
       activesupport (= 8.0.1)
       globalid (>= 0.3.6)
@@ -74,6 +83,8 @@ GEM
       uri (>= 0.13.1)
     addressable (2.8.7)
       public_suffix (>= 2.0.2, < 7.0)
+    arbre (2.2.1)
+      activesupport (>= 7.0)
     ast (2.4.2)
     base64 (0.2.0)
     bcrypt (3.1.20)
@@ -100,6 +111,7 @@ GEM
     concurrent-ruby (1.3.5)
     connection_pool (2.5.0)
     crass (1.0.6)
+    csv (3.3.2)
     date (3.4.1)
     debug (1.10.0)
       irb (~> 1.10)
@@ -113,6 +125,11 @@ GEM
     devise-i18n (1.15.0)
       devise (>= 4.9.0)
       rails-i18n
+    devise-two-factor (6.4.1)
+      activesupport (>= 7.2, < 8.2)
+      devise (>= 4.0, < 6.0)
+      railties (>= 7.2, < 8.2)
+      rotp (~> 6.0)
     dotenv (3.1.7)
     dotenv-rails (3.1.7)
       dotenv (= 3.1.7)
@@ -126,17 +143,28 @@ GEM
     erubi (1.13.1)
     et-orbi (1.2.11)
       tzinfo
+    formtastic (6.0.0)
+      actionpack (>= 7.2.0)
+    formtastic_i18n (0.7.0)
     fugit (1.11.1)
       et-orbi (~> 1, >= 1.2.11)
       raabro (~> 1.4)
     globalid (1.2.1)
       activesupport (>= 6.1)
+    has_scope (0.9.0)
+      actionpack (>= 7.0)
+      activesupport (>= 7.0)
     i18n (1.14.7)
       concurrent-ruby (~> 1.0)
     importmap-rails (2.1.0)
       actionpack (>= 6.0.0)
       activesupport (>= 6.0.0)
       railties (>= 6.0.0)
+    inherited_resources (2.1.0)
+      actionpack (>= 7.0)
+      has_scope (>= 0.6)
+      railties (>= 7.0)
+      responders (>= 2)
     io-console (0.8.0)
     irb (1.15.1)
       pp (>= 0.6.0)
@@ -157,6 +185,18 @@ GEM
       sshkit (>= 1.23.0, < 2.0)
       thor (~> 1.3)
       zeitwerk (>= 2.6.18, < 3.0)
+    kaminari (1.3.3)
+      activesupport (>= 4.1.0)
+      kaminari-actionview (= 1.3.3)
+      kaminari-activerecord (= 1.3.3)
+      kaminari-core (= 1.3.3)
+    kaminari-actionview (1.3.3)
+      actionview
+      kaminari-core (= 1.3.3)
+    kaminari-activerecord (1.3.3)
+      activerecord
+      kaminari-core (= 1.3.3)
+    kaminari-core (1.3.3)
     language_server-protocol (3.17.0.4)
     launchy (3.1.1)
       addressable (~> 2.8)
@@ -275,6 +315,10 @@ GEM
       zeitwerk (~> 2.6)
     rainbow (3.1.1)
     rake (13.2.1)
+    ransack (4.4.4)
+      activerecord (>= 7.2)
+      activesupport (>= 7.2)
+      i18n
     rdoc (6.12.0)
       psych (>= 4.0.0)
     regexp_parser (2.10.0)
@@ -284,6 +328,7 @@ GEM
       actionpack (>= 5.2)
       railties (>= 5.2)
     rexml (3.4.0)
+    rotp (6.4.0)
     rubocop (1.72.2)
       json (~> 2.3)
       language_server-protocol (~> 3.17.0.2)
@@ -402,12 +447,14 @@ PLATFORMS
   x86_64-linux-musl
 
 DEPENDENCIES
+  activeadmin (= 4.0.0.beta23)
   bootsnap
   brakeman
   capybara
   debug
   devise
   devise-i18n
+  devise-two-factor (~> 6.4)
   dotenv-rails
   enumerations
   importmap-rails
@@ -419,6 +466,8 @@ DEPENDENCIES
   puma (>= 5.0)
   rails (~> 8.0.1)
   rails-i18n (~> 8.0)
+  ransack (~> 4.4)
+  rotp (~> 6.4)
   rubocop-rails-omakase
   selenium-webdriver
   solid_cable

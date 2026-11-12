@@ -262,6 +262,10 @@
 - **Accès :** modèle `AdminUser` séparé des comptes de l'app, double authentification obligatoire, pas d'inscription libre.
 - **Ce que voit l'équipe :** comptes, foyers, invitations, et des agrégats par foyer. Jamais le détail des enregistrements ni les préférences : ils appartiennent à leur auteur.
 - **Actions :** renvoyer ou annuler une invitation, débloquer un foyer, confirmer un email ; supprimer un compte arrive avec le lot 7. Chaque action est journalisée.
+- **Réalisé (lot 9) :** `AdminUser` + TOTP (enrôlement à la première connexion, 5 essais puis blocage 30 min, session de 30 min, pas de mot de passe oublié : `bin/rails admin:bootstrap` recrée le mot de passe, `admin:reset_two_factor` refait l'enrôlement). Le journal est la table `admin_actions`, en lecture seule dans l'admin, sans nom ni email dans le détail.
+- **Débloquer un foyer :** `Household#admin_unblock!(by:)` remet l'état (`active`, ou `solo` sous deux membres) et vide `blocked_at`. Niveau et compteur ne bougent pas. Il écrit l'EngineEvent `household.admin_unblocked` ; aucune notification n'en part (l'alerte E5 est liée à un bilan de semaine). À trancher : les membres doivent-ils être prévenus ?
+- **Supprimer un compte :** `AccountDeletion#save_as_admin(typed_email:)`, sans mot de passe mais avec l'email tapé ; mêmes étapes et même sort des enregistrements (supprimés) que pour la personne. Le chemin de la personne (`save`) n'a pas changé.
+- **Dernière activité d'un foyer :** la date du dernier enregistrement du foyer, rien de plus (un agrégat, jamais une ligne).
 
 ## 2026-11-13 · Prénom de la personne invitée
 - **Décidé par :** la porteuse du projet.
@@ -318,3 +322,10 @@
 - **Cookies :** le bandeau informe et un « OK » mémorise la lecture (cookie nécessaire `cookie_notice_seen`, 12 mois). Pas de choix tant qu'aucun traceur n'existe. Masqué dans les coquilles natives.
 - **Pages légales :** `/cgu` et `/confidentialite`, brouillons « à valider juridiquement », éditeur, adresse, immatriculation et hébergeur en espaces à compléter. **À traiter avant publication :** les polices se chargent depuis Google Fonts (adresse IP transmise à Google) ; les héberger supprime le transfert et garde la promesse « aucun traceur » sans réserve.
 - **Contraste :** le badge « Ult. » (blanc sur terracotta, 4,35:1) passe en encre sur blanc ; le terracotta ne marque que la part de la personne qui regarde. L'app n'a qu'un thème clair ; les deux fonds vérifiés sont le fond clair et le fond encre (intro, alertes, bandeau).
+
+## 2026-11-13 · Back-office : durcissement après revue de sécurité
+- **Enrôlement :** le secret TOTP n'est montré qu'à une session arrivée par un lien à usage unique (30 min, lié au compte, remis hors bande par `admin:bootstrap` / `admin:reset_two_factor`) et connectée par mot de passe. Un secret neuf par lien ; réinitialiser met fin à toutes les sessions du compte.
+- **Emails :** deux actions distinctes (adresse actuelle, changement en attente), chacune nomme l'adresse visée. Le journal garde des empreintes à clé (HMAC), pas les adresses.
+- **Tri :** liste blanche par ressource ; tout le reste retombe sur l'ordre par défaut.
+- **Dernière activité d'un foyer :** semaine ISO, seulement pour deux membres ou plus, non triable.
+- **Journal :** connexions, refus, blocages et commandes console y figurent ; il est en ajout seul dans Postgres (trigger), donc `db/structure.sql`. Un compte admin se désactive, il ne se supprime pas. Session : 30 min d'inactivité, 8 h au total.

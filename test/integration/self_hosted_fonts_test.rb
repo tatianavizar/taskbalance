@@ -27,9 +27,17 @@ class SelfHostedFontsTest < ActionDispatch::IntegrationTest
   end
 
   test "the stylesheet declares every font face it uses" do
-    css = Rails.root.join("app/assets/tailwind/application.css").read
+    css = Rails.root.join("app/assets/tailwind/fonts.css").read
 
-    FONT_FILES.each { |file| assert_includes css, %(url("#{file}")) }
+    FONT_FILES.each { |file| assert_includes css, %(url("/#{file}")) }
     assert_no_match(%r{https?://}, css.scan(/@font-face\s*\{[^}]*\}/).join)
+    # tokens.css feeds both builds: the app and the back office.
+    assert_match(/\A@import "\.\/fonts\.css";/, Rails.root.join("app/assets/tailwind/tokens.css").read)
+  end
+
+  test "the back office loads no font from Google either" do
+    head = Rails.root.join("app/views/active_admin/_html_head.html.erb").read
+
+    assert_no_match(/fonts\.googleapis|fonts\.gstatic/, head)
   end
 end
