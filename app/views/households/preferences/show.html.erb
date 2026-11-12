@@ -5,7 +5,7 @@
 <% answered = @choices.count { |_, choice| choice != "neutral" } %>
 
 <div class="flex items-center gap-2.5">
-  <%= back_button(invitee && current_invitation ? invitation_path(current_invitation.token) : household_path(@household)) %>
+  <%= back_button(invitee && current_invitation ? invitee_invitation_path : household_path(@household)) %>
   <span class="font-bold flex-1"><%= invitee ? t("split.invitee.welcome", name: current_participant.first_name) : t("preferences.breadcrumb") %></span>
   <span class="text-[13px] text-muted"><%= invitee ? t("split.invitee.preferences_step") : t("preferences.answered", count: answered, total: @chores.size) %></span>
 </div>

@@ -116,14 +116,14 @@ class Users::RegistrationsController < Devise::RegistrationsController
     return @form_invitation if defined?(@form_invitation)
 
     token = params[:invitation_token].presence
-    invitation = Invitation.find_by(token: token.to_s) if token
+    invitation = Invitation.find_by_token(token)
     @form_invitation = invitation&.usable? ? invitation : nil
   end
 
   def pending_invitation_for(user)
     return if invitation_token.blank? || user.email.blank?
 
-    invitation = Invitation.find_by(token: invitation_token)
+    invitation = Invitation.find_by_token(invitation_token)
     invitation if invitation&.usable? && invitation.for?(user)
   end
 

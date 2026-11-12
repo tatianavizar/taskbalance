@@ -1,5 +1,10 @@
 # The invitee's side of an invitation (B7 to B9, B12). The token in the URL is
-# the only credential: it is long, random and never listed anywhere.
+# the only credential: it is long, random, never listed anywhere and never
+# stored (only its digest is: Invitation.find_by_token).
+#
+# The person who claimed an invitation (signed in, not joined yet) reaches
+# B12 and the refusal without the token, through /invitation/... (the app
+# cannot rebuild the link): those routes read Invitation.live_for_invitee.
 #
 # Routing of GET /invitations/:token:
 #   unknown token                          -> B8, unknown
@@ -14,7 +19,8 @@
 class InvitationsController < ApplicationController
   rate_limit to: 60, within: 1.minute, only: :show, with: -> { head :too_many_requests }
 
-  before_action :set_invitation
+  before_action :authenticate_user!, unless: -> { params[:token] }
+  before_action :set_invitation, except: :resume
   before_action :require_sign_in, only: %i[claim accept decline waiting]
 
   def show
@@ -34,7 +40,7 @@ class InvitationsController < ApplicationController
     if @invitation.claim_for!(current_user)
       redirect_to invitee_resume_path(@invitation)
     else
-      redirect_to invitation_path(@invitation.token)
+      redirect_to back_to_invitation
     end
   end
 
@@ -44,7 +50,7 @@ class InvitationsController < ApplicationController
       session.delete(:invitation_token)
       redirect_to household_path(@invitation.household), notice: t("invitations.flash.joined")
     else
-      redirect_to invitation_path(@invitation.token), alert: @invitation.errors.full_messages.to_sentence
+      redirect_to back_to_invitation, alert: @invitation.errors.full_messages.to_sentence
     end
   end
 
@@ -54,22 +60,34 @@ class InvitationsController < ApplicationController
       session.delete(:invitation_token)
       redirect_to dashboard_path, notice: t("invitations.flash.declined")
     else
-      redirect_to invitation_path(@invitation.token)
+      redirect_to back_to_invitation
     end
   end
 
   # B12: the setup is not finished. Once it is, the invitee goes on to B10.
   def waiting
-    return redirect_to(invitation_path(@invitation.token)) unless @invitation&.grants_setup_access_to?(current_user)
+    return redirect_to(back_to_invitation) unless @invitation&.grants_setup_access_to?(current_user)
 
     @household = @invitation.household
     @setup_ready = @household.setup_ready_for_invitee?
   end
 
+  # GET /invitation: the claimed invitation, wherever the person is in it.
+  def resume
+    invitation = pending_invitation_of(current_user)
+    redirect_to(invitation ? invitee_resume_path(invitation) : dashboard_path)
+  end
+
   private
 
+  # By the token of the link, or (no token: /invitation/...) the invitation
+  # the signed-in person claimed.
   def set_invitation
-    @invitation = Invitation.includes(:household, :inviter).find_by(token: params[:token].to_s)
+    @invitation = if params[:token]
+      Invitation.includes(:household, :inviter).find_by_token(params[:token].to_s)
+    else
+      pending_invitation_of(current_user)
+    end
     return render_invalid(:unknown, status: :not_found) unless @invitation
 
     @invitation.expire_if_due!
@@ -78,7 +96,11 @@ class InvitationsController < ApplicationController
   def require_sign_in
     return if user_signed_in?
 
-    redirect_to(@invitation ? invitation_path(@invitation.token) : new_user_session_path)
+    redirect_to(@invitation&.token ? invitation_path(@invitation.token) : new_user_session_path)
+  end
+
+  def back_to_invitation
+    @invitation&.token ? invitation_path(@invitation.token) : dashboard_path
   end
 
   def show_for_signed_in

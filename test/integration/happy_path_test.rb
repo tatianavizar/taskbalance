@@ -32,7 +32,7 @@ class HappyPathTest < ActionDispatch::IntegrationTest
     assert_emails 1 do
       post household_invitations_path(household), params: { invitation: { first_name: "Karim", email: "karim@exemple.fr" } }
     end
-    invitation = household.invitations.find_by!(email: "karim@exemple.fr")
+    invitation = with_link_token(household.invitations.find_by!(email: "karim@exemple.fr"))
     assert_predicate invitation, :pending?
     get household_setup_path(household)
     assert_select "h1", "Avec qui partagez-vous le foyer ?"
@@ -90,7 +90,7 @@ class HappyPathTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_text "Proposée par Virginie"
     assert_select "button", "Rejoindre le foyer"
-    assert_select "form[action=?]", decline_invitation_path(invitation.token)
+    assert_select "form[action=?]", invitee_decline_path
     shown = household.reload.starting_plan.assignments.to_h { |item| [ item["chore_id"], item["assignees"] ] }
     patch household_split_path(household), params: { commit_action: "validate", assignments: shown }
 

@@ -30,7 +30,38 @@ class InvitationTest < ActiveSupport::TestCase
 
     invitation.update!(email: "renamed@test.com")
 
-    assert_equal token, invitation.reload.token
+    assert_equal invitation, Invitation.find_by_token(token)
+  end
+
+  test "only a keyed digest of the token is stored; the link finds the invitation by it" do
+    invitation = @household.invitations.create!(email: "new@test.com")
+    token = invitation.token
+
+    assert_not Invitation.column_names.include?("token")
+    stored = Invitation.connection.select_one("SELECT * FROM invitations WHERE id = #{invitation.id}").values.map(&:to_s)
+    assert_not stored.any? { |value| value.include?(token) }, "the raw token is not in the row"
+    expected = OpenSSL::HMAC.hexdigest("SHA256", Rails.application.key_generator.generate_key("invitation-token-digest"), token)
+    assert_equal expected, invitation.token_digest
+    assert_not_equal Digest::SHA256.hexdigest(token), invitation.token_digest, "keyed, not a plain hash"
+
+    found = Invitation.find_by_token(token)
+    assert_equal invitation, found
+    assert_equal token, found.token
+    assert_nil Invitation.find_by(id: invitation.id).token, "a row read back has no token"
+    assert_nil Invitation.find_by_token(token + "x")
+    assert_nil Invitation.find_by_token("")
+    assert_nil Invitation.find_by_token(nil)
+  end
+
+  test "the queued email carries the token sealed, never in clear" do
+    invitation = nil
+    assert_enqueued_emails 1 do
+      invitation = Invitation.invite(household: @household, email: "sealed@test.com", inviter: users(:alice), first_name: "S")
+    end
+    arguments = enqueued_jobs.last[:args].to_json
+    assert_not_includes arguments, invitation.token
+    perform_enqueued_jobs
+    assert_includes ActionMailer::Base.deliveries.last.text_part.body.to_s, "/invitations/#{invitation.token}"
   end
 
   test "emails are stored trimmed and lowercased" do
@@ -41,7 +72,7 @@ class InvitationTest < ActiveSupport::TestCase
     @household.invitations.create!(email: "new@test.com")
 
     assert_raises(ActiveRecord::RecordNotUnique) do
-      Invitation.new(household: @household, email: "new@test.com", token: "other", expires_at: 1.day.from_now, last_sent_at: Time.current).save!(validate: false)
+      Invitation.new(household: @household, email: "new@test.com", token_digest: "other", expires_at: 1.day.from_now, last_sent_at: Time.current).save!(validate: false)
     end
   end
 
@@ -271,19 +302,32 @@ class InvitationTest < ActiveSupport::TestCase
 
   # ---- Resends (D12) --------------------------------------------------------------
 
-  test "resend keeps the token, resets the expiry and sends a new email" do
+  test "resend issues a new token (the old link dies), resets the expiry and sends a new email" do
     invitation = @household.invitations.create!(email: "new@test.com")
-    token = invitation.token
+    old_token = invitation.token
 
     travel 16.minutes do
       assert_enqueued_emails 1 do
         assert_equal [ :ok ], invitation.resend!
       end
+      assert_not_equal old_token, invitation.token
+      assert_nil Invitation.find_by_token(old_token)
+      assert_equal invitation, Invitation.find_by_token(invitation.token)
       invitation.reload
-      assert_equal token, invitation.token
       assert_equal 1, invitation.resend_count
       assert_in_delta 14.days.from_now, invitation.expires_at, 5
     end
+  end
+
+  test "an email queued before a resend is not sent: its link is dead" do
+    invitation = Invitation.invite(household: @household, email: "late@test.com", inviter: users(:alice), first_name: "L")
+    travel 16.minutes do
+      invitation.resend!
+      perform_enqueued_jobs
+    end
+    mails = ActionMailer::Base.deliveries.select { |mail| mail.to == [ "late@test.com" ] }
+    assert_equal 1, mails.size
+    assert_equal invitation.token, token_in_mail(mails.first)
   end
 
   test "resends are spaced by 15 minutes and the verdict gives the remaining wait" do

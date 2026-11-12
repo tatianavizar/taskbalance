@@ -579,7 +579,6 @@ CREATE TABLE public.invitations (
     id bigint NOT NULL,
     email character varying NOT NULL,
     household_id bigint NOT NULL,
-    token character varying NOT NULL,
     created_at timestamp without time zone NOT NULL,
     state character varying DEFAULT 'pending'::character varying NOT NULL,
     expires_at timestamp(6) without time zone NOT NULL,
@@ -592,7 +591,8 @@ CREATE TABLE public.invitations (
     inviter_id bigint,
     first_name character varying,
     color character varying,
-    monogram character varying
+    monogram character varying,
+    token_digest character varying NOT NULL
 );
 
 
@@ -1815,10 +1815,10 @@ CREATE INDEX index_invitations_on_inviter_id ON public.invitations USING btree (
 
 
 --
--- Name: index_invitations_on_token; Type: INDEX; Schema: public; Owner: -
+-- Name: index_invitations_on_token_digest; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE UNIQUE INDEX index_invitations_on_token ON public.invitations USING btree (token);
+CREATE UNIQUE INDEX index_invitations_on_token_digest ON public.invitations USING btree (token_digest);
 
 
 --
@@ -2562,6 +2562,7 @@ ALTER TABLE ONLY public.week_plans
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20261113100100'),
 ('20261113100000'),
 ('20261113092400'),
 ('20261113092300'),

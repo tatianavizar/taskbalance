@@ -104,7 +104,7 @@ class AccountDeletionTest < ActiveSupport::TestCase
 
   def invitation!(household, email:, first_name:, state:, invitee: nil, expires_at: 7.days.from_now)
     Invitation.new(household: household, email: email, first_name: first_name, state: state, invitee: invitee,
-                   token: SecureRandom.hex(16), expires_at: expires_at, last_sent_at: Time.current, created_at: Time.current)
+                   token_digest: SecureRandom.hex(32), expires_at: expires_at, last_sent_at: Time.current, created_at: Time.current)
               .tap { |invitation| invitation.save!(validate: false) }
   end
 
