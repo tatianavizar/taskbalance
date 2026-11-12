@@ -340,3 +340,15 @@
   - Chaque visite pose le cookie de session (nécessaire, exempté de consentement).
   - Schéma de base enregistré en `db/structure.sql` (triggers du journal admin).
 - **À faire au déploiement :** `APP_HOST` (et `APP_EXTRA_HOSTS`) dans l'environnement de production, base `cache` créée, clés de chiffrement Active Record (`bin/rails db:encryption:init`).
+
+## 2026-11-13 · Retours sur la revue de sécurité, pause, déblocage, applications natives
+- **Connexion (remplace les seuils choisis par l'agent) :** 4 mauvais mots de passe en 2 h bloquent le compte 2 h. Au 3e blocage (12 essais), le compte reste bloqué jusqu'à ce qu'un admin le débloque depuis le back-office (action journalisée). Un succès remet les compteurs à zéro. La limite par connexion (IP) reste.
+- **Changement d'email :** 2 par compte sur 24 h glissantes.
+- **Jetons d'invitation :** stockés en empreinte HMAC-SHA256, jamais en clair. Un renvoi émet un nouveau lien ; l'ancien ne marche plus.
+- **Foyer supprimé :** pas d'email ; la notification reste dans l'app.
+- **Email après départ :** acceptable ; le correctif déjà en place reste.
+- **File des jobs :** Solid Queue, pas Sidekiq (pas de Redis à opérer ; le volume le permet).
+- **Pause :** elle neutralise des semaines entières. Elle ne peut pas commencer ni s'étendre sur une semaine où la personne a déjà enregistré une tâche.
+- **Déblocage par l'équipe (back-office) :** seul le membre concerné par le blocage est prévenu, pas le reste du foyer.
+- **Back-office :** rôle superadmin, qui a tous les droits (y compris gérer les admins et voir les données individuelles) ; chaque consultation de données individuelles est journalisée. « Dernière activité » gardée. Pas de QR code à l'activation de la double authentification.
+- **Applications iOS et Android (lots 8b, 9) :** écrites par les agents sans pouvoir les compiler ; la compilation et les essais sur appareil restent à faire.
