@@ -93,7 +93,7 @@ class LargeHouseholdsTest < ActionDispatch::IntegrationTest
 
   test "a paused member leaves the bars: three with one pause is read at two, zone 40-60" do
     household, (a, b, c) = build_household("Ana", "Ben", "Cy")
-    MemberPause.declare!(member: membership(household, c), declared_by: a, starts_on: Date.new(2026, 11, 2), ends_on: Date.new(2026, 11, 8))
+    MemberPause.declare!(member: membership(household, c), declared_by: c, starts_on: Date.new(2026, 11, 2), ends_on: Date.new(2026, 11, 8))
     log_week!(household, a, 2)
     log_week!(household, b, 2)
     sign_in a
