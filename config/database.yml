@@ -76,12 +76,10 @@ test:
 # the values provided in this file. Alternatively, you can specify a connection
 # URL environment variable explicitly:
 #
-#   production:
-#     url: <%= ENV["MY_APP_DATABASE_URL"] %>
-#
-# Read https://guides.rubyonrails.org/configuring.html#configuring-a-database
-# for a full overview on how database connection configuration can be specified.
-#
+#   # Kamal: four databases on the same server, named below.
+# Heroku: one Postgres add-on per role. DATABASE_URL is the primary (Rails reads
+# it on its own); CACHE_DATABASE_URL, QUEUE_DATABASE_URL and CABLE_DATABASE_URL
+# replace the names below when set (docs/deploy-heroku.md).
 production:
   primary: &primary_production
     <<: *default
@@ -92,11 +90,14 @@ production:
     <<: *primary_production
     database: task_balance_production_cache
     migrations_paths: db/cache_migrate
+    <% if ENV["CACHE_DATABASE_URL"].present? %>url: <%= ENV["CACHE_DATABASE_URL"] %><% end %>
   queue:
     <<: *primary_production
     database: task_balance_production_queue
     migrations_paths: db/queue_migrate
+    <% if ENV["QUEUE_DATABASE_URL"].present? %>url: <%= ENV["QUEUE_DATABASE_URL"] %><% end %>
   cable:
     <<: *primary_production
     database: task_balance_production_cable
     migrations_paths: db/cable_migrate
+    <% if ENV["CABLE_DATABASE_URL"].present? %>url: <%= ENV["CABLE_DATABASE_URL"] %><% end %>
