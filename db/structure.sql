@@ -45,7 +45,7 @@ CREATE TABLE public.absence_answers (
     corrected_at timestamp(6) without time zone,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT absence_answers_answer_values CHECK (((answer)::text = ANY ((ARRAY['yes'::character varying, 'no'::character varying])::text[])))
+    CONSTRAINT absence_answers_answer_values CHECK (((answer)::text = ANY (ARRAY[('yes'::character varying)::text, ('no'::character varying)::text])))
 );
 
 
@@ -157,7 +157,9 @@ CREATE TABLE public.admin_users (
     updated_at timestamp(6) without time zone NOT NULL,
     session_version integer DEFAULT 0 NOT NULL,
     enrolment_nonce character varying,
-    deactivated_at timestamp(6) without time zone
+    deactivated_at timestamp(6) without time zone,
+    role character varying DEFAULT 'admin'::character varying NOT NULL,
+    CONSTRAINT admin_users_role_values CHECK (((role)::text = ANY ((ARRAY['admin'::character varying, 'superadmin'::character varying])::text[])))
 );
 
 
@@ -343,7 +345,7 @@ CREATE TABLE public.chore_preferences (
     choice character varying NOT NULL,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT chore_preferences_choice CHECK (((choice)::text = ANY ((ARRAY['like'::character varying, 'neutral'::character varying, 'dislike'::character varying])::text[])))
+    CONSTRAINT chore_preferences_choice CHECK (((choice)::text = ANY (ARRAY[('like'::character varying)::text, ('neutral'::character varying)::text, ('dislike'::character varying)::text])))
 );
 
 
@@ -548,7 +550,11 @@ CREATE TABLE public.households (
     weekly_proposal_enabled boolean DEFAULT true NOT NULL,
     gap_carry_over_enabled boolean DEFAULT true NOT NULL,
     auto_validate_splits boolean DEFAULT false NOT NULL,
-    gap_folded_through date
+    gap_folded_through date,
+    engine_due_at timestamp(6) without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    engine_claimed_at timestamp(6) without time zone,
+    chores_scheduled_week date,
+    chores_claimed_at timestamp(6) without time zone
 );
 
 
@@ -579,7 +585,6 @@ CREATE TABLE public.invitations (
     id bigint NOT NULL,
     email character varying NOT NULL,
     household_id bigint NOT NULL,
-    token character varying NOT NULL,
     created_at timestamp without time zone NOT NULL,
     state character varying DEFAULT 'pending'::character varying NOT NULL,
     expires_at timestamp(6) without time zone NOT NULL,
@@ -592,7 +597,8 @@ CREATE TABLE public.invitations (
     inviter_id bigint,
     first_name character varying,
     color character varying,
-    monogram character varying
+    monogram character varying,
+    token_digest character varying NOT NULL
 );
 
 
@@ -768,6 +774,42 @@ ALTER SEQUENCE public.notifications_id_seq OWNED BY public.notifications.id;
 
 
 --
+-- Name: push_devices; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.push_devices (
+    id bigint NOT NULL,
+    user_id bigint NOT NULL,
+    platform character varying NOT NULL,
+    token text NOT NULL,
+    token_digest character varying NOT NULL,
+    last_seen_at timestamp(6) without time zone NOT NULL,
+    created_at timestamp(6) without time zone NOT NULL,
+    updated_at timestamp(6) without time zone NOT NULL,
+    CONSTRAINT push_devices_platform CHECK (((platform)::text = ANY ((ARRAY['ios'::character varying, 'android'::character varying])::text[])))
+);
+
+
+--
+-- Name: push_devices_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.push_devices_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: push_devices_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.push_devices_id_seq OWNED BY public.push_devices.id;
+
+
+--
 -- Name: schema_migrations; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -789,7 +831,7 @@ CREATE TABLE public.split_gap_entries (
     amount numeric(8,3) NOT NULL,
     reset_by_id bigint,
     created_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT split_gap_entries_kind CHECK (((kind)::text = ANY ((ARRAY['week'::character varying, 'reset'::character varying])::text[])))
+    CONSTRAINT split_gap_entries_kind CHECK (((kind)::text = ANY (ARRAY[('week'::character varying)::text, ('reset'::character varying)::text])))
 );
 
 
@@ -825,7 +867,7 @@ CREATE TABLE public.split_setting_changes (
     applied_at timestamp(6) without time zone,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT split_setting_changes_status CHECK (((status)::text = ANY ((ARRAY['pending'::character varying, 'applied'::character varying, 'withdrawn'::character varying])::text[])))
+    CONSTRAINT split_setting_changes_status CHECK (((status)::text = ANY (ARRAY[('pending'::character varying)::text, ('applied'::character varying)::text, ('withdrawn'::character varying)::text])))
 );
 
 
@@ -863,7 +905,7 @@ CREATE TABLE public.task_handovers (
     responded_at timestamp(6) without time zone,
     created_at timestamp(6) without time zone NOT NULL,
     updated_at timestamp(6) without time zone NOT NULL,
-    CONSTRAINT task_handovers_status CHECK (((status)::text = ANY ((ARRAY['pending'::character varying, 'accepted'::character varying, 'refused'::character varying, 'cancelled'::character varying])::text[]))),
+    CONSTRAINT task_handovers_status CHECK (((status)::text = ANY (ARRAY[('pending'::character varying)::text, ('accepted'::character varying)::text, ('refused'::character varying)::text, ('cancelled'::character varying)::text]))),
     CONSTRAINT task_handovers_two_people CHECK ((from_user_id <> to_user_id))
 );
 
@@ -948,7 +990,12 @@ CREATE TABLE public.users (
     confirmed_at timestamp(6) without time zone,
     confirmation_sent_at timestamp(6) without time zone,
     unconfirmed_email character varying,
-    deleted_at timestamp(6) without time zone
+    deleted_at timestamp(6) without time zone,
+    failed_sign_ins_at timestamp(6) without time zone[] DEFAULT '{}'::timestamp without time zone[] NOT NULL,
+    sign_in_locked_at timestamp(6) without time zone,
+    sign_in_lockouts_count integer DEFAULT 0 NOT NULL,
+    sign_in_hard_locked_at timestamp(6) without time zone,
+    email_changes_requested_at timestamp(6) without time zone[] DEFAULT '{}'::timestamp without time zone[] NOT NULL
 );
 
 
@@ -1029,8 +1076,8 @@ CREATE TABLE public.week_plans (
     targets jsonb DEFAULT '{}'::jsonb NOT NULL,
     carry_gap boolean DEFAULT true NOT NULL,
     gap_waived_by_id bigint,
-    CONSTRAINT week_plans_kind CHECK (((kind)::text = ANY ((ARRAY['starting'::character varying, 'weekly'::character varying])::text[]))),
-    CONSTRAINT week_plans_status CHECK (((status)::text = ANY ((ARRAY['awaiting_proposal'::character varying, 'proposed'::character varying, 'validated'::character varying])::text[])))
+    CONSTRAINT week_plans_kind CHECK (((kind)::text = ANY (ARRAY[('starting'::character varying)::text, ('weekly'::character varying)::text]))),
+    CONSTRAINT week_plans_status CHECK (((status)::text = ANY (ARRAY[('awaiting_proposal'::character varying)::text, ('proposed'::character varying)::text, ('validated'::character varying)::text])))
 );
 
 
@@ -1184,6 +1231,13 @@ ALTER TABLE ONLY public.notification_preferences ALTER COLUMN id SET DEFAULT nex
 --
 
 ALTER TABLE ONLY public.notifications ALTER COLUMN id SET DEFAULT nextval('public.notifications_id_seq'::regclass);
+
+
+--
+-- Name: push_devices id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.push_devices ALTER COLUMN id SET DEFAULT nextval('public.push_devices_id_seq'::regclass);
 
 
 --
@@ -1393,6 +1447,14 @@ ALTER TABLE ONLY public.notification_preferences
 
 ALTER TABLE ONLY public.notifications
     ADD CONSTRAINT notifications_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: push_devices push_devices_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.push_devices
+    ADD CONSTRAINT push_devices_pkey PRIMARY KEY (id);
 
 
 --
@@ -1754,6 +1816,13 @@ CREATE INDEX index_engine_events_undelivered ON public.engine_events USING btree
 
 
 --
+-- Name: index_engine_events_undelivered_by_household; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_engine_events_undelivered_by_household ON public.engine_events USING btree (household_id) WHERE (delivered_at IS NULL);
+
+
+--
 -- Name: index_household_members_on_household_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -1789,6 +1858,20 @@ CREATE UNIQUE INDEX index_household_weeks_on_household_id_and_week_start ON publ
 
 
 --
+-- Name: index_households_on_engine_due_at; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_households_on_engine_due_at ON public.households USING btree (engine_due_at);
+
+
+--
+-- Name: index_households_on_time_zone_and_chores_scheduled_week; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_households_on_time_zone_and_chores_scheduled_week ON public.households USING btree (time_zone, chores_scheduled_week);
+
+
+--
 -- Name: index_invitations_on_household_id_and_email; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -1810,10 +1893,10 @@ CREATE INDEX index_invitations_on_inviter_id ON public.invitations USING btree (
 
 
 --
--- Name: index_invitations_on_token; Type: INDEX; Schema: public; Owner: -
+-- Name: index_invitations_on_token_digest; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE UNIQUE INDEX index_invitations_on_token ON public.invitations USING btree (token);
+CREATE UNIQUE INDEX index_invitations_on_token_digest ON public.invitations USING btree (token_digest);
 
 
 --
@@ -1922,6 +2005,20 @@ CREATE UNIQUE INDEX index_notifications_weekly_cap ON public.notifications USING
 
 
 --
+-- Name: index_push_devices_on_token_digest; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX index_push_devices_on_token_digest ON public.push_devices USING btree (token_digest);
+
+
+--
+-- Name: index_push_devices_on_user_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_push_devices_on_user_id ON public.push_devices USING btree (user_id);
+
+
+--
 -- Name: index_split_gap_entries_on_household_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -1974,7 +2071,7 @@ CREATE UNIQUE INDEX index_split_setting_changes_one_pending ON public.split_sett
 -- Name: index_task_handovers_live; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE UNIQUE INDEX index_task_handovers_live ON public.task_handovers USING btree (chore_id, week_start, from_user_id) WHERE ((status)::text = ANY ((ARRAY['pending'::character varying, 'accepted'::character varying])::text[]));
+CREATE UNIQUE INDEX index_task_handovers_live ON public.task_handovers USING btree (chore_id, week_start, from_user_id) WHERE ((status)::text = ANY (ARRAY[('pending'::character varying)::text, ('accepted'::character varying)::text]));
 
 
 --
@@ -2246,6 +2343,14 @@ ALTER TABLE ONLY public.chore_assignees
 
 
 --
+-- Name: push_devices fk_rails_4389e5ccb6; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.push_devices
+    ADD CONSTRAINT fk_rails_4389e5ccb6 FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
+
+
+--
 -- Name: chore_preferences fk_rails_46cccc49f4; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -2514,7 +2619,7 @@ ALTER TABLE ONLY public.split_setting_changes
 --
 
 ALTER TABLE ONLY public.chores
-    ADD CONSTRAINT fk_rails_e36dfa813c FOREIGN KEY (task_id) REFERENCES public.tasks(id) ON DELETE RESTRICT NOT VALID;
+    ADD CONSTRAINT fk_rails_e36dfa813c FOREIGN KEY (task_id) REFERENCES public.tasks(id) ON DELETE RESTRICT;
 
 
 --
@@ -2557,6 +2662,11 @@ ALTER TABLE ONLY public.week_plans
 SET search_path TO "$user", public;
 
 INSERT INTO "schema_migrations" (version) VALUES
+('20261113120000'),
+('20261113100200'),
+('20261113100100'),
+('20261113100000'),
+('20261113092500'),
 ('20261113092400'),
 ('20261113092300'),
 ('20261113092200'),

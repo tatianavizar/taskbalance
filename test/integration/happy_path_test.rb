@@ -3,7 +3,8 @@ require "test_helper"
 # Happy path through the real HTTP stack, no browser: two people sign up, one
 # creates the household, invites the other, chooses the tasks and proposes the
 # split; the other gives preferences, accepts the split and joins; both log
-# tasks for a week, the weekly job closes the week, and both get the same
+# tasks for a week, the recurring dispatcher enqueues the household's engine
+# job, which closes the week, and both get the same
 # report.
 class HappyPathTest < ActionDispatch::IntegrationTest
   include ActionMailer::TestHelper
@@ -32,7 +33,7 @@ class HappyPathTest < ActionDispatch::IntegrationTest
     assert_emails 1 do
       post household_invitations_path(household), params: { invitation: { first_name: "Karim", email: "karim@exemple.fr" } }
     end
-    invitation = household.invitations.find_by!(email: "karim@exemple.fr")
+    invitation = with_link_token(household.invitations.find_by!(email: "karim@exemple.fr"))
     assert_predicate invitation, :pending?
     get household_setup_path(household)
     assert_select "h1", "Avec qui partagez-vous le foyer ?"
@@ -90,7 +91,7 @@ class HappyPathTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_text "Proposée par Virginie"
     assert_select "button", "Rejoindre le foyer"
-    assert_select "form[action=?]", decline_invitation_path(invitation.token)
+    assert_select "form[action=?]", invitee_decline_path
     shown = household.reload.starting_plan.assignments.to_h { |item| [ item["chore_id"], item["assignees"] ] }
     patch household_split_path(household), params: { commit_action: "validate", assignments: shown }
 
@@ -152,7 +153,7 @@ class HappyPathTest < ActionDispatch::IntegrationTest
     [ week2 - 6.hours,                          # Monday 03:00 + : closes week 1
       sunday_2030 ].each do |at|                # provisional week 2 (no message)
       travel_to(at)
-      perform_enqueued_jobs { WeeklyEngineJob.perform_now }
+      perform_enqueued_jobs { EngineDispatchJob.perform_now }
     end
 
     # Both log again on Sunday at 21:00, after the provisional report.
@@ -165,7 +166,7 @@ class HappyPathTest < ActionDispatch::IntegrationTest
     [ sunday_2030 + 7.hours,                    # Monday 03:30: final week 2
       sunday_2030 + 12.hours ].each do |at|     # Monday 08:30: report delivery
       travel_to(at)
-      perform_enqueued_jobs { WeeklyEngineJob.perform_now }
+      perform_enqueued_jobs { EngineDispatchJob.perform_now }
     end
 
     weeks = HouseholdWeek.where(household: household).order(:week_start)
@@ -196,7 +197,7 @@ class HappyPathTest < ActionDispatch::IntegrationTest
                        execution_load: true, time_spent: 20, completed_at: Time.current)
     end
     travel_to(week3 + 8.days) # Tuesday after, 09:00: the first run since Wednesday
-    perform_enqueued_jobs { WeeklyEngineJob.perform_now }
+    perform_enqueued_jobs { EngineDispatchJob.perform_now }
 
     week3_reports = Notification.where(household: household, kind: "weekly_report")
       .where("facts->>'week_start' = ?", week3.to_date.iso8601)

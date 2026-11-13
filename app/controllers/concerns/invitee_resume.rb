@@ -22,7 +22,7 @@ module InviteeResume
     case invitation.resume_stage
     when :style then household_member_style_path(invitation.household)
     when :preferences then household_preferences_path(invitation.household)
-    else waiting_invitation_path(invitation.token)
+    else invitee_waiting_path
     end
   end
 end

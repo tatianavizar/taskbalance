@@ -42,6 +42,7 @@
       <%= tab_bar if with_chrome %>
     </div>
     <%= confirm_dialog %>
+    <%= native_push_sync %>
     <%= render "components/cookie_banner", with_tabs: with_chrome if cookie_banner? %>
   </body>
 </html>

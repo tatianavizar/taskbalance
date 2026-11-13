@@ -1,7 +1,7 @@
 source "https://rubygems.org"
 
 # Bundle edge Rails instead: gem "rails", github: "rails/rails", branch: "main"
-gem "rails", "~> 8.0.1"
+gem "rails", "~> 8.1.0"
 # The modern asset pipeline for Rails [https://github.com/rails/propshaft]
 gem "propshaft"
 # Use postgresql as the database for Active Record
@@ -74,6 +74,6 @@ gem "enumerations"
 # Back office (lot 9): ActiveAdmin 4 runs on Tailwind and importmap, no Sprockets or Sass.
 # Ransack 6 needs Rails 8.1: stay on 4.x.
 gem "activeadmin", "4.0.0.beta23"
-gem "ransack", "~> 4.4"
+gem "ransack", "~> 6.1"
 gem "devise-two-factor", "~> 6.4"
 gem "rotp", "~> 6.4"

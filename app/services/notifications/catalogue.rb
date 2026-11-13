@@ -22,6 +22,8 @@ module Notifications
       Entry.new("alert_no_logs",   "alert",            "alert",  :dashboard), # E3
       Entry.new("alert_blocked",    "alert",            "alert",  :dashboard), # E4
       Entry.new("alert_unblocked",  "alert",            "alert",  :dashboard), # E5
+      # The block lifted from the back office: to the members behind it only.
+      Entry.new("alert_block_lifted", "alert",          "alert",  :dashboard),
       Entry.new("task_assigned",    "task_assigned",    nil,      :chores),
       Entry.new("task_offered",     "task_assigned",    nil,      :chores), # D15
       Entry.new("task_offer_answered", "task_assigned", nil,      :chores), # D16

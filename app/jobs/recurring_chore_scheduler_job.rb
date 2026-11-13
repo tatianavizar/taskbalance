@@ -1,8 +1,8 @@
-# Writes every household's occurrences for its current local week. Idempotent,
-# so it runs often (config/recurring.yml): a household whose Monday has just
-# begun in its time zone gets its week within minutes.
+# Writes every household's occurrences for its current local week, inline and
+# without selection (RecurringChoreScheduler.run_all): for development, tests
+# and `bin/rails runner`. Production schedules ChoreSchedulerDispatchJob.
 class RecurringChoreSchedulerJob < ApplicationJob
-  queue_as :default
+  queue_as :engine
 
   def perform
     RecurringChoreScheduler.run_all

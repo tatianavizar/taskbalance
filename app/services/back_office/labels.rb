@@ -32,12 +32,19 @@ module BackOffice
       "admin.locked" => "Compte bloqué après trop d'essais",
       "admin.bootstrapped" => "Compte créé (console)",
       "admin.password_reset" => "Mot de passe réinitialisé (console)",
-      "admin.two_factor_reset" => "Double authentification réinitialisée (console)",
+      "admin.two_factor_reset" => "Double authentification réinitialisée",
+      "admin.created" => "Compte de l'équipe créé",
+      "admin.role_changed" => "Rôle changé",
+      "admin.deactivated" => "Compte de l'équipe désactivé",
+      "user.individual_data_viewed" => "Données individuelles consultées",
       "two_factor.enrolment_failed" => "Code d'enrôlement refusé",
-      "user.account_deleted" => "Compte supprimé"
+      "user.account_deleted" => "Compte supprimé",
+      "user.sign_in_unlocked" => "Compte débloqué"
     }.freeze
 
     ROLES = { "manager" => "Gestionnaire", "member" => "Membre" }.freeze
+
+    ADMIN_ROLES = { "admin" => "Admin", "superadmin" => "Superadmin" }.freeze
 
     module_function
 
@@ -49,10 +56,22 @@ module BackOffice
       at ? Week.containing(at, household.time_zone).label.downcase : "—"
     end
 
+    # The sign-in lockout of an account (SignInLockout), for the team only.
+    def sign_in_lock(user)
+      if user.sign_in_hard_locked?
+        "Bloquée depuis le #{I18n.l(user.sign_in_hard_locked_at, format: :long)} (3e blocage : à débloquer ici)"
+      elsif user.sign_in_temporarily_locked?
+        "Bloquée jusqu'au #{I18n.l(user.sign_in_unlocks_at, format: :long)}"
+      else
+        "Ouverte"
+      end
+    end
+
     def household_state(state) = HOUSEHOLD_STATES.fetch(state.to_s, [ state.to_s, "pill-soft" ])
     def invitation_state(state) = INVITATION_STATES.fetch(state.to_s, [ state.to_s, "pill-soft" ])
     def action(name) = ACTIONS.fetch(name.to_s, name.to_s)
     def role(role) = ROLES.fetch(role.to_s, role.to_s)
+    def admin_role(role) = ADMIN_ROLES.fetch(role.to_s, role.to_s)
 
     def household_state_options = HOUSEHOLD_STATES.map { |value, (label, _)| [ label, value ] }
     def invitation_state_options = INVITATION_STATES.map { |value, (label, _)| [ label, value ] }

@@ -26,8 +26,33 @@ class FiftyFormBuilderTest < ActionView::TestCase
     assert_includes html, 'aria-invalid="true"'
     assert_match(/aria-describedby="user_email_hint user_email_error"/, html)
     assert_includes html, 'id="user_email_error"'
-    assert_match(/\d champs? à corriger/, html)
+    assert_not_includes html, "alert-box", "field errors are shown inline only, no summary banner"
+  end
+
+  test "an error on the form itself is shown in the summary" do
+    user = User.new(email: "a@b.fr")
+    user.errors.add(:base, "Ce lien a expiré.")
+    html = render_form(user)
+
+    assert_includes html, "Ce lien a expiré."
     assert_includes html, 'role="alert"'
+  end
+
+  test "a password field gets an eye button, hidden by default" do
+    html = fields_for(:user, User.new, builder: FiftyFormBuilder) do |f|
+      concat f.field(:password, as: :password)
+    end
+
+    assert_includes html, 'data-controller="password-visibility"'
+    assert_includes html, 'type="password"'
+    assert_includes html, 'type="button"'
+    assert_includes html, 'aria-label="Afficher le mot de passe"'
+    assert_includes html, 'aria-pressed="false"'
+    assert_includes html, 'aria-controls="user_password"'
+  end
+
+  test "other fields have no eye button" do
+    assert_not_includes render_form(User.new), "password-visibility"
   end
 
   test "submit renders the primary button" do

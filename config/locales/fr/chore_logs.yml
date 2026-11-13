@@ -34,6 +34,8 @@ fr:
       today_prefix: "Aujourd'hui, %{day}"
       detached: "plus rattaché à un foyer"
       edit_aria: "Corriger ou supprimer « %{name} »"
+      menu_edit: "Corriger"
+      menu_delete: "Supprimer"
       older: "Voir les semaines précédentes"
     edit:
       title: "Corriger un enregistrement"

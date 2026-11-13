@@ -1,15 +1,7 @@
 <%# C5, C6 : tâche perso (ou modification d'une tâche du foyer). %>
 <%= form_with model: @chore, html: { class: "flex flex-col gap-5 flex-1" } do |f| %>
   <%= hidden_field_tag :return_to, @return_to if @return_to %>
-  <% if @chore.errors.any? %>
-    <% order = %i[custom_name category loads time_required assignees frequency times_per_period anchor_on] %>
-    <% fields = (@chore.errors.attribute_names - [ :base ]).sort_by { |a| order.index(a) || order.size }.map { |a| Chore.human_attribute_name(a) } %>
-    <div class="alert-box" role="alert" id="chore_error_summary">
-      <%= sanitize t("forms.error_summary", count: fields.size), tags: %w[b] %>
-      <% if fields.any? %><br><%= fields.join(" · ") %><% end %>
-      <% @chore.errors[:base].each do |message| %><br><%= message %><% end %>
-    </div>
-  <% end %>
+  <%= f.error_summary %>
 
   <% if @chore.catalogue_chore? %>
     <div>

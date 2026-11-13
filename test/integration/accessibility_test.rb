@@ -107,7 +107,6 @@ class AccessibilityTest < ActionDispatch::IntegrationTest
     assert_response :unprocessable_entity
     assert_empty audit("sign-up with errors")
     assert_select "input[aria-invalid=true][aria-describedby]", minimum: 2
-    assert_select "[role=alert]", minimum: 1
     document = doc
     document.css("input[aria-invalid=true]").each do |input|
       input["aria-describedby"].split.each { |id| assert document.at_css("[id='#{id}']"), "##{id} missing" }

@@ -65,11 +65,17 @@ Rails.application.routes.draw do
   get "notifications" => "notifications#index", as: :notifications
   patch "notifications/lecture" => "notifications#read_all", as: :read_all_notifications
   get "notifications/:id" => "notifications#show", as: :notification, constraints: { id: /\d+/ }
+  # Lot 8b : H1 (autoriser les notifications, coquilles natives) et le jeton du
+  # téléphone, envoyé par le composant bridge « push-notifications ».
+  get "notifications/autoriser" => "push_permissions#show", as: :push_permission
+  resource :push_device, path: "appareils", only: [ :create, :destroy ]
   get "desinscription/:token" => "unsubscribes#show", as: :unsubscribe
   post "desinscription/:token" => "unsubscribes#create"
   post "desinscription/:token/reactiver" => "unsubscribes#resubscribe", as: :resubscribe
 
   get "dashboard" => "pages#dashboard", as: :dashboard
+  # Onglet « Foyer » des coquilles natives : une adresse fixe.
+  get "foyer" => "pages#household", as: :household_home
   # Bilan (E1, E7, E10, E14), les 4 semaines (E2) et les niveaux (E8, E9, E13).
   get "bilan" => "reports#show", as: :report
   get "bilan/historique" => "reports#history", as: :report_history
@@ -98,6 +104,11 @@ Rails.application.routes.draw do
   get "configurations/ios_v1", to: "configurations#show", defaults: { platform: "ios", format: :json }
   get "configurations/android_v1", to: "configurations#show", defaults: { platform: "android", format: :json }
 
+  # Liens universels (iOS) et App Links (Android), lot 9 : voir NativeApp.
+  get ".well-known/apple-app-site-association", to: "well_known#apple_app_site_association", format: false
+  get "apple-app-site-association", to: "well_known#apple_app_site_association", format: false
+  get ".well-known/assetlinks.json", to: "well_known#asset_links", format: false
+
   # Catalogue de composants, en développement et en test seulement
   get "styleguide" => "styleguide#show" if Rails.env.local?
 
@@ -122,6 +133,11 @@ Rails.application.routes.draw do
   end
 
   # Invitation, côté personne invitée (B7 à B9, B12). Le jeton fait office d'identifiant.
+  # Une fois l'invitation prise en main (connectée), B12 et le refus passent par
+  # /invitation, sans jeton : l'app ne garde que son empreinte.
+  get "invitation", to: "invitations#resume", as: :invitee_invitation
+  get "invitation/attente", to: "invitations#waiting", as: :invitee_waiting
+  post "invitation/refus", to: "invitations#decline", as: :invitee_decline
   resources :invitations, only: [ :show ], param: :token do
     member do
       post :claim

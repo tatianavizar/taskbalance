@@ -166,6 +166,12 @@ module Notifications
       }
     end
 
+    # Sent to the person whose empty weeks caused the block, and to nobody
+    # else; it does not say who lifted it.
+    def alert_block_lifted
+      { subject: m("title"), title: m("title"), lines: [ m("level", level: facts["level"]), m("counts"), m("keep") ] }
+    end
+
     # ---- the absence question and what follows -----------------------------
 
     def absence_question

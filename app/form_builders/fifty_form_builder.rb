@@ -6,8 +6,12 @@ class FiftyFormBuilder < ActionView::Helpers::FormBuilder
   #   f.field :email, as: :email, hint: "…", label: "Email"
   def field(method, as: :text, label: nil, hint: nil, **html)
     html[:class] = [ "field-input", html[:class] ].compact.join(" ")
+    # Lot 9: in the native shells, the date picker is native (bridge
+    # component « date-picker »); a browser keeps its own.
+    html[:data] = { controller: "bridge--date-picker", action: "click->bridge--date-picker#open" }.merge(html[:data] || {}) if as == :date
     wrap(method, label: label, hint: hint, html: html) do |attrs|
-      public_send(INPUT_TYPES.fetch(as), method, **attrs)
+      input = public_send(INPUT_TYPES.fetch(as), method, **attrs)
+      as == :password ? with_visibility_toggle(method, input) : input
     end
   end
 
@@ -64,16 +68,17 @@ class FiftyFormBuilder < ActionView::Helpers::FormBuilder
     end
   end
 
-  # Résumé sombre en tête de formulaire : « 1 champ à corriger ».
+  # Résumé sombre en tête de formulaire, pour les seules erreurs qui ne
+  # tiennent pas à un champ (:base). Les erreurs de champ s'affichent sous
+  # chaque champ, sans bandeau qui les compte (décision 2026-11-13).
   def error_summary
-    return if object.nil? || object.errors.none?
+    return if object.nil?
 
-    fields = object.errors.attribute_names - [ :base ]
-    parts = []
-    parts << @template.t("forms.error_summary", count: fields.size).html_safe if fields.any?
-    parts.concat(object.errors[:base].map { |message| ERB::Util.html_escape(message) })
+    messages = object.errors[:base]
+    return if messages.none?
+
     @template.tag.div(
-      @template.safe_join(parts, @template.tag.br),
+      @template.safe_join(messages.map { |message| ERB::Util.html_escape(message) }, @template.tag.br),
       class: "alert-box", role: "alert", id: field_id(:error_summary)
     )
   end
@@ -109,6 +114,23 @@ class FiftyFormBuilder < ActionView::Helpers::FormBuilder
         error_tag(method)
       ].compact)
     end
+  end
+
+  # Bouton œil d'un champ mot de passe (password_visibility_controller.js).
+  # Libellé fixe, l'état passe par aria-pressed ; masqué par défaut.
+  def with_visibility_toggle(method, input)
+    button = @template.tag.button(
+      eye_icons, type: "button", class: "password-toggle",
+      "aria-label": @template.t("forms.password.show"), "aria-pressed": "false",
+      "aria-controls": field_id(method), data: { action: "password-visibility#toggle" }
+    )
+    @template.tag.div(@template.safe_join([ input, button ]), class: "password-field", data: { controller: "password-visibility" })
+  end
+
+  def eye_icons
+    eye = '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>'
+    svg = ->(klass, body) { %(<svg class="#{klass}" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">#{body}</svg>) }
+    @template.raw(svg.call("icon-show", eye) + svg.call("icon-hide", eye + '<path d="M4 4l16 16"/>'))
   end
 
   def errors?(method)

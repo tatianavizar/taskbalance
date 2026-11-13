@@ -21,7 +21,7 @@ class ApplicationController < ActionController::Base
   # The invitation they opened before signing in, else the one they claimed.
   def invitation_path_after_sign_in(user)
     token = session.delete(:invitation_token)
-    return invitation_path(token) if token.present? && Invitation.live.exists?(token: token)
+    return invitation_path(token) if Invitation.live.find_by_token(token)
 
     invitation = pending_invitation_of(user)
     invitee_resume_path(invitation) if invitation

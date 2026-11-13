@@ -28,6 +28,8 @@ class HouseholdMember < ApplicationRecord
   after_create :refresh_household_monograms
   after_create :refresh_household_state
   after_destroy :refresh_household_state
+  # The engine reads the members (reports, split): wake it for the household.
+  after_commit(on: %i[create destroy]) { Household.where(id: household_id).update_all(engine_due_at: Time.current) }
 
   # Colours still free in this household, in palette order.
   def available_colors

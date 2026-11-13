@@ -37,7 +37,7 @@ class InviteeSplitScreensTest < ActionView::TestCase
     assert_includes rendered, "Proposée par Dana le"
     assert_includes rendered, "Rejoindre le foyer"
     assert_includes rendered, "Finalement, ne pas rejoindre ce foyer"
-    assert_includes rendered, decline_invitation_path(@invitation.token)
+    assert_includes rendered, invitee_decline_path
     assert_includes rendered, "assignments[#{@chore.id}][]"
   end
 

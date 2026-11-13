@@ -89,6 +89,23 @@ module BackOffice
         end
       end
 
+      # Sign-in lockout (SignInLockout): lifts a temporary or a permanent lock
+      # and resets both counters. The person is not told by the app; they can
+      # sign in again.
+      def unlock_account(admin, user)
+        return failure("Ce compte est supprimé.") if user.deleted?
+
+        AdminAction.transaction do
+          user.lock!
+          return failure("La connexion à ce compte n'est pas bloquée.") unless user.sign_in_locked?
+
+          hard = user.sign_in_hard_locked?
+          user.unlock_sign_in!
+          AdminAction.record!(admin: admin, action: "user.sign_in_unlocked", record: user, hard_lock: hard)
+          success("Compte débloqué : la personne peut se connecter de nouveau.")
+        end
+      end
+
       # The admin types the account's email (AccountDeletion#save_as_admin).
       # Logs are deleted, as in the person's own deletion.
       def delete_account(admin, user, typed_email:)

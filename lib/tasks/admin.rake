@@ -38,14 +38,16 @@ module AdminTasks
 end
 
 namespace :admin do
-  desc "Create a back-office account, or reset its password: ADMIN_EMAIL, and the password asked on the terminal (ADMIN_PASSWORD only as a fallback when there is none)"
+  desc "Create a back-office account, or reset its password: ADMIN_EMAIL, ROLE (superadmin by default for a new account, admin; an existing account keeps its role unless ROLE is given), and the password asked on the terminal (ADMIN_PASSWORD only as a fallback when there is none)"
   task bootstrap: :environment do
     email = ENV["ADMIN_EMAIL"].to_s.strip
     abort "ADMIN_EMAIL is required." if email.blank?
+    role = ENV["ROLE"].to_s.strip.presence
+    abort "ROLE must be one of: #{AdminUser::ROLES.join(', ')}." if role && !AdminUser::ROLES.include?(role)
 
     password = AdminTasks.read_password
-    result = BackOffice::Console.bootstrap(email: email, password: password)
-    puts result.created ? "Back-office account created for #{result.admin.email}." : "Password reset for #{result.admin.email} (its sessions are ended)."
+    result = BackOffice::Console.bootstrap(email: email, password: password, role: role)
+    puts result.created ? "Back-office account created for #{result.admin.email} (#{result.admin.role})." : "Password reset for #{result.admin.email} (#{result.admin.role}; its sessions are ended)."
     AdminTasks.print_link(result)
   rescue BackOffice::Console::Invalid => e
     abort "Not saved: #{e.message}"

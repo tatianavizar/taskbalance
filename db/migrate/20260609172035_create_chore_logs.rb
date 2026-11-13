@@ -10,7 +10,7 @@ class CreateChoreLogs < ActiveRecord::Migration[8.0]
       t.datetime   :completed_at, null: false
     end
 
-    add_index :chore_logs, [:household_id, :completed_at]
-    add_index :chore_logs, [:user_id, :completed_at]
+    add_index :chore_logs, [ :household_id, :completed_at ]
+    add_index :chore_logs, [ :user_id, :completed_at ]
   end
 end

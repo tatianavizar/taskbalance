@@ -14,10 +14,16 @@ module BackOffice
     class << self
       # Creates the account, or resets the password of an existing one (ending
       # its sessions: the password is part of the session salt). The second
-      # factor is left alone when already set up.
-      def bootstrap(email:, password:)
+      # factor is left alone when already set up. A new account is a
+      # superadmin unless `role` says otherwise (the first account must be
+      # able to manage the others); an existing one keeps its role unless
+      # `role` is given.
+      def bootstrap(email:, password:, role: nil)
         admin = AdminUser.find_or_initialize_by(email: email.to_s.strip.downcase)
         created = admin.new_record?
+        raise Invalid, "Unknown role: #{role}." if role && !AdminUser::ROLES.include?(role.to_s)
+
+        admin.role = role || (created ? "superadmin" : admin.role)
         admin.password = admin.password_confirmation = password
 
         AdminUser.transaction do
@@ -26,7 +32,7 @@ module BackOffice
           admin.unlock_access! if admin.access_locked?
           token = admin.issue_enrolment! unless admin.two_factor_enrolled?
           AdminAction.record_console!(action: created ? "admin.bootstrapped" : "admin.password_reset", record: admin,
-                                      enrolment_link_issued: token.present?)
+                                      enrolment_link_issued: token.present?, role: admin.role)
           Result.new(admin: admin, created: created, enrolment_token: token)
         end
       end

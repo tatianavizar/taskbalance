@@ -145,9 +145,9 @@ class HomeTest < ActionDispatch::IntegrationTest
       log = ChoreLog.create!(user: @virginie, household: @household, chore_name: "Ménage", category: "cleaning",
                              mental_load: true, execution_load: false, time_spent: 10, completed_at: Time.current)
     end
-    # The test adapter keeps what was published: the count is cumulative.
-    assert_turbo_stream_broadcasts(stream, count: 2) { log.update!(time_spent: 15) }
-    assert_turbo_stream_broadcasts(stream, count: 3) { log.destroy! }
+    # Counted per block (turbo-rails 2.0.2x captures only the block's broadcasts).
+    assert_turbo_stream_broadcasts(stream, count: 1) { log.update!(time_spent: 15) }
+    assert_turbo_stream_broadcasts(stream, count: 1) { log.destroy! }
   end
 
   test "logging through the form broadcasts to the household" do

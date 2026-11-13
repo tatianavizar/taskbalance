@@ -82,7 +82,7 @@ class ChoreLogsControllerTest < ActionDispatch::IntegrationTest
     post chore_logs_path, params: params_for(mental_load: "0", execution_load: "0", time_spent: "", idempotency_key: key)
 
     assert_response :unprocessable_entity
-    assert_select ".alert-box", /2 champs à corriger/
+    assert_select ".alert-box", 0
     assert_field_error "Cochez au moins une charge. Les deux sont possibles."
     assert_field_error "Indiquez combien de temps ça a pris, même approximativement."
     assert_select "input[name=?][value=?]", "log_entry[idempotency_key]", key

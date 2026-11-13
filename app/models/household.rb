@@ -42,6 +42,17 @@ class Household < ApplicationRecord
 
   self.ransackable_attribute_names = %w[name state time_zone level blocked_at created_at]
 
+  # Fan-out of the weekly engine (EngineCycle): a new household is due at once.
+  # Set in Ruby rather than left to the column default so it follows the
+  # application clock.
+  attribute :engine_due_at, default: -> { Time.current }
+
+  # What the engine reads to decide its moments (zone) or the proposal
+  # (WeeklySplit): a change makes the household due now.
+  ENGINE_WAKING_ATTRIBUTES = %w[time_zone setup_step weekly_proposal_enabled gap_carry_over_enabled
+                                auto_validate_splits].freeze
+  after_update_commit :wake_engine, if: -> { (saved_changes.keys & ENGINE_WAKING_ATTRIBUTES).any? }
+
   before_validation { self.name = name.to_s.strip.presence }
 
   validates :name, presence: true, length: { maximum: NAME_MAX_LENGTH }
@@ -70,6 +81,13 @@ class Household < ApplicationRecord
   rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotUnique
     household.errors.add(:base, :user_already_in_household)
     household
+  end
+
+  # Makes the household due now for the engine dispatcher, whatever
+  # engine_due_at said (a member arrived or left, a setting or the time zone
+  # changed, the set-up ended). One cheap UPDATE, no callbacks.
+  def wake_engine
+    self.class.where(id: id).update_all(engine_due_at: Time.current)
   end
 
   def ultimate_level?
@@ -107,17 +125,35 @@ class Household < ApplicationRecord
   # Back office: the team lifts a block by hand (docs/decisions.md, 2026-11-13).
   # Only the state and the date go back; the level and the balanced-weeks
   # counter are the engine's and stay as they are. Recorded as an EngineEvent
-  # (`household.admin_unblocked`, nothing is sent for it) next to the engine's
-  # own. Returns false when the household is not blocked.
+  # (`household.admin_unblocked`) next to the engine's own; the members behind
+  # the block are told (Events::BlockLiftedAlert), nobody else. Returns false
+  # when the household is not blocked.
   def admin_unblock!(by:)
-    with_lock do
-      return false unless blocked?
+    unblocked = with_lock do
+      next false unless blocked?
 
+      concerned = members_behind_block
       update!(state: household_members.count >= 2 ? "active" : "solo", blocked_at: nil)
-      EngineEvent.record!(household: self, name: "household.admin_unblocked",
-                          admin_user_id: by.id, level: level, balanced_weeks_count: balanced_weeks_count)
+      EngineEvent.record!(household: self, name: "household.admin_unblocked", subject: self,
+                          admin_user_id: by.id, level: level, balanced_weeks_count: balanced_weeks_count,
+                          user_ids: concerned.map(&:id))
       true
     end
+    # Tell the person concerned now, not at the next engine run.
+    NotificationsDispatchJob.perform_later(id) if unblocked
+    unblocked
+  end
+
+  # The members whose empty weeks caused the current block: every absence
+  # inquiry that ended in a regression since the household was blocked (a
+  # second one during the same block does not drop the level again, but its
+  # member is concerned too). Members who left since are gone with their
+  # inquiries.
+  def members_behind_block
+    return [] unless blocked_at
+
+    User.where(id: absence_inquiries.regressed.where(deadline_at: blocked_at..)
+                                    .joins(:household_member).select("household_members.user_id")).order(:id).to_a
   end
 
   def manager

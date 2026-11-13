@@ -16,7 +16,7 @@ module TaskBalance
     end
 
     # Initialize configuration defaults for originally generated Rails version.
-    config.load_defaults 8.0
+    config.load_defaults 8.1
 
     # Please, add to the `ignore` list any other `lib` subdirectories that do
     # not contain `.rb` files, or that should not be reloaded or eager loaded.
@@ -28,8 +28,8 @@ module TaskBalance
 
     config.i18n.load_path += Dir[Rails.root.join("config/locales/**/*.{rb,yml}")]
     config.i18n.default_locale = :fr
-    config.i18n.available_locales = [:fr, :en]
-    config.i18n.fallbacks = [:en]
+    config.i18n.available_locales = [ :fr, :en ]
+    config.i18n.fallbacks = [ :en ]
 
     # Pages d'erreur en français (ErrorsController) au lieu des fichiers de public/.
     config.exceptions_app = routes

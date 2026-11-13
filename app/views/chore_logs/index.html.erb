@@ -29,8 +29,16 @@
               <% if log.household_id.nil? %> · <%= t("chore_logs.index.detached") %><% end %>
             </span>
           </span>
-          <%= link_to edit_chore_log_path(log), "aria-label": t("chore_logs.index.edit_aria", name: log.chore_name),
-                class: "flex items-center justify-center min-w-[44px] min-h-[44px] no-underline text-ink text-xl" do %>⋯<% end %>
+          <%# Lot 9: in the native shells, « ⋯ » opens a native menu (bridge component « overflow-menu »). %>
+          <span data-controller="bridge--overflow-menu" data-bridge--overflow-menu-title-value="<%= log.chore_name %>">
+            <%= link_to edit_chore_log_path(log), "aria-label": t("chore_logs.index.edit_aria", name: log.chore_name),
+                  data: { action: "click->bridge--overflow-menu#open" },
+                  class: "flex items-center justify-center min-w-[44px] min-h-[44px] no-underline text-ink text-xl" do %>⋯<% end %>
+            <span hidden>
+              <%= link_to t("chore_logs.index.menu_edit"), edit_chore_log_path(log), tabindex: -1, data: { "bridge--overflow-menu-target": "item" } %>
+              <%= link_to t("chore_logs.index.menu_delete"), delete_chore_log_path(log), tabindex: -1, data: { "bridge--overflow-menu-target": "item", destructive: "true" } %>
+            </span>
+          </span>
         </div>
       <% end %>
     </div>

@@ -1,0 +1,16 @@
+<div class="space-y-3 p-4 text-sm">
+  <p>
+    <strong>Admin</strong> : comptes, foyers, invitations et journal, en chiffres agrégés seulement.
+    <strong>Superadmin</strong> : tous les droits, y compris gérer l'équipe et consulter les données individuelles d'une personne (chaque consultation est journalisée).
+  </p>
+  <%= form_with url: change_role_admin_admin_user_path(admin), method: :post, builder: ActionView::Helpers::FormBuilder,
+                class: "flex items-end gap-2", data: { turbo: false } do |form| %>
+    <div>
+      <%= form.label :role, "Rôle", class: "block font-semibold" %>
+      <%= form.select :role, AdminUser::ROLES.map { |role| [ BackOffice::Labels.admin_role(role), role ] }, { selected: admin.role },
+                      class: "block rounded-lg border border-gray-300 px-3 py-2" %>
+    </div>
+    <%= form.submit "Changer le rôle", class: "cursor-pointer rounded-lg bg-blue-600 px-4 py-2 font-bold text-white",
+                    data: { confirm: "Changer le rôle de #{admin.email} ?" } %>
+  <% end %>
+</div>

@@ -25,6 +25,23 @@ module ApplicationHelper
     !hotwire_native_app? && cookies[:cookie_notice_seen].blank?
   end
 
+  # Lot 8b : dans les coquilles natives, une personne connectée envoie le jeton
+  # du téléphone au serveur (composant bridge « push-notifications », mode
+  # "sync"). L'empreinte du jeton déjà enregistré par cette session évite de le
+  # renvoyer à chaque page.
+  def native_push_sync
+    return unless hotwire_native_app? && user_signed_in?
+
+    digest = PushDevice.where(id: session[:push_device_id], user_id: current_user.id).pick(:token_digest) if session[:push_device_id]
+    tag.div(hidden: true, data: {
+      controller: "bridge--push-notifications",
+      "bridge--push-notifications-mode-value": "sync",
+      "bridge--push-notifications-url-value": push_device_path,
+      "bridge--push-notifications-signed-in-value": true,
+      "bridge--push-notifications-device-digest-value": digest.to_s
+    })
+  end
+
   # Onglet actif selon le contrôleur courant.
   def active_tab
     case controller_path

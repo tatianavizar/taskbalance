@@ -17,10 +17,12 @@ class AdminAction < ApplicationRecord
   ACTIONS = %w[
     admin.signed_in admin.sign_in_failed admin.locked
     admin.bootstrapped admin.password_reset admin.two_factor_reset
+    admin.created admin.role_changed admin.deactivated
     two_factor.enrolled two_factor.enrolment_failed
     invitation.resent invitation.cancelled
     household.unblocked
     user.email_confirmed user.email_change_confirmed user.account_deleted
+    user.sign_in_unlocked user.individual_data_viewed
   ].freeze
 
   belongs_to :admin_user, optional: true

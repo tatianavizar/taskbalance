@@ -1,0 +1,13 @@
+.gradle/
+build/
+app/build/
+local.properties
+.idea/
+*.iml
+captures/
+# Firebase project file: downloaded from the Firebase console, never committed.
+app/google-services.json
+# Signing material.
+*.jks
+*.keystore
+keystore.properties

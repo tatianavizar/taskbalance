@@ -9,6 +9,9 @@ fi
 # If running the rails server then create or migrate existing database
 if [ "${@: -2:1}" == "./bin/rails" ] && [ "${@: -1:1}" == "server" ]; then
   ./bin/rails db:prepare
+  # Task catalogue (db/seeds.rb): upserted by key, never deleted. db:prepare
+  # seeds only a new database; this keeps an existing one up to date.
+  ./bin/rails db:seed
 fi
 
 exec "${@}"

@@ -81,6 +81,19 @@
     color: var(--color-ink);
   }
   .field-input[aria-invalid="true"] { border: 2px solid var(--color-ink); }
+
+  /* Password field with its eye button (A2, A4, A8). */
+  .password-field { position: relative; }
+  .password-field .field-input { padding-right: 52px; }
+  .password-toggle {
+    position: absolute; right: 2px; top: 2px; width: 44px; height: 44px;
+    display: flex; align-items: center; justify-content: center;
+    border: 0; padding: 0; border-radius: 10px; background: transparent;
+    color: var(--color-ink); cursor: pointer;
+  }
+  .password-toggle .icon-hide,
+  .password-toggle[aria-pressed="true"] .icon-show { display: none; }
+  .password-toggle[aria-pressed="true"] .icon-hide { display: block; }
   .field-hint { color: var(--color-muted); font-size: 13px; line-height: 18px; margin-top: 6px; }
   .field-error { display: flex; gap: 6px; align-items: flex-start; font-weight: 600; font-size: 13px; line-height: 18px; margin-top: 6px; }
   .field-error-icon {

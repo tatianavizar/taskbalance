@@ -1,0 +1,19 @@
+# Heroku, container stack (`heroku stack:set container`): builds the same
+# Dockerfile as Kamal. Steps and ENV: docs/deploy-heroku.md.
+build:
+  docker:
+    web: Dockerfile
+release:
+  image: web
+  # Every database (primary, cache, queue, cable), then the task catalogue.
+  command:
+    - bash
+    - -c
+    - ./bin/rails db:prepare && ./bin/rails db:seed
+run:
+  # Puma listens on $PORT (config/puma.rb). Heroku's router does TLS and
+  # compression, so Thruster is not used here.
+  web: ./bin/rails server
+  # Solid Queue (engine every 15 min, emails, push). A staging app can skip this
+  # dyno with SOLID_QUEUE_IN_PUMA=1.
+  worker: ./bin/jobs
