@@ -22,9 +22,6 @@ fr:
     log_out: "Se déconnecter"
     log_in: "Se connecter"
   forms:
-    error_summary:
-      one: "<b>1 champ à corriger</b> avant de continuer."
-      other: "<b>%{count} champs à corriger</b> avant de continuer."
     password:
       show: "Afficher le mot de passe"
   app:

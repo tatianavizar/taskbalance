@@ -23,11 +23,11 @@ class AuthScreensTest < ActionDispatch::IntegrationTest
     assert_select "input[type=hidden][name='user[time_zone]']"
   end
 
-  test "a too short password is reported under its field, with the count" do
+  test "a too short password is reported under its field, without a summary banner" do
     sign_up(password: "abc", password_confirmation: "abc")
 
     assert_response :unprocessable_entity
-    assert_select ".alert-box", /1 champ à corriger/
+    assert_select ".alert-box", 0
     assert_select "input[aria-invalid=true]", 1
     assert_field_error "8 caractères minimum."
   end

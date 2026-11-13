@@ -26,7 +26,15 @@ class FiftyFormBuilderTest < ActionView::TestCase
     assert_includes html, 'aria-invalid="true"'
     assert_match(/aria-describedby="user_email_hint user_email_error"/, html)
     assert_includes html, 'id="user_email_error"'
-    assert_match(/\d champs? à corriger/, html)
+    assert_not_includes html, "alert-box", "field errors are shown inline only, no summary banner"
+  end
+
+  test "an error on the form itself is shown in the summary" do
+    user = User.new(email: "a@b.fr")
+    user.errors.add(:base, "Ce lien a expiré.")
+    html = render_form(user)
+
+    assert_includes html, "Ce lien a expiré."
     assert_includes html, 'role="alert"'
   end
 

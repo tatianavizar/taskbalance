@@ -68,16 +68,17 @@ class FiftyFormBuilder < ActionView::Helpers::FormBuilder
     end
   end
 
-  # Résumé sombre en tête de formulaire : « 1 champ à corriger ».
+  # Résumé sombre en tête de formulaire, pour les seules erreurs qui ne
+  # tiennent pas à un champ (:base). Les erreurs de champ s'affichent sous
+  # chaque champ, sans bandeau qui les compte (décision 2026-11-13).
   def error_summary
-    return if object.nil? || object.errors.none?
+    return if object.nil?
 
-    fields = object.errors.attribute_names - [ :base ]
-    parts = []
-    parts << @template.t("forms.error_summary", count: fields.size).html_safe if fields.any?
-    parts.concat(object.errors[:base].map { |message| ERB::Util.html_escape(message) })
+    messages = object.errors[:base]
+    return if messages.none?
+
     @template.tag.div(
-      @template.safe_join(parts, @template.tag.br),
+      @template.safe_join(messages.map { |message| ERB::Util.html_escape(message) }, @template.tag.br),
       class: "alert-box", role: "alert", id: field_id(:error_summary)
     )
   end

@@ -71,8 +71,7 @@ class ChoresControllerTest < ActionDispatch::IntegrationTest
       post chores_path, params: { chore: custom_params(custom_name: "", mental_load: "0", time_required: "0") }
     end
     assert_response :unprocessable_entity
-    assert_select ".alert-box", /3 champs à corriger/
-    assert_select ".alert-box", /Nom · Ce qu'elle demande · Durée/
+    assert_select ".alert-box", 0
     assert_select ".field-error", /Donnez un nom à la tâche/
     assert_select ".field-error", /Cochez au moins une charge : mentale, exécution, ou les deux/
     assert_select ".field-error", /Indiquez une durée d'au moins 1 minute/
