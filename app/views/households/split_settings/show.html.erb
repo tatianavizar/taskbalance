@@ -1,0 +1,38 @@
+<%# C16 : réglages de la répartition. Un changement s'applique une fois validé par tous les membres. %>
+<% provide :title, t("split_settings.title") %>
+<div class="flex items-center gap-2.5">
+  <%= back_button household_path(@household) %>
+  <h1 class="screen-title text-xl m-0"><%= t("split_settings.title") %></h1>
+</div>
+
+<% if @pending_change %>
+  <section class="card flex flex-col gap-2" aria-labelledby="pending-title">
+    <h2 id="pending-title" class="text-base font-bold m-0 font-sans"><%= t("split_settings.pending_title") %></h2>
+    <ul class="m-0 pl-5">
+      <% @pending_change.changes_requested.each do |setting, value| %>
+        <li><%= t("split_settings.pending_change.#{setting}.#{value}") %></li>
+      <% end %>
+    </ul>
+    <p class="m-0 font-semibold text-sm"><%= t("split_settings.pending_waiting", names: @pending_change.pending_members.map { |m| m.user.first_name }.to_sentence) %></p>
+    <% if @pending_change.pending_members.any? { |m| m.user_id == current_user.id } %>
+      <%= button_to t("split_settings.approve"), approve_household_split_settings_path(@household, change_id: @pending_change.id), class: "btn btn-primary" %>
+    <% end %>
+  </section>
+<% end %>
+
+<%= form_with model: @household, url: household_split_settings_path(@household), method: :patch, html: { class: "flex flex-col gap-3" } do |f| %>
+  <h2 class="text-[13px] font-bold uppercase tracking-wide text-muted m-0 mt-2 font-sans"><%= t("split_settings.monday") %></h2>
+  <div class="card">
+    <%= f.switch_field :weekly_proposal_enabled, label: t("split_settings.weekly_proposal"), hint: t("split_settings.weekly_proposal_hint") %>
+    <%= f.switch_field :auto_validate_splits, label: t("split_settings.auto_validate"), hint: t("split_settings.auto_validate_hint") %>
+  </div>
+  <%= list_row title: t("split_settings.preferences_link"), href: household_preferences_path(@household) %>
+  <p class="field-hint m-0"><%= t("split_settings.rule") %></p>
+
+  <h2 class="text-[13px] font-bold uppercase tracking-wide text-muted m-0 mt-2 font-sans"><%= t("split_settings.carry_over_section") %></h2>
+  <div class="card">
+    <%= f.switch_field :gap_carry_over_enabled, label: t("split_settings.gap_carry_over"), hint: t("split_settings.gap_carry_over_hint") %>
+  </div>
+
+  <%= f.submit t("split_settings.submit"), variant: :secondary %>
+<% end %>

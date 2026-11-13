@@ -38,3 +38,49 @@
 
 #Ignore this
 .claude/settings.local.json
+
+# ---------------------------------------------------------------------------
+# Secrets, keys and credentials — never commit these.
+# Note: config/credentials.yml.enc IS tracked on purpose; it is encrypted and
+# useless without config/master.key, which is ignored above.
+# .kamal/secrets is also tracked on purpose: it is the stock Kamal template
+# and holds only shell references, never raw values.
+# ---------------------------------------------------------------------------
+
+# Rails credential keys (per-environment credentials)
+/config/credentials/*.key
+
+# Private keys, certificates, keystores
+*.pem
+*.key
+*.p12
+*.pfx
+*.ppk
+*.jks
+*.keystore
+id_rsa
+id_ecdsa
+id_ed25519
+*_rsa
+*_ed25519
+
+# Credential files that must never be copied into the repo
+.ssh/
+.netrc
+.npmrc
+
+# Environment files in any directory (the /.env* rule above only covers root)
+.env
+.env.*
+!.env.example
+
+# Local databases
+*.sqlite3
+*.sqlite3-journal
+
+# macOS
+.DS_Store
+
+# Agent worktrees
+/.worktrees/
+/.claude/worktrees/

@@ -1,0 +1,15 @@
+<%# La durée, par pas de 5 minutes (D6) : un champ nombre, plus - et + avec JavaScript. %>
+<div>
+  <span class="field-label" id="log_minutes_label"><%= t("chore_logs.form.time_label") %></span>
+  <div class="stepper" role="group" aria-labelledby="log_minutes_label" <%= tag.attributes("data-invalid": ("true" if entry.errors[:time_spent].any?)) %>>
+    <button type="button" class="stepper-btn" data-action="log-form#less" aria-label="<%= t("chore_logs.form.less") %>" tabindex="-1">−</button>
+    <%= f.number_field :time_spent, class: "stepper-input", min: 1, max: LogEntry::MAX_MINUTES, inputmode: "numeric",
+          placeholder: "—", "aria-labelledby": "log_minutes_label", "aria-live": "polite",
+          "aria-describedby": ("log_time_error" if entry.errors[:time_spent].any?), data: { "log-form-target": "minutes" } %>
+    <span class="text-muted pr-1" aria-hidden="true"><%= t("week.min_unit") %></span>
+    <button type="button" class="stepper-btn" data-action="log-form#more" aria-label="<%= t("chore_logs.form.more") %>" tabindex="-1">+</button>
+  </div>
+  <% if entry.errors[:time_spent].any? %>
+    <div class="field-error" id="log_time_error"><span class="field-error-icon" aria-hidden="true">!</span><span><%= entry.errors[:time_spent].first %></span></div>
+  <% end %>
+</div>

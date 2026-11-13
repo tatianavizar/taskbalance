@@ -1,0 +1,24 @@
+<%# D15 : proposer une de mes tâches de la semaine à un autre membre. %>
+<% provide :title, t("handovers.new.title") %>
+<div class="flex items-center gap-2.5">
+  <%= back_button(household_split_path(@household)) %>
+  <span class="font-bold flex-1"><%= t("households.show.breadcrumb_split") %></span>
+</div>
+
+<div>
+  <h1 class="screen-title"><%= t("handovers.new.title") %></h1>
+  <p class="screen-subtitle"><%= t("handovers.new.subtitle") %></p>
+</div>
+
+<% if @chores.empty? || @members.empty? %>
+  <%= callout do %><p class="m-0"><%= t(@members.empty? ? "handovers.new.no_member" : "handovers.new.no_task") %></p><% end %>
+<% else %>
+  <%= form_with scope: :handover, url: household_handovers_path(@household), class: "flex flex-col gap-3" do |f| %>
+    <%= f.select_field :chore_id, @chores.map { |c| [ c.effective_name, c.id ] }, label: t("handovers.new.task") %>
+    <%= f.select_field :to_user_id, @members.map { |u| [ u.first_name, u.id ] }, label: t("handovers.new.to") %>
+    <%= callout do %><p class="m-0 text-sm"><%= t("handovers.new.note") %></p><% end %>
+    <%= sticky_cta do %>
+      <%= f.submit t("handovers.new.submit") %>
+    <% end %>
+  <% end %>
+<% end %>

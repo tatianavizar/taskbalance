@@ -1,0 +1,211 @@
+fr:
+  notifications:
+    you: "vous"
+    week_short: "S%{number}"
+    deadline: "%{day} %{hour}"
+    range:
+      between: "Du %{from} au %{to}."
+      since: "À partir du %{from}."
+    cta:
+      open: "Ouvrir 50/50"
+      report: "Voir le bilan complet"
+    footer:
+      same_figures: "Tous les membres du foyer ont les mêmes chiffres."
+      same_words: "Tous les membres du foyer ont les mêmes faits et les mêmes chiffres."
+      unsubscribe: "Ne plus recevoir « %{type} »"
+      manage: "Réglages des notifications"
+      why: "Vous recevez cet email parce que vous êtes membre d'un foyer sur 50/50."
+    event_types:
+      weekly_report: "Bilan de la semaine"
+      task_assigned: "Une tâche m'est assignée"
+      alert: "Alerte : semaine sans saisie"
+      monday_split: "Répartition du lundi"
+      absence_question: "Question d'absence"
+    event_hints:
+      weekly_report: "Un par semaine, le dimanche à 20:00."
+      task_assigned: "Quand un autre membre vous assigne une tâche."
+      alert: "Semaine sans saisie, blocage, déblocage : une par semaine au plus. Aussi : suppression du foyer."
+      monday_split: "Aussi : remise à zéro de l'écart, foyer prêt."
+      absence_question: "Aussi : pauses déclarées et leur suite."
+
+    account:
+      heading: "Notifications"
+      intro: "Un réglage par type de message. Vous recevez un message par email, ou sur ce téléphone quand les notifications y sont autorisées. Pas de rappel quotidien, pas de relance pour enregistrer."
+      save: "Enregistrer"
+      saved: "Réglages des notifications enregistrés."
+      feed: "Mes notifications"
+
+    feed:
+      title: "Notifications"
+      empty_title: "Rien pour l'instant."
+      empty_body: "Le bilan du dimanche, les alertes et ce que font les autres membres qui vous concerne apparaissent ici."
+      mark_all_read: "Tout marquer comme lu"
+      unread: "Non lue"
+      bell: "Notifications"
+      bell_unread:
+        one: "Notifications, %{count} non lue"
+        other: "Notifications, %{count} non lues"
+      by_email: "Envoyée par email"
+      not_sent_cap: "Non envoyée : une alerte ou un bilan est déjà parti cette semaine."
+      not_sent_stale: "Non envoyée : l'événement date de plus de 2 jours."
+      not_sent_no_channel: "Non envoyée : aucune adresse confirmée."
+
+    unsubscribe:
+      confirm_title: "Ne plus recevoir ce message ?"
+      confirm_body: "Vous ne recevrez plus « %{type} », par email comme sur ce téléphone. Les autres messages ne changent pas."
+      confirm: "Me désinscrire"
+      done_title: "C'est fait."
+      done_body: "Vous ne recevrez plus « %{type} », par email comme sur ce téléphone. Les autres messages ne changent pas."
+      undo: "Réactiver"
+      redone_title: "Réactivé."
+      redone_body: "Vous recevrez de nouveau « %{type} »."
+      settings: "Réglages des notifications"
+      invalid_title: "Ce lien n'est plus valide."
+      invalid_body: "Il est incomplet ou a été modifié. Les réglages se changent dans Mon compte."
+
+    mailer:
+      footer_company: "50/50"
+
+    messages:
+      weekly_report:
+        subject:
+          neutral: "Semaine %{week} : semaine neutre"
+          shares: "Semaine %{week} : %{shares} de la charge mentale"
+        headline:
+          balanced: "Semaine équilibrée."
+          unbalanced: "Semaine déséquilibrée."
+          neutral: "Semaine neutre."
+          carrier:
+            self:
+              mental: "Vous portez %{share} % de la charge mentale."
+              execution: "Vous portez %{share} % de l'exécution."
+            other:
+              mental: "%{name} porte %{share} % de la charge mentale."
+              execution: "%{name} porte %{share} % de l'exécution."
+        streak:
+          zero: ""
+          one: ", comme la précédente"
+          other: ", comme les %{count} précédentes"
+        verdict:
+          balanced: "Bilan provisoire. La semaine est équilibrée : chaque membre reste entre %{min} et %{max} %, en charge mentale comme en exécution."
+          above: "Bilan provisoire. Au-dessus de %{max} % : la semaine n'est pas équilibrée%{streak}."
+          outside: "Bilan provisoire. Hors de la zone de %{min} à %{max} % : la semaine n'est pas équilibrée%{streak}."
+          neutral:
+            too_few_active_members: "Bilan provisoire. Il faut au moins 2 membres actifs : la semaine ne compte pas."
+            member_arrived: "Bilan provisoire. Un membre est arrivé en cours de semaine : elle ne compte pas."
+            no_mental_logs: "Bilan provisoire. Aucune charge mentale enregistrée : la semaine ne compte pas."
+            no_execution_logs: "Bilan provisoire. Aucune exécution enregistrée : la semaine ne compte pas."
+            pause_declared: "Bilan provisoire. Une pause déclarée après coup rend la semaine neutre."
+        level:
+          blocked: "La progression est bloquée : une semaine où chaque membre enregistre au moins une tâche la débloque."
+          ultimate: "Le foyer est au niveau ultime."
+          is:
+            one: "Le foyer est au niveau %{level}, à %{count} semaine équilibrée du niveau %{next}."
+            other: "Le foyer est au niveau %{level}, à %{count} semaines équilibrées du niveau %{next}."
+          stays:
+            one: "Le foyer reste au niveau %{level}, à %{count} semaine équilibrée du niveau %{next}."
+            other: "Le foyer reste au niveau %{level}, à %{count} semaines équilibrées du niveau %{next}."
+        details:
+          mental: "Charge mentale"
+          execution: "Exécution"
+          time: "Temps"
+
+      reengagement:
+        title: "Aucune tâche enregistrée la semaine %{week} dans %{household}."
+        line: "50/50 garde la trace des tâches du foyer, en charge mentale comme en exécution. Vous pouvez reprendre quand vous voulez."
+
+      alert_no_logs:
+        subject:
+          self: "Semaine %{week} close : vous n'avez enregistré aucune tâche"
+          other: "Semaine %{week} close : %{name} n'a enregistré aucune tâche"
+        title:
+          self: "Vous n'avez enregistré aucune tâche cette semaine"
+          other: "%{name} n'a enregistré aucune tâche cette semaine"
+        range: "Du %{from} au %{to}."
+        pause: "Une absence ? Déclarez une pause."
+        counts: "Tâches enregistrées en semaine %{week} : %{counts}."
+        heading:
+          self: "Vos tâches enregistrées"
+          other: "Tâches enregistrées par %{name}"
+        logs:
+          zero: "Aucune tâche"
+          one: "%{count} tâche"
+          other: "%{count} tâches"
+
+      alert_blocked:
+        down:
+          self: "Le foyer redescend au niveau %{level} : vous n'avez rien enregistré depuis %{weeks} semaines"
+          other: "Le foyer redescend au niveau %{level} : %{name} n'a rien enregistré depuis %{weeks} semaines"
+        held:
+          self: "La progression du foyer est bloquée : vous n'avez rien enregistré depuis %{weeks} semaines"
+          other: "La progression du foyer est bloquée : %{name} n'a rien enregistré depuis %{weeks} semaines"
+        range: "Du %{from} au %{to}."
+        unblock: "Pour débloquer : une semaine où chaque membre enregistre au moins une tâche."
+
+      alert_unblocked:
+        title: "Progression débloquée."
+        everyone: "Chaque membre a enregistré des tâches en semaine %{week}."
+        outcome:
+          balanced: "La semaine est aussi équilibrée : elle compte pour le niveau %{level}."
+          balanced_top: "La semaine est aussi équilibrée : elle compte."
+          unbalanced: "La semaine n'est pas équilibrée : elle ne compte pas."
+        streak: "Le compte des semaines sans enregistrement repart de zéro."
+
+      absence_question:
+        title:
+          self: "Semaine %{week} close : vous n'avez rien enregistré depuis 2 semaines"
+          other: "Semaine %{week} close : %{name} n'a rien enregistré depuis 2 semaines"
+        ask:
+          self: "Une absence ? Répondez avant %{deadline}."
+          other: "Absence de %{name} ? Répondez avant %{deadline}."
+        rule: "La question est posée à tout le foyer. Un seul « Oui » suffit. Sans « Oui » avant %{deadline}, le foyer redescend d'un niveau et la progression est bloquée."
+
+      absence_outcome:
+        paused:
+          title:
+            self: "Une pause est déclarée pour vous. %{range}"
+            other: "Une pause est déclarée pour %{name}. %{range}"
+          line:
+            self: "Le foyer ne redescend pas d'un niveau."
+            other: "Le foyer ne redescend pas d'un niveau."
+        cancelled:
+          title:
+            self: "La descente de niveau est annulée."
+            other: "La descente de niveau est annulée."
+          line:
+            self: "Une pause couvre vos semaines sans enregistrement. Le niveau et le compte de semaines équilibrées sont rétablis, la progression est débloquée."
+            other: "Une pause couvre les semaines sans enregistrement de %{name}. Le niveau et le compte de semaines équilibrées sont rétablis, la progression est débloquée."
+
+      pause_declared:
+        title:
+          self: "Pause déclarée pour vous. %{range}"
+          other: "Pause déclarée pour %{name}. %{range}"
+        line: "Une semaine de pause ne compte pas dans le bilan du foyer."
+
+      task_assigned:
+        title: "%{name} vous a assigné une tâche : %{chore}."
+        due: "À faire pour le %{date}."
+
+      task_offered:
+        title: "%{name} vous propose une tâche : %{chore}."
+        line: "Pour la semaine %{week} seulement. Si vous acceptez, elle est prévue dans votre charge mentale cette semaine ; la répartition validée ne change pas."
+
+      task_offer_answered:
+        accepted: "%{name} prend « %{chore} » cette semaine."
+        refused: "%{name} ne prend pas « %{chore} » cette semaine."
+
+      monday_split:
+        title: "La répartition de la semaine %{week} est prête."
+        counts: "Tâches prévues : %{counts}."
+
+      gap_reset:
+        title: "L'écart de la semaine %{week} est remis à zéro."
+
+      household_ready:
+        title: "C'est prêt : %{household} a choisi ses tâches."
+        line: "Vos préférences et la répartition vous attendent."
+
+      household_deleted:
+        title: "%{name} a supprimé le foyer « %{household} »."
+        journal: "Votre journal vous suit : vos enregistrements restent dans votre compte."
+        next: "Pour continuer, créez un foyer ou ouvrez une nouvelle invitation."

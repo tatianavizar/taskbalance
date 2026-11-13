@@ -1,0 +1,62 @@
+<%# D6, D7 (erreurs), D10 (le jour) : enregistrer une tâche. %>
+<% provide :chrome, "none" %>
+<% provide :title, t("chore_logs.new.title") %>
+<% entry = @entry %>
+<% today = entry.today %>
+<div class="flex">
+  <%= back_button dashboard_path, label: t("common.close") %>
+</div>
+<div>
+  <h1 class="screen-title"><%= t("chore_logs.new.title") %></h1>
+  <p class="screen-subtitle"><%= t("chore_logs.new.by", name: current_user.first_name) %></p>
+</div>
+
+<%= form_with model: entry, scope: :log_entry, url: chore_logs_path, method: :post,
+      data: { controller: "log-form" }, html: { class: "flex flex-col gap-5 flex-1" } do |f| %>
+  <%= f.hidden_field :idempotency_key %>
+  <%= f.hidden_field :occurrence_id %>
+  <%= f.error_summary %>
+
+  <div>
+    <%= f.label :chore_id, t("chore_logs.form.task_label"), class: "field-label" %>
+    <%# Les tâches du foyer, rangées par catégorie. Aucune : une autre tâche, hors répartition (D6). %>
+    <select name="log_entry[chore_id]" id="log_entry_chore_id" class="field-input select-input"
+            data-log-form-target="chore" data-action="change->log-form#choose"
+            <%= tag.attributes("aria-invalid": ("true" if entry.errors[:chore_id].any?)) %>>
+      <option value=""><%= t("chore_logs.form.other_task") %></option>
+      <% @chores.group_by(&:effective_category).sort_by { |category, _| Chore::CATEGORIES.index(category) || Chore::CATEGORIES.size }.each do |category, chores| %>
+        <optgroup label="<%= category_label(category) %>">
+          <% chores.each do |chore| %>
+            <%= tag.option chore.effective_name, value: chore.id, selected: entry.chore_id == chore.id,
+                  data: { mental: chore.mental_load.to_s, execution: chore.execution_load.to_s, minutes: chore.effective_time_required } %>
+          <% end %>
+        </optgroup>
+      <% end %>
+    </select>
+    <% if entry.errors[:chore_id].any? %>
+      <div class="field-error"><span class="field-error-icon" aria-hidden="true">!</span><span><%= entry.errors[:chore_id].first %></span></div>
+    <% end %>
+  </div>
+
+  <div class="flex flex-col gap-5" data-log-form-target="custom">
+    <%= f.field :custom_name, label: t("chore_logs.form.name_label"), placeholder: t("chore_logs.form.name_placeholder"),
+          autocomplete: "off", hint: t("chore_logs.form.off_split_hint") %>
+    <%= f.select_field :category, Chore::CATEGORIES.map { |c| [ category_label(c), c ] }, label: t("chore_logs.form.category_label"),
+          options: { selected: entry.category.presence || "other" } %>
+  </div>
+
+  <%= render "chore_logs/loads", f: f, entry: entry %>
+  <%= render "chore_logs/minutes", f: f, entry: entry %>
+
+  <div>
+    <%= f.select_field :day, entry.selectable_days.map { |d| [ [ day_label(d, today: today), (t("chore_logs.form.journal_only") unless entry.week_open?(d)) ].compact.join(" · "), d.iso8601 ] },
+          label: t("chore_logs.form.day_label"), options: { selected: entry.day.iso8601 },
+          hint: t("chore_logs.form.day_hint", days: LogEntry::MAX_DAYS_BACK) %>
+  </div>
+
+  <p class="m-0 text-[13px] leading-[18px] text-muted"><%= t("chore_logs.form.own_only") %></p>
+
+  <%= sticky_cta do %>
+    <%= f.submit t("chore_logs.form.submit") %>
+  <% end %>
+<% end %>

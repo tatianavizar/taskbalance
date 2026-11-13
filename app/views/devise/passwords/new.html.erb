@@ -1,18 +1,16 @@
-<h2>Forgot your password?</h2>
+<% provide :chrome, "none" %>
+<% provide :title, t("devise.passwords.new.forgot_your_password") %>
+<%= back_button new_session_path(resource_name) %>
+<div>
+  <h1 class="screen-title"><%= t("devise.passwords.new.forgot_your_password") %></h1>
+  <p class="screen-subtitle"><%= t("auth.forgot.subtitle", hours: Devise.reset_password_within.in_hours.to_i) %></p>
+</div>
 
-<%= simple_form_for(resource, as: resource_name, url: password_path(resource_name), html: { method: :post }) do |f| %>
-  <%= f.error_notification %>
-
-  <div class="form-inputs">
-    <%= f.input :email,
-                required: true,
-                autofocus: true,
-                input_html: { autocomplete: "email" } %>
-  </div>
-
-  <div class="form-actions">
-    <%= f.button :submit, "Send me reset password instructions" %>
-  </div>
+<%= form_for(resource, as: resource_name, url: password_path(resource_name), html: { method: :post, class: "flex flex-col gap-4 flex-1" }) do |f| %>
+  <%= f.error_summary %>
+  <%= f.field :email, as: :email, label: t("auth.forgot.email_label"), autofocus: true, autocomplete: "email" %>
+  <%= sticky_cta do %>
+    <%= f.submit t("auth.forgot.submit") %>
+    <%= link_to t("auth.forgot.back"), new_session_path(resource_name), class: "flex items-center justify-center min-h-[44px] font-semibold text-sm" %>
+  <% end %>
 <% end %>
-
-<%= render "devise/shared/links" %>

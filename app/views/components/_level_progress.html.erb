@@ -1,0 +1,14 @@
+<% ultimate = total.nil? %>
+<% bars = ultimate ? 1 : total %>
+<% tag_name = href ? :a : :div %>
+<%= content_tag tag_name, href: href, class: "card block no-underline" do %>
+  <div class="flex justify-between gap-3 text-[13px]">
+    <b><%= ultimate ? t("components.level_progress.ultimate") : t("components.level_progress.level", level: level) %></b>
+    <span class="text-muted text-right"><%= ultimate ? t("components.level_progress.ultimate_summary", count: done) : t("components.level_progress.summary", count: done, total: total, next_level: level + 1) %></span>
+  </div>
+  <div class="grid gap-1 mt-2" style="grid-template-columns:repeat(<%= bars %>,minmax(0,1fr))" aria-hidden="true">
+    <% bars.times do |i| %>
+      <span style="height:8px;border-radius:4px;background:<%= ultimate || i < done ? "var(--color-ink)" : "var(--color-line)" %>"></span>
+    <% end %>
+  </div>
+<% end %>

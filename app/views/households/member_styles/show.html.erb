@@ -1,0 +1,54 @@
+<%# P2 : la pastille de la personne (couleur unique dans le foyer, lettres modifiables). %>
+<% subject = @subject %>
+<% invitee = @invitation.present? %>
+<% provide :chrome, "none" if invitee %>
+<% provide :title, t("member_style.title") %>
+<div class="flex items-center gap-2.5">
+  <%= back_button(invitee ? invitation_path(@invitation.token) : household_path(@household)) %>
+  <span class="font-bold flex-1"><%= invitee ? t("split.invitee.welcome", name: subject[:name]) : t("member_style.title") %></span>
+  <% if invitee %><span class="text-[13px] text-muted"><%= t("member_style.step") %></span><% end %>
+</div>
+
+<div>
+  <h1 class="screen-title"><%= t("member_style.title") %></h1>
+  <p class="screen-subtitle"><%= t("member_style.subtitle") %></p>
+</div>
+
+<% if @error %>
+  <div class="alert-box" role="alert" id="style-error"><%= @error %></div>
+<% end %>
+
+<div class="card flex items-center gap-3.5 !py-3.5">
+  <%= avatar(initials: subject[:monogram], color: subject[:color], size: 56) %>
+  <b class="text-[17px]"><%= subject[:name] %></b>
+</div>
+
+<%= form_with url: household_member_style_path(@household), method: :patch, html: { class: "flex flex-col gap-4 flex-1" } do %>
+  <fieldset class="m-0 p-0 border-0 min-w-0">
+    <legend class="field-label"><%= t("member_style.color") %></legend>
+    <div class="swatches">
+      <% HouseholdMember::COLORS.each do |color| %>
+        <% holder = subject[:taken][color] %>
+        <% id = "color_#{color}" %>
+        <label class="swatch" for="<%= id %>">
+          <%= radio_button_tag :color, color, subject[:color] == color, id: id, class: "swatch-input", disabled: holder.present?, "aria-describedby": "style-hint" %>
+          <span class="swatch-dot" style="background:var(--color-member-<%= color %>)" aria-hidden="true"><%= subject[:monogram] if subject[:color] == color %></span>
+          <span class="swatch-name"><%= t("member_style.colors.#{color}") %><% if holder %> · <%= holder %><% end %></span>
+        </label>
+      <% end %>
+    </div>
+    <p class="field-hint" id="style-hint"><%= t("member_style.color_hint") %></p>
+  </fieldset>
+
+  <div>
+    <label class="field-label" for="monogram"><%= t("member_style.letters") %></label>
+    <input type="text" id="monogram" name="monogram" value="<%= subject[:custom] ? subject[:monogram] : "" %>" placeholder="<%= subject[:monogram] unless subject[:custom] %>"
+           maxlength="<%= HouseholdMember::MONOGRAM_MAX_LENGTH %>" autocomplete="off" autocapitalize="characters" class="field-input" style="width:96px"
+           aria-describedby="monogram-hint<%= " style-error" if @letters_error %>" <%= "aria-invalid=true" if @letters_error %>>
+    <div class="field-hint" id="monogram-hint"><%= t("member_style.letters_hint", max: HouseholdMember::MONOGRAM_MAX_LENGTH) %></div>
+  </div>
+
+  <%= sticky_cta do %>
+    <%= button_tag t(invitee ? "member_style.continue" : "common.save"), type: "submit", class: "btn btn-primary" %>
+  <% end %>
+<% end %>

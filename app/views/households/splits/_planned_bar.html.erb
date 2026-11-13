@@ -1,0 +1,61 @@
+<%# « Prévu cette semaine » : une barre par foyer, la moyenne des deux charges de chaque personne (2.2c). La personne qui regarde en premier.
+    Remplacé en direct par SplitsController#preview (lot 6) : même calcul, côté serveur.
+    waivable : la personne au-dessus de la zone peut valider « sans reporter l'écart » (décision 2026-11-08, D4). %>
+<% waivable = local_assigns.fetch(:waivable, false) %>
+<% ordered = split.participants.sort_by { |p| p.key == viewer.key ? 0 : 1 } %>
+<% values = ordered.map { |p| [ p, split.share_of(p.key)&.average ] } %>
+<% fair = HouseholdRules.fair_share(split.participants.size) %>
+<% zone = HouseholdRules.zone(split.participants.size) %>
+<% outside = split.outside_zone %>
+<div id="planned_bar" class="flex flex-col gap-2">
+<section class="callout flex flex-col gap-1" aria-labelledby="planned-title" aria-live="polite">
+  <h2 id="planned-title" class="m-0 text-[15px] font-bold text-center font-sans"><%= t("split.planned") %></h2>
+  <% if values.size >= 3 %>
+    <%# Une barre par membre, la zone en pointillés et le repère de la part juste (P3, C14). %>
+    <div role="img" class="balance-rows" aria-label="<%= t("split.bar_aria_zone", fair: fair, zone_min: zone.min, zone_max: zone.max, shares: values.map { |p, v| "#{p.first_name} #{share_percent(v)}" }.to_sentence) %>">
+      <% values.each_with_index do |(participant, value), i| %>
+        <div class="balance-row" aria-hidden="true">
+          <b class="balance-name"><%= participant.first_name %></b>
+          <div class="balance-track">
+            <% if zone %><span class="balance-zone" style="left:<%= zone.min %>%;width:<%= zone.max - zone.min %>%"></span><% end %>
+            <% if value %><i style="width:<%= value.clamp(0, 100).round(2) %>%;background:<%= i.zero? ? "var(--color-self)" : "var(--color-member-#{participant.color})" %>;<%= "box-shadow: inset 0 0 0 1.5px var(--color-ink);" unless i.zero? %>"></i><% end %>
+            <span class="balance-fair" style="left:calc(<%= fair %>% - 1px)"></span>
+          </div>
+          <b class="balance-value"><%= share_percent(value) %></b>
+        </div>
+      <% end %>
+    </div>
+  <% else %>
+  <div class="flex justify-between gap-2 text-sm" style="font-variant-numeric: tabular-nums">
+    <% values.each_with_index do |(participant, value), i| %>
+      <span><% if i.zero? %><b><%= share_percent(value) %></b> <%= participant.first_name %><% else %><%= participant.first_name %> <b><%= share_percent(value) %></b><% end %></span>
+    <% end %>
+  </div>
+  <div role="img" class="relative mt-1 flex rounded-[6px] overflow-visible" style="height:12px;background:var(--color-track)"
+       aria-label="<%= t("split.bar_aria", fair: fair, shares: values.map { |p, v| "#{p.first_name} #{share_percent(v)}" }.to_sentence) %>">
+    <% values.each_with_index do |(participant, value), i| %>
+      <% next unless value %>
+      <div style="width:<%= value.clamp(0, 100).round(2) %>%;height:12px;background:<%= i.zero? ? "var(--color-self)" : "var(--color-member-#{participant.color})" %>;<%= "border-radius:6px 0 0 6px;" if i.zero? %>box-shadow:2px 0 0 #fff"></div>
+    <% end %>
+    <% if fair %>
+      <div class="absolute" style="left:calc(<%= fair %>% - 1px);top:-3px;width:2px;height:18px;background:var(--color-ink)"></div>
+    <% end %>
+  </div>
+  <% end %>
+  <% unless split.exact? %>
+    <p class="m-0 mt-2 text-[13px] leading-[18px]"><%= t("split.not_exact", even: even_split_label(split.participants)) %></p>
+  <% end %>
+</section>
+<% if outside.any? && zone %>
+  <div class="alert-box" role="status">
+    <p class="m-0"><%= t("split.zone.outside", min: zone.min, max: zone.max,
+                         shares: outside.map { |p| "#{p.first_name} #{share_percent(split.share_of(p.key).average)}" }.to_sentence) %></p>
+    <% if waivable && split.above_zone.any? { |p| p.key == viewer.key } %>
+      <label class="flex items-start gap-2 mt-2 text-sm">
+        <%= check_box_tag :carry_gap, "0", false, id: "carry_gap" %>
+        <span><%= t("split.zone.waive") %></span>
+      </label>
+    <% end %>
+  </div>
+<% end %>
+</div>

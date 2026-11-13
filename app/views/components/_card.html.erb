@@ -1,0 +1,6 @@
+<% css = [ "card block no-underline", options[:class] ].compact.join(" ") %>
+<% if href %>
+  <%= link_to href, **options.except(:class), class: css do %><%= yield %><% end %>
+<% else %>
+  <%= tag.div(**options.except(:class), class: css) { yield } %>
+<% end %>

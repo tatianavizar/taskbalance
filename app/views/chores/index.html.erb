@@ -1,37 +1,71 @@
-<div class="d-flex justify-content-between align-items-center mb-4">
-  <h1><%= t("chores.index.title") %></h1>
+<%# D3, D4 : les tâches de la semaine, en retard, aujourd'hui, plus tard. %>
+<% provide :title, t("chores.index.title") %>
+<%= turbo_stream_from Household.home_stream(@household) %>
+<%= turbo_refreshes_with method: :morph, scroll: :preserve %>
+
+<% board = @board %>
+<% counts = board.counts %>
+<% filter = ->(scope: board.scope, category: board.category) { chores_path(scope: (scope unless scope == :all), category: category) } %>
+
+<div class="flex items-center gap-2.5 min-h-[44px]">
+  <h1 class="screen-title flex-1"><%= t("chores.index.title") %></h1>
+  <%= link_to new_chore_path, "aria-label": t("chores.index.add"), class: "flex items-center justify-center w-11 h-11 -mr-2.5" do %>
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>
+  <% end %>
 </div>
 
-<% if @chores.empty? %>
-  <p class="text-muted"><%= t("chores.index.empty") %></p>
-<% else %>
-  <% @chores.group_by(&:household).each do |household, chores| %>
-    <h2 class="h5 mb-2"><%= household.name %></h2>
-    <ul class="list-group mb-4">
-      <% chores.each do |chore| %>
-        <li class="list-group-item d-flex justify-content-between align-items-center">
-          <div>
-            <span class="<%= 'text-decoration-line-through text-muted' if chore.completed? %>">
-              <%= chore.effective_name %>
-            </span>
-            <span class="badge ms-2 <%= chore.completed? ? 'bg-success' : 'bg-secondary' %>">
-              <%= t("chores.index.status.#{chore.status}") %>
-            </span>
-            <% if chore.due_date %>
-              <small class="text-muted ms-2"><%= chore.due_date.strftime("%b %d") %></small>
-            <% end %>
-          </div>
-          <div class="d-flex gap-2">
-            <%= link_to t("common.edit"), edit_chore_path(chore), class: "btn btn-sm btn-outline-secondary" %>
-            <% unless chore.completed? %>
-              <%= button_to t("chores.index.mark_completed"),
-                    mark_as_completed_chore_path(chore),
-                    method: :patch,
-                    class: "btn btn-sm btn-outline-success" %>
-            <% end %>
-          </div>
-        </li>
-      <% end %>
-    </ul>
+<nav class="chips" aria-label="<%= t("chores.index.filters") %>">
+  <% { all: t("chores.index.scope.all"), mine: t("chores.index.scope.mine"), shared: t("chores.index.scope.shared") }.each do |scope, label| %>
+    <%= link_to "#{label} · #{counts[scope]}", filter.call(scope: scope), class: "chip", "aria-current": (board.scope == scope).to_s %>
   <% end %>
+</nav>
+
+<% if board.categories.size > 1 || board.category %>
+  <%= form_with url: chores_path, method: :get, html: { data: { controller: "autosubmit" }, class: "m-0" } do |f| %>
+    <%= hidden_field_tag :scope, board.scope, id: nil unless board.scope == :all %>
+    <label class="sr-only" for="category"><%= t("chores.index.category_label") %></label>
+    <%= select_tag :category, options_for_select([ [ t("chores.index.all_categories"), "" ] ] + ((board.categories | [ board.category ].compact).map { |c| [ category_label(c), c ] }), board.category),
+          class: "field-input select-input", data: { action: "change->autosubmit#submit" } %>
+    <noscript><button type="submit" class="btn btn-secondary btn-sm mt-2"><%= t("chores.index.filter") %></button></noscript>
+  <% end %>
+<% end %>
+
+<% sections = { late: board.late, today: board.due_today, later: board.later } %>
+<%# D4 : « Les miennes » sans rien en retard ni pour aujourd'hui, on indique la suivante. %>
+<% if sections.values.all?(&:empty?) || (board.scope == :mine && sections[:late].empty? && sections[:today].empty?) %>
+  <%# D4: nothing for this person today. %>
+  <p class="m-0 text-[13px] text-muted"><%= day_label(board.today, today: board.today) %> · <%= l(board.today, format: :day_month) %></p>
+  <div class="border-[1.5px] border-dashed border-field rounded-2xl p-5 flex flex-col gap-2">
+    <% if board.scope == :mine %>
+      <b><%= t("chores.index.empty_mine") %></b>
+      <% nxt = board.next_for_user %>
+      <% if nxt %>
+        <span class="text-sm leading-5 text-muted"><%= t("chores.index.next_task", name: nxt.name, day: l(nxt.due_on, format: "%A %-d %b")) %></span>
+      <% end %>
+      <%= link_to t("chores.index.see_all", count: counts[:all]), filter.call(scope: :all), class: "font-semibold text-sm min-h-[44px] flex items-center" %>
+    <% else %>
+      <b><%= t("chores.index.empty") %></b>
+    <% end %>
+  </div>
+  <p class="m-0 text-sm leading-5 text-muted"><%= t("chores.index.off_split_hint") %></p>
+<% else %>
+  <% sections.each do |key, entries| %>
+    <% next if entries.empty? %>
+    <h2 class="section-label font-sans" id="section-<%= key %>"><%= t("chores.index.sections.#{key}") %></h2>
+    <div class="card px-3.5 py-0" aria-labelledby="section-<%= key %>">
+      <% if key == :late %>
+        <% board.late_groups.each do |group| %>
+          <%= render "chores/task_row", entry: group.entry, board: board, late: true, count: group.count, since: group.since %>
+        <% end %>
+      <% else %>
+        <% entries.each do |entry| %>
+          <%= render "chores/task_row", entry: entry, board: board, late: false %>
+        <% end %>
+      <% end %>
+    </div>
+  <% end %>
+<% end %>
+
+<%= sticky_cta do %>
+  <%= link_to t("chores.index.log"), new_chore_log_path, class: "btn btn-primary" %>
 <% end %>

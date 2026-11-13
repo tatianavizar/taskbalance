@@ -1,34 +1,71 @@
-<div class="d-flex justify-content-between align-items-center mb-4">
-  <h1><%= @household.name %></h1>
-  <div>
-    <%= link_to t("common.edit"), edit_household_path(@household), class: "btn btn-outline-secondary btn-sm" %>
-    <%= link_to t("common.delete"), household_path(@household), data: { turbo_method: :delete, turbo_confirm: t("households.show.delete_confirm") }, class: "btn btn-outline-danger btn-sm" %>
-  </div>
+<%# F1 : le foyer, ses membres, l'organisation, et les sorties (F2, F3). %>
+<% provide :title, @household.name %>
+<% zone = @household.zone %>
+<% created_on = l(@household.created_at.in_time_zone(zone).to_date, format: :short) %>
+<% manager = @members.find(&:manager?) %>
+<% me = @members.find { |member| member.user_id == current_user.id } %>
+<div>
+  <h1 class="screen-title"><%= t("households.show.title") %></h1>
+  <p class="screen-subtitle">
+    <%= t("households.show.created", date: created_on) %><% if @household.level.positive? %> · <%= t("households.show.level", level: @household.level) %><% end %>
+  </p>
 </div>
 
-<h2 class="h5 mb-3"><%= t("households.show.members_title") %></h2>
+<%= render "households/setup_card", household: @household %>
 
-<% if @household.users.empty? %>
-  <p class="text-muted"><%= t("households.show.no_members") %></p>
-<% else %>
-  <ul class="list-group mb-3">
-    <% @household.users.each do |user| %>
-      <li class="list-group-item"><%= user.email %></li>
+<section class="flex flex-col gap-3" aria-labelledby="members-title">
+  <h2 id="members-title" class="text-[13px] font-bold text-muted m-0 font-sans"><%= t("households.show.members_title") %></h2>
+  <div class="list-stack">
+    <% @members.each do |member| %>
+      <% since = l(member.created_at.in_time_zone(zone).to_date, format: :short) %>
+      <% name = member.user_id == current_user.id ? t("households.show.you", name: member.user.first_name) : member.user.first_name %>
+      <%# P2 : on ouvre sa propre pastille pour changer de couleur ou de lettres. %>
+      <%= list_row title: name, subtitle: t("households.show.role_since.#{member.role}", date: since),
+            href: (household_member_style_path(@household) if member.user_id == current_user.id && @members.size >= 2),
+            leading: avatar(initials: member.monogram, color: member.color, size: 36) %>
     <% end %>
-  </ul>
+    <%= list_row title: t("households.show.invite_link"), href: new_household_invitation_path(@household),
+          leading: avatar(initials: "+", pending: true, size: 36) %>
+  </div>
+</section>
+
+<% invitations = @household.invitations.where(state: %w[pending declined expired]).order(created_at: :desc).limit(10).each(&:expire_if_due!) %>
+<% if invitations.any? %>
+  <section class="flex flex-col gap-3" aria-labelledby="invitations-title">
+    <h2 id="invitations-title" class="text-[13px] font-bold text-muted m-0 font-sans"><%= t("households.show.invitations_title") %></h2>
+    <div class="list-stack">
+      <% invitations.each do |invitation| %>
+        <% state = invitation.current_state %>
+        <%= list_row title: invitation.display_name, subtitle: invitation.email, href: household_invitation_path(@household, invitation),
+              leading: avatar(initials: invitation.display_name.first.upcase, pending: true, size: 36),
+              trailing: status_pill(t("invitations.show.pill.#{state}"), tone: (state == "pending" ? :outline : :soft)) %>
+      <% end %>
+    </div>
+  </section>
 <% end %>
 
-<div class="d-flex gap-2 mb-3">
-  <%= link_to t("households.show.invite_link"), new_household_household_member_path(@household), class: "btn btn-outline-primary btn-sm" %>
-  <%= link_to t("chores.setup.title"), household_chores_setup_path(@household), class: "btn btn-outline-secondary btn-sm" %>
-  <%= link_to t("chores.new.title"), new_chore_path(household_id: @household.id), class: "btn btn-outline-success btn-sm" %>
-</div>
+<% plan = @household.week_plan_for %>
+<section class="flex flex-col gap-3" aria-labelledby="organisation-title">
+  <h2 id="organisation-title" class="text-[13px] font-bold text-muted m-0 font-sans"><%= t("households.show.organisation_title") %></h2>
+  <div class="list-stack">
+    <%= list_row title: t("chores.setup.manage_title"), href: household_chores_setup_path(@household),
+          trailing: tag.span(@household.chores.active.count, class: "text-[13px] text-muted") %>
+    <%= list_row title: t("split.title"), href: household_split_path(@household),
+          subtitle: (validation_status(plan) if plan) %>
+    <%= list_row title: t("split_settings.title"), href: household_split_settings_path(@household) %>
+    <%= list_row title: t("preferences.title"), href: household_preferences_path(@household) %>
+    <%= list_row title: t("pauses.declare_row"), href: new_member_pause_path %>
+    <%= list_row title: t("pauses.index.title"), href: member_pauses_path %>
+    <%= list_row title: t("households.show.rename"), href: edit_household_path(@household) %>
+    <%= list_row title: t("auth.account.title"), href: account_path %>
+  </div>
+</section>
 
-<% chore_count = @household.chores.count %>
-<% if chore_count > 0 %>
-  <p class="text-muted small"><%= t("chores.index.count", count: chore_count) %></p>
-<% end %>
-
-<div class="mt-4">
-  <%= link_to t("households.show.back_link"), households_path %>
+<div class="list-stack">
+  <%= list_row title: t("households.show.leave"), href: new_household_departure_path(@household) %>
+  <% if me&.manager? %>
+    <%= list_row title: t("households.show.delete"), href: delete_household_path(@household) %>
+  <% elsif manager %>
+    <p class="m-0 px-4 py-3 text-[13px] leading-[18px] text-muted"><%= t("households.show.delete_by_manager", name: manager.user.first_name) %></p>
+  <% end %>
 </div>

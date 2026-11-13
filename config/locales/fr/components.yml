@@ -1,0 +1,25 @@
+fr:
+  components:
+    balance:
+      out_of_zone: "hors zone"
+      aria_empty: "%{title} : rien n'est encore mesuré. Repère de la part juste : %{fair} %."
+      aria: "%{title} : %{shares}. Repère de la part juste : %{fair} %."
+      aria_zone: "Zone équilibrée : de %{min} à %{max} %."
+      aria_out: "Hors zone : %{names}."
+    level_progress:
+      level: "Niveau %{level}"
+      ultimate: "Niveau ultime"
+      ultimate_summary:
+        zero: "0 semaine équilibrée"
+        one: "%{count} semaine équilibrée"
+        other: "%{count} semaines équilibrées"
+      summary:
+        zero: "0 semaine équilibrée sur %{total} pour le niveau %{next_level}"
+        one: "%{count} semaine équilibrée sur %{total} pour le niveau %{next_level}"
+        other: "%{count} semaines équilibrées sur %{total} pour le niveau %{next_level}"
+    progress_dots:
+      aria: "Écran %{current} sur %{total}"
+    step_progress:
+      aria: "Étape %{current} sur %{total}"
+  styleguide:
+    title: "Composants"

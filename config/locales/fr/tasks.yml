@@ -1,0 +1,16 @@
+fr:
+  tasks:
+    index:
+      title: "Catalogue des tâches"
+      intro: "Les tâches s'ajoutent au foyer depuis le choix des tâches."
+      empty: "Le catalogue est vide."
+      time_required: "%{count} min"
+    categories:
+      cooking: "Cuisine"
+      groceries: "Courses"
+      cleaning: "Ménage"
+      laundry: "Linge"
+      childcare: "Enfants"
+      admin: "Administratif"
+      maintenance: "Entretien"
+      other: "Autre"

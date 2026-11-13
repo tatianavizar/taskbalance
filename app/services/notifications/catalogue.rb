@@ -1,0 +1,55 @@
+module Notifications
+  # Every event 50/50 can announce (docs/plan-de-travail.md §3, H1, F4).
+  #
+  #   event_type  the setting (NotificationPreference) that governs it. F4 has
+  #               five rows, so the events that have none of their own share
+  #               the closest one: a pause and its outcome follow
+  #               "Question d'absence"; the gap reset and « Prêt » (B12) follow
+  #               "Répartition du lundi".
+  #   cap         "report" or "alert": at most one of each per person and per
+  #               week, all channels together (D9). nil: not capped.
+  #   target      the route a tap opens (`<target>_path`, plus `path_options`),
+  #               for the e-mail button, the feed and, in lot 8b, the push
+  #               payload. Every target is a route of lot 5b's screens: the
+  #               report (E1, E14), the home (alerts E3, E4, E5, D13), the
+  #               absence question (E11, P5) and the pauses (F10).
+  Entry = Data.define(:kind, :event_type, :cap, :target)
+
+  module Catalogue
+    ENTRIES = [
+      Entry.new("weekly_report",    "weekly_report",    "report", :report),
+      Entry.new("reengagement",     "weekly_report",    "report", :dashboard), # instead of the report, empty week
+      Entry.new("alert_no_logs",   "alert",            "alert",  :dashboard), # E3
+      Entry.new("alert_blocked",    "alert",            "alert",  :dashboard), # E4
+      Entry.new("alert_unblocked",  "alert",            "alert",  :dashboard), # E5
+      Entry.new("task_assigned",    "task_assigned",    nil,      :chores),
+      Entry.new("task_offered",     "task_assigned",    nil,      :chores), # D15
+      Entry.new("task_offer_answered", "task_assigned", nil,      :chores), # D16
+      Entry.new("monday_split",     "monday_split",     nil,      :chores),
+      Entry.new("gap_reset",        "monday_split",     nil,      :chores),
+      Entry.new("household_ready",  "monday_split",     nil,      :dashboard), # B12 « Prêt »
+      Entry.new("absence_question", "absence_question", nil,      :absence_inquiries), # E11, P5, H5
+      Entry.new("absence_outcome",  "absence_question", nil,      :member_pauses),     # F10
+      Entry.new("pause_declared",   "absence_question", nil,      :member_pauses),     # F10
+      # Lot 7, F3. In-app only (decision 2026-11-13): never emailed, shown
+      # to the person on the screen they land on without a household.
+      Entry.new("household_deleted", "alert",           nil,      :dashboard)
+    ].index_by(&:kind).freeze
+
+    # Recorded for the feed, never sent through a channel (no email, no push).
+    # They ignore the alert preference: it governs messages, not this notice.
+    IN_APP_ONLY = %w[household_deleted].freeze
+
+    def self.in_app_only?(kind) = IN_APP_ONLY.include?(kind.to_s)
+
+    # The route options a notification adds to its target: the report opens on
+    # the week it is about (E14), not on the week in progress.
+    def self.path_options(notification)
+      week_start = notification.facts["week_start"] if notification.kind == "weekly_report"
+      week_start ? { semaine: week_start } : {}
+    end
+
+    def self.fetch(kind) = ENTRIES.fetch(kind.to_s)
+    def self.kinds = ENTRIES.keys
+  end
+end

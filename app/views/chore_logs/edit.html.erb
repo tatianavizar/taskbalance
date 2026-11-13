@@ -1,0 +1,46 @@
+<%# E12 : corriger un enregistrement. Seule la personne qui l'a fait y arrive. %>
+<% provide :chrome, "none" %>
+<% provide :title, t("chore_logs.edit.title") %>
+<% entry = @entry %>
+<% log = @log %>
+<% today = entry.today %>
+<div class="flex items-center gap-1">
+  <%= back_button chore_logs_path, label: t("chore_logs.index.title") %>
+  <span class="font-bold"><%= t("chore_logs.index.title") %></span>
+</div>
+<div>
+  <h1 class="screen-title"><%= log.chore_name %></h1>
+  <p class="screen-subtitle">
+    <%= t("chore_logs.edit.logged_at", day: l(log.completed_on, format: "%A %-d %b"), time: hour_label(log.completed_at, log.time_zone)) %>
+    <% if log.household_id.nil? %>· <%= t("chore_logs.edit.detached") %>
+    <% elsif log.counts_in_report? %>· <%= t("chore_logs.edit.week_open", week: log.week.label) %>
+    <% else %>· <%= t("chore_logs.edit.week_closed", week: log.week.label) %><% end %>
+  </p>
+</div>
+
+<%= form_with model: entry, scope: :log_entry, url: chore_log_path(log), method: :patch,
+      data: { controller: "log-form" }, html: { class: "flex flex-col gap-5 flex-1" } do |f| %>
+  <%= f.error_summary %>
+  <%= render "chore_logs/loads", f: f, entry: entry %>
+  <%= render "chore_logs/minutes", f: f, entry: entry %>
+
+  <% if entry.day_locked? %>
+    <div>
+      <span class="field-label"><%= t("chore_logs.form.day_label") %></span>
+      <p class="field-input flex items-center bg-soft-2 text-muted m-0"><%= day_label(log.completed_on, today: today) %></p>
+    </div>
+  <% else %>
+    <%= f.select_field :day, entry.selectable_days.push(log.completed_on).uniq.sort.reverse.map { |d| [ [ day_label(d, today: today), (t("chore_logs.form.journal_only") unless entry.week_open?(d)) ].compact.join(" · "), d.iso8601 ] },
+          label: t("chore_logs.form.day_label"), options: { selected: entry.day.iso8601 },
+          hint: t("chore_logs.form.day_hint", days: LogEntry::MAX_DAYS_BACK) %>
+  <% end %>
+
+  <%= card do %>
+    <p class="m-0 text-[13px] leading-[18px] text-muted"><%= log.counts_in_report? ? t("chore_logs.edit.rule_open") : t("chore_logs.edit.rule_closed") %></p>
+  <% end %>
+
+  <%= sticky_cta do %>
+    <%= f.submit t("chore_logs.edit.submit") %>
+    <%= link_to t("chore_logs.edit.delete"), delete_chore_log_path(log), class: "flex items-center justify-center min-h-[44px] font-bold text-sm" %>
+  <% end %>
+<% end %>

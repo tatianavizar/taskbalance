@@ -1,11 +1,22 @@
 alice_in_smith:
   user: alice
   household: smith_home
+  role: 1
+  color: mint
+  monogram: A
+  created_at: <%= 2.months.ago.to_fs(:db) %>
 
 bob_in_smith:
   user: bob
   household: smith_home
+  role: 0
+  color: blue
+  monogram: B
+  created_at: <%= 1.month.ago.to_fs(:db) %>
 
-alice_in_jones:
-  user: alice
+carol_in_jones:
+  user: carol
   household: jones_home
+  role: 1
+  color: mint
+  monogram: C

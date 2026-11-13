@@ -1,12 +1,21 @@
-<h1><%= t("tasks.index.title") %></h1>
+<% provide :title, t("tasks.index.title") %>
+<div>
+  <h1 class="screen-title"><%= t("tasks.index.title") %></h1>
+  <p class="screen-subtitle"><%= t("tasks.index.intro") %></p>
+</div>
 
-<%= form_with url: chores_add_path, method: :post, local: true do %>
-  <% @tasks.each do |task| %>
-    <div>
-      <%= check_box_tag 'task_ids[]', task.id %>
-      <%= task.name %>
-    </div>
+<% if @tasks_by_category.empty? %>
+  <%= callout do %><p class="m-0"><%= t("tasks.index.empty") %></p><% end %>
+<% else %>
+  <% @tasks_by_category.each do |category, tasks| %>
+    <section class="flex flex-col gap-2" aria-labelledby="cat-<%= category %>">
+      <h2 id="cat-<%= category %>" class="text-base font-bold m-0 font-sans"><%= t("tasks.categories.#{category}", default: category.to_s.humanize) %></h2>
+      <div class="list-stack">
+        <% tasks.each do |task| %>
+          <%= list_row title: task.name,
+                trailing: (tag.span(t("tasks.index.time_required", count: task.time_required), class: "text-[13px] text-muted") if task.time_required.present?) %>
+        <% end %>
+      </div>
+    </section>
   <% end %>
-
-  <%= submit_tag t("tasks.index.submit") %>
 <% end %>

@@ -1,33 +1,69 @@
-<div class="d-flex justify-content-between align-items-center mb-2">
-  <h1><%= t("chores.setup.title") %></h1>
-  <span class="text-muted"><%= @household.name %></span>
+<%# C1 pendant la mise en place, M1 ensuite (Foyer › Tâches du foyer). %>
+<% setting_up = !@household.setup_done? %>
+<% provide :chrome, "none" if setting_up %>
+<% provide :title, setting_up ? t("chores.setup.title") : t("chores.setup.manage_title") %>
+<% active_count = @ticked_task_ids.size + @custom_chores.size %>
+
+<div class="flex items-center gap-2.5">
+  <%= back_button(setting_up ? dashboard_path : household_path(@household)) %>
+  <span class="font-bold"><%= setting_up ? t("setup.title") : t("households.show.breadcrumb_tasks") %></span>
 </div>
-<p class="text-muted mb-4"><%= t("chores.setup.note") %></p>
 
-<%= form_with url: household_chores_setup_path(@household), method: :patch, local: true do %>
-  <% @tasks_by_category.each do |category, tasks| %>
-    <div class="card mb-4">
-      <div class="card-header fw-semibold">
-        <%= t("tasks.categories.#{category}") %>
-      </div>
-      <ul class="list-group list-group-flush">
-        <% tasks.each do |task| %>
-          <li class="list-group-item d-flex justify-content-between align-items-center">
-            <div class="form-check">
-              <%= check_box_tag "task_ids[]", task.id, @existing_task_ids.include?(task.id),
-                    class: "form-check-input", id: "task_#{task.id}" %>
-              <%= label_tag "task_#{task.id}", task.name, class: "form-check-label" %>
-            </div>
-            <small class="text-muted"><%= task.time_required %> min</small>
-          </li>
-        <% end %>
-      </ul>
-    </div>
-  <% end %>
-
-  <%= submit_tag t("chores.setup.submit"), class: "btn btn-primary" %>
+<% if setting_up %>
+  <%= step_progress steps: t("households.new.steps"), current: 3 %>
+  <div>
+    <h1 class="screen-title"><%= t("chores.setup.heading") %></h1>
+    <p class="screen-subtitle"><%= t("chores.setup.intro") %></p>
+  </div>
+<% else %>
+  <div>
+    <h1 class="screen-title"><%= t("chores.setup.manage_title") %></h1>
+    <p class="screen-subtitle"><%= t("chores.setup.manage_intro", count: active_count) %></p>
+  </div>
 <% end %>
 
-<div class="mt-3">
-  <%= link_to t("common.cancel"), household_path(@household) %>
-</div>
+<%= form_with url: household_chores_setup_path(@household), method: :patch, html: { class: "flex flex-col gap-3 flex-1" } do %>
+  <%= hidden_field_tag "task_ids[]", "" %>
+  <% @tasks_by_category.each_with_index do |(category, tasks), index| %>
+    <% done = tasks.count { |task| @ticked_task_ids.include?(task.id) } %>
+    <details class="split-group" <%= "open" if index.zero? %>>
+      <summary>
+        <span class="flex-1"><%= t("tasks.categories.#{category}") %></span>
+        <span class="text-[13px] text-muted font-normal"><%= t("chores.setup.category_count", done: done, total: tasks.size) %></span>
+        <svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg>
+      </summary>
+      <div class="card">
+        <% tasks.each do |task| %>
+          <label for="task_<%= task.id %>" class="split-row cursor-pointer">
+            <%= check_box_tag "task_ids[]", task.id, @ticked_task_ids.include?(task.id), class: "check-input", id: "task_#{task.id}" %>
+            <span class="check-box"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5 9-10"/></svg></span>
+            <span class="flex-1"><%= task.name %><br><span class="text-[13px] leading-[18px] text-muted"><%= loads_label(task.default_mental_load, task.default_execution_load) %> · <%= frequency_label(task.frequency, task.times_per_period) %></span></span>
+            <span class="text-[13px] text-muted"><%= t("tasks.index.time_required", count: task.time_required) %></span>
+          </label>
+        <% end %>
+      </div>
+    </details>
+  <% end %>
+
+  <section class="card" aria-labelledby="custom-title">
+    <div class="flex justify-between items-center min-h-[44px]">
+      <h2 id="custom-title" class="text-base font-bold m-0 font-sans"><%= t("chores.setup.custom_title") %></h2>
+      <span class="text-[13px] text-muted"><%= @custom_chores.size %></span>
+    </div>
+    <% @custom_chores.each do |chore| %>
+      <div class="split-row">
+        <%= link_to chore.effective_name, edit_chore_path(chore), class: "flex-1" %>
+        <span class="text-[13px] text-muted"><%= t("tasks.index.time_required", count: chore.effective_time_required.to_i) %></span>
+        <%= link_to delete_chore_path(chore), class: "flex items-center justify-center", style: "width:44px;height:44px;margin-right:-10px",
+              aria: { label: t("chores.setup.delete_custom", name: chore.effective_name) } do %>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"></path></svg>
+        <% end %>
+      </div>
+    <% end %>
+  </section>
+
+  <%= sticky_cta do %>
+    <%= submit_tag(setting_up ? t("chores.setup.submit_setup", count: active_count) : t("chores.setup.submit"), class: "btn btn-primary", data: { disable_with: false }) %>
+    <%= link_to t("chores.setup.add_custom"), new_chore_path(return_to: "catalogue"), class: "link text-center text-sm min-h-[44px] flex items-center justify-center" %>
+  <% end %>
+<% end %>

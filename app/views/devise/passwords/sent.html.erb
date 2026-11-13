@@ -1,0 +1,20 @@
+<% provide :chrome, "none" %>
+<% provide :title, t("auth.reset_sent.title") %>
+<%= back_button new_user_password_path %>
+<h1 class="screen-title"><%= t("auth.reset_sent.title") %></h1>
+
+<%= callout do %>
+  <p class="m-0"><%= t("auth.reset_sent.body_html", email: ERB::Util.html_escape(@email), time: l(@expires_at, format: :hour),
+                       hours: Devise.reset_password_within.in_hours.to_i) %></p>
+<% end %>
+<p class="m-0 text-sm leading-5 text-muted"><%= t("auth.reset_sent.help") %></p>
+
+<div class="mt-auto flex flex-col gap-3 pb-2">
+  <div data-controller="countdown" data-countdown-seconds-value="<%= @resend_in %>"
+       data-countdown-wait-label-value="<%= t("auth.reset_sent.resend_wait", seconds: "%s") %>">
+    <%= button_to t("auth.reset_sent.resend"), user_password_path, params: { user: { email: @email } },
+          class: "btn btn-secondary", disabled: @resend_in.positive?,
+          form_class: "m-0", data: { countdown_target: "button" } %>
+  </div>
+  <%= link_to t("auth.reset_sent.back"), new_user_session_path, class: "btn btn-primary" %>
+</div>

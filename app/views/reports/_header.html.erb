@@ -1,0 +1,29 @@
+<%# En-tête du Bilan : titre, lien vers le journal, onglets Semaine / 4 semaines, sélecteur de période.
+    `active` : :week ou :history ; `week_href` et `history_href` : les deux onglets, sur la même semaine ;
+    `prev_href` / `next_href` : nil au bord de la période ; `label` : « Semaine 45 » ; `sub` : « 2 nov – 8 nov ». %>
+<% arrow = "min-w-[44px] min-h-[44px] flex items-center justify-center rounded-[22px] no-underline font-bold" %>
+<div class="flex items-center gap-2.5 min-h-[44px]">
+  <h1 class="screen-title flex-1 m-0"><%= t("reports.show.title") %></h1>
+  <%= link_to t("reports.show.journal"), chore_logs_path, class: "font-semibold text-sm no-underline inline-flex items-center min-h-[44px]" %>
+</div>
+
+<nav aria-label="<%= t("reports.period_label") %>" class="grid grid-cols-2 gap-1 rounded-xl bg-soft-2 p-1">
+  <% [ [ :week, t("reports.tabs.week"), week_href ], [ :history, t("reports.tabs.history"), history_href ] ].each do |key, text, href| %>
+    <%= link_to text, href, "aria-current": (active == key ? "page" : nil),
+          class: "min-h-[44px] flex items-center justify-center rounded-[9px] font-semibold text-sm no-underline #{active == key ? "bg-ink text-white" : "text-muted"}" %>
+  <% end %>
+</nav>
+
+<div class="flex items-center justify-between rounded-[22px] border border-line bg-surface min-h-[44px] px-0.5">
+  <% if prev_href %>
+    <%= link_to "‹", prev_href, "aria-label": t("reports.previous"), class: arrow %>
+  <% else %>
+    <span aria-hidden="true" class="<%= arrow %>" style="color:var(--color-line)">‹</span>
+  <% end %>
+  <span class="tabular"><b><%= label %></b> · <span class="text-[13px] leading-[18px] text-muted"><%= sub %></span></span>
+  <% if next_href %>
+    <%= link_to "›", next_href, "aria-label": t("reports.next"), class: arrow %>
+  <% else %>
+    <span aria-hidden="true" class="<%= arrow %>" style="color:var(--color-line)">›</span>
+  <% end %>
+</div>

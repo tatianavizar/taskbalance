@@ -1,0 +1,97 @@
+<%# E11 : la question d'absence d'un foyer de deux. P5 : à trois et plus. Chacune et chacun répond Oui ou Non, la personne
+    absente comprise, jusqu'au mercredi 20:00. La personne concernée peut corriger une réponse donnée à son sujet. %>
+<% provide :chrome, "none" %>
+<% inquiry = @inquiry %>
+<% zone = @household.zone %>
+<% name = inquiry.concerned_first_name %>
+<% first_day = inquiry.first_week_start %>
+<% last_day = inquiry.last_week_start + 6 %>
+<% deadline = moment_label(inquiry.deadline_at, zone) %>
+<% accepting = inquiry.accepting_answers? %>
+<% mine = @answers[@membership.id] %>
+<% outcome = inquiry.current_outcome %>
+<% provide :title, (@concerned ? t("absence.title_self") : t("absence.title", name: name)) %>
+<div class="flex">
+  <%= back_button dashboard_path, label: t("common.close") %>
+</div>
+<div>
+  <h1 class="screen-title"><%= @concerned ? t("absence.title_self") : t("absence.title", name: name) %></h1>
+  <p class="screen-subtitle">
+    <%= @concerned ? t("absence.facts_self", from: l(first_day, format: :short), to: l(last_day, format: :short)) :
+                     t("absence.facts", name: name, from: l(first_day, format: :short), to: l(last_day, format: :short)) %>
+    <% unless inquiry.covered_by_pause? %><%= t("absence.no_pause") %><% end %>
+  </p>
+</div>
+
+<%# Les deux semaines, depuis leur bilan. %>
+<ul class="card m-0 list-none flex flex-col tabular" style="padding:6px 16px" aria-label="<%= t("absence.weeks_label") %>" id="absence-weeks">
+  <% @weeks.each_with_index do |row, i| %>
+    <li class="flex justify-between items-center min-h-[36px] text-sm <%= "border-t border-divider" if i.positive? %>">
+      <span><b><%= t("alerts.first_empty.short_week", number: row[:week].number) %></b> <span class="text-xs text-muted"><%= week_range_label(row[:week]) %></span></span>
+      <b><%= t("alerts.blocked.tasks", count: row[:count]) %></b>
+    </li>
+  <% end %>
+</ul>
+
+<%# Où en est la décision. %>
+<div class="<%= outcome.in?(%i[away_declared regression_cancelled]) ? "callout" : "alert-panel" %> text-sm leading-5" id="absence-outcome">
+  <%= case outcome
+      when :away_declared then t("absence.outcome.away_declared", from: l(first_day, format: :short), to: l(last_day, format: :short))
+      when :regression_cancelled then t("absence.outcome.regression_cancelled", level: level_name(@household.level))
+      when :regressed then t("absence.outcome.regressed", level: level_name(@household.level))
+      when :regression_due then t("absence.outcome.regression_due")
+      else t("absence.outcome.awaiting#{@household.level.zero? ? "_level_zero" : ""}", moment: deadline, level: level_name([ @household.level - 1, 0 ].max))
+      end %>
+  <% if @pause_open %>
+    <div>
+      <% if @concerned %>
+        <%= link_to t("alerts.pause_link"), new_member_pause_path(du: first_day, au: last_day), class: "font-bold underline inline-flex items-center min-h-[44px]" %>
+      <% else %>
+        <%= link_to t("alerts.pause_for_link", name: name), new_member_pause_path(pour: inquiry.household_member_id, du: first_day, au: last_day), class: "font-bold underline inline-flex items-center min-h-[44px]" %>
+      <% end %>
+    </div>
+  <% end %>
+</div>
+
+<%# Qui a répondu. %>
+<section class="flex flex-col gap-2" aria-labelledby="answers-title" id="absence-answers">
+  <h2 id="answers-title" class="m-0 text-[13px] font-bold text-muted font-sans"><%= t("absence.answers_title") %></h2>
+  <div class="list-stack">
+    <% inquiry.respondents.each do |member| %>
+      <% answer = @answers[member.id] %>
+      <% who = member.user_id == current_user.id ? t("households.show.you", name: member.user.first_name) : member.user.first_name %>
+      <%= list_row title: who, leading: avatar(initials: member.monogram, color: member.color, size: 36),
+            subtitle: (answer&.corrected? ? t("absence.corrected_by", name: name, was: t("absence.answer.#{answer.original_answer}")) : nil),
+            trailing: status_pill(answer ? t("absence.answer.#{answer.answer}") : t("absence.answer.none"), tone: (answer ? (answer.yes? ? :soft : :ink) : :outline)) %>
+    <% end %>
+  </div>
+  <% summary = inquiry.answers_summary %>
+  <p class="m-0 text-[13px] leading-[18px] text-muted tabular"><%= t("absence.summary", yes: summary[:yes], no: summary[:no], unanswered: summary[:unanswered]) %></p>
+</section>
+
+<%# Répondre : les deux boutons ont le même poids. %>
+<% if accepting %>
+  <section class="flex flex-col gap-3" aria-labelledby="answer-title" id="absence-form">
+    <h2 id="answer-title" class="m-0 text-[15px] font-bold font-sans"><%= mine ? t("absence.your_answer", answer: t("absence.answer.#{mine.answer}")) : t("absence.your_answer_none") %></h2>
+    <div class="flex flex-col gap-1">
+      <%= button_to t("absence.yes"), answer_absence_inquiry_path(inquiry), params: { answer: "yes" }, class: "btn btn-outline", form: { class: "m-0" } %>
+      <p class="m-0 text-[13px] leading-[18px] text-muted"><%= t("absence.yes_effect", from: l(first_day, format: :short), to: l(last_day, format: :short)) %></p>
+    </div>
+    <div class="flex flex-col gap-1">
+      <%= button_to t("absence.no"), answer_absence_inquiry_path(inquiry), params: { answer: "no" }, class: "btn btn-outline", form: { class: "m-0" } %>
+      <p class="m-0 text-[13px] leading-[18px] text-muted"><%= t("absence.no_effect", moment: deadline) %></p>
+    </div>
+    <p class="m-0 text-[13px] leading-[18px] text-muted"><%= @concerned ? t("absence.rule_self") : t("absence.rule", name: name) %></p>
+  </section>
+
+  <% @inquiry.absence_answers.select { |a| @correctable.include?(a.id) }.each do |answer| %>
+    <section class="card flex flex-col gap-2" aria-labelledby="correct-title-<%= answer.id %>" id="absence-correct-<%= answer.id %>">
+      <b id="correct-title-<%= answer.id %>"><%= t("absence.correct.title", name: answer.household_member.user.first_name, answer: t("absence.answer.#{answer.answer}")) %></b>
+      <p class="m-0 text-[13px] leading-[18px] text-muted"><%= t("absence.correct.body") %></p>
+      <%= button_to t("absence.correct.yes"), correct_absence_inquiry_path(inquiry), method: :patch, params: { answer_id: answer.id, answer: "yes" }, class: "btn btn-outline", form: { class: "m-0" } %>
+      <%= button_to t("absence.correct.no"), correct_absence_inquiry_path(inquiry), method: :patch, params: { answer_id: answer.id, answer: "no" }, class: "btn btn-outline", form: { class: "m-0" } %>
+    </section>
+  <% end %>
+<% else %>
+  <p class="m-0 text-sm leading-5 text-muted" id="absence-closed"><%= t("absence.closed", moment: deadline) %></p>
+<% end %>

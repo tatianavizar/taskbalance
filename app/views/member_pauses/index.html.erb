@@ -1,0 +1,55 @@
+<%# F10 : les pauses du foyer. Tout le foyer voit les dates ; la raison n'est visible que par la personne concernée.
+    La personne en pause arrête sa pause ou en change la fin. %>
+<% provide :title, t("pauses.index.title") %>
+<% zone = @household.zone %>
+<% today = @household.today %>
+<div class="flex items-center gap-2.5">
+  <%= back_button household_path(@household) %>
+  <h1 class="screen-title m-0"><%= t("pauses.index.title") %></h1>
+</div>
+
+<% if (own = @own_current) %>
+  <section class="card flex flex-col gap-2" aria-labelledby="own-pause-title" id="own-pause">
+    <h2 id="own-pause-title" class="m-0 text-lg leading-6 font-bold"><%= t("pauses.own.title") %></h2>
+    <p class="m-0 text-sm leading-5 tabular">
+      <%= pause_range_label(own) %> · <%= pause_day_label(own, today) %>
+    </p>
+    <p class="m-0 text-[13px] leading-[18px] text-muted"><%= t("pauses.own.note") %></p>
+    <p class="m-0 text-[13px] leading-[18px] text-muted"><%= t("pauses.own.stop_note") %></p>
+    <%= button_to t("pauses.own.stop"), stop_member_pause_path(own), class: "btn btn-outline", form: { class: "m-0", data: { turbo_confirm: t("pauses.own.stop_confirm") } } %>
+    <%= link_to t("pauses.own.edit"), edit_member_pause_path(own), class: "btn btn-outline" %>
+  </section>
+<% end %>
+
+<% if @current_and_next.empty? && @past.empty? %>
+  <%= callout do %><p class="m-0"><%= t("pauses.index.none") %></p><% end %>
+<% end %>
+
+<% { current: @current_and_next, past: @past }.each do |key, pauses| %>
+  <% next if pauses.empty? %>
+  <section class="flex flex-col gap-2" aria-labelledby="pauses-<%= key %>">
+    <h2 id="pauses-<%= key %>" class="m-0 text-[13px] font-bold text-muted font-sans"><%= t("pauses.index.#{key}") %></h2>
+    <div class="list-stack">
+      <% pauses.each do |pause| %>
+        <% member = pause.household_member %>
+        <% reason = pause.reason_for(current_user) %>
+        <% by = (pause.declared_by_id && pause.declared_by_id != member.user_id) ? @household.household_members.find { |m| m.user_id == pause.declared_by_id }&.user&.first_name : nil %>
+        <% state = pause.starts_on > today ? :upcoming : (key == :past ? :past : :current) %>
+        <%= list_row title: (member.user_id == current_user.id ? t("households.show.you", name: member.user.first_name) : member.user.first_name),
+              subtitle: safe_join([ pause_range_label(pause), (" · #{t("pauses.index.declared_by", name: by)}" if by) ].compact),
+              leading: avatar(initials: member.monogram, color: member.color, size: 36),
+              trailing: status_pill(t("pauses.state.#{state}"), tone: (state == :current ? :soft : :outline)),
+              id: "pause-#{pause.id}" %>
+        <% if reason %>
+          <p class="m-0 px-4 pb-3 text-[13px] leading-[18px] text-muted" id="pause-reason-<%= pause.id %>"><%= t("pauses.index.reason_private", reason: reason) %></p>
+        <% end %>
+      <% end %>
+    </div>
+  </section>
+<% end %>
+
+<p class="m-0 text-[13px] leading-[18px] text-muted"><%= t("pauses.index.privacy") %></p>
+
+<%= sticky_cta do %>
+  <%= link_to t("pauses.index.declare"), new_member_pause_path, class: "btn btn-primary" %>
+<% end %>

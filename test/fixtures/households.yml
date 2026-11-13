@@ -1,5 +1,8 @@
 smith_home:
   name: Smith Home
+  time_zone: Europe/Paris
+  state: active
 
 jones_home:
   name: Jones Home
+  time_zone: Europe/Paris

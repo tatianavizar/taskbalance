@@ -1,0 +1,27 @@
+<%# C12 : la personne invitée n'a pas encore rejoint. Deux choix de même poids. %>
+<% provide :chrome, "none" %>
+<% provide :title, t("split.title") %>
+<% names = @household.pending_invitations.map { |i| SplitParticipant.for_invitation(i, color: "mint").first_name }.to_sentence %>
+<div class="flex items-center gap-2.5">
+  <%= back_button household_chores_setup_path(@household) %>
+  <span class="font-bold"><%= t("setup.title") %></span>
+</div>
+
+<%= step_progress steps: t("households.new.steps"), current: 4 %>
+
+<div>
+  <h1 class="screen-title"><%= t("split.choice.heading", names: names) %></h1>
+  <p class="screen-subtitle"><%= t("split.choice.subtitle") %></p>
+</div>
+
+<div class="flex flex-col gap-3">
+  <%= link_to household_split_path(@household, mode: "now"), class: "choice-card" do %>
+    <b class="font-display text-base"><%= t("split.choice.now") %></b>
+    <span class="block mt-1 text-sm"><%= t("split.choice.now_body", names: names) %></span>
+  <% end %>
+  <%= button_to wait_household_split_path(@household), class: "choice-card", form: { class: "contents" } do %>
+    <b class="font-display text-base"><%= t("split.choice.wait", names: names) %></b>
+    <span class="block mt-1 text-sm"><%= t("split.choice.wait_body", names: names) %></span>
+  <% end %>
+  <p class="text-[13px] text-muted m-0"><%= t("split.choice.note") %></p>
+</div>

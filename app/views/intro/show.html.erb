@@ -1,0 +1,16 @@
+<% provide :chrome, "none" %>
+<% provide :body_class, { 1 => "theme-mint", 2 => "theme-ink", 3 => "" }.fetch(@step) %>
+
+<div class="flex flex-col gap-4 flex-1">
+  <div class="flex justify-between items-center min-h-[44px]">
+    <%= progress_dots current: @step, total: IntroController::STEPS %>
+    <%= link_to t("intro.skip"), @exit_path, class: "font-bold inline-flex items-center min-h-[44px]" unless @last %>
+  </div>
+
+  <%= render({ 1 => "intro/step1", 2 => "intro/step2", 3 => "intro/step3" }.fetch(@step)) %>
+
+  <div class="mt-auto pb-2">
+    <%= link_to t(@last ? (user_signed_in? ? "intro.done" : "intro.continue") : "intro.next"), @next_path,
+          class: "btn btn-primary #{"btn-on-ink" if @step == 2}", style: "min-height: 56px" %>
+  </div>
+</div>

@@ -1,0 +1,45 @@
+<div style="max-width:560px;margin:0 auto;padding:20px;background:#f6fbf8;color:#0f1a14;font:15px/22px Figtree,system-ui,-apple-system,'Segoe UI',sans-serif">
+  <div style="background:#b9f2d4;border-radius:16px;padding:16px">
+    <div style="font:600 19px/25px Unbounded,system-ui,-apple-system,'Segoe UI',sans-serif"><%= @message.title %></div>
+    <% @message.lines.each do |line| %>
+      <p style="margin:6px 0 0;font-size:14px;line-height:20px"><%= line %></p>
+    <% end %>
+  </div>
+
+  <% if @message.details.any? %>
+    <% if @message.heading %>
+      <p style="margin:14px 0 4px;font-size:14px;font-weight:700"><%= @message.heading %></p>
+    <% end %>
+    <table role="presentation" width="100%" style="margin-top:<%= @message.heading ? 0 : 14 %>px;border:1px solid #dcebe3;border-radius:14px;background:#ffffff;border-collapse:separate;font-size:14px;line-height:22px">
+      <% @message.details.each do |label, value| %>
+        <tr>
+          <td style="padding:6px 14px"><%= label %></td>
+          <td style="padding:6px 14px;text-align:right;font-weight:700"><%= value %></td>
+        </tr>
+      <% end %>
+    </table>
+  <% end %>
+
+  <% if @message.history.any? %>
+    <table role="presentation" width="100%" style="margin-top:12px;border-collapse:separate;border-spacing:6px 0;font-size:13px;text-align:center">
+      <tr>
+        <% @message.history.each do |week| %>
+          <% last = week.equal?(@message.history.last) %>
+          <td style="border:1px solid #dcebe3;border-radius:10px;padding:6px 8px;background:<%= week["balanced"] ? "#1d5c3f" : "#ffffff" %>;color:<%= week["balanced"] ? "#ffffff" : "#0f1a14" %>;<%= "border:1.5px solid #0f1a14;" if last %>">
+            <%= t("notifications.week_short", number: week["week_number"]) %><br><b><%= week["share"] %> %</b>
+          </td>
+        <% end %>
+      </tr>
+    </table>
+  <% end %>
+
+  <p style="margin:18px 0 0">
+    <a href="<%= @cta_url %>" style="display:block;text-align:center;border-radius:26px;background:#0f1a14;color:#b9f2d4;padding:15px 20px;font-weight:700;text-decoration:none"><%= @message.cta %></a>
+  </p>
+
+  <p style="margin:18px 0 0;font-size:12px;line-height:17px;color:#55625b">
+    <%= @message.footer_note %><br>
+    <% if @unsubscribe_url %><a href="<%= @unsubscribe_url %>" style="color:#0f1a14"><%= t("notifications.footer.unsubscribe", type: t("notifications.event_types.#{@event_type}")) %></a>
+    · <% end %><a href="<%= @settings_url %>" style="color:#0f1a14"><%= t("notifications.footer.manage") %></a>
+  </p>
+</div>

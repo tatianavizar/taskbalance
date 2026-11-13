@@ -1,0 +1,22 @@
+<%= @message.title %>
+<% @message.lines.each do |line| %>
+<%= line %>
+<% end %>
+<% if @message.details.any? %>
+
+<%= @message.heading %>
+<% @message.details.each do |label, value| %>
+<%= label %> : <%= value %>
+<% end %>
+<% end %>
+<% if @message.history.any? %>
+
+<%= @message.history.map { |week| "#{t("notifications.week_short", number: week["week_number"])} #{week["share"]} %" }.join(" · ") %>
+<% end %>
+
+<%= @message.cta %> : <%= @cta_url %>
+
+--
+<%= @message.footer_note %>
+<% if @unsubscribe_url %><%= t("notifications.footer.unsubscribe", type: t("notifications.event_types.#{@event_type}")) %> : <%= @unsubscribe_url %>
+<% end %><%= t("notifications.footer.manage") %> : <%= @settings_url %>

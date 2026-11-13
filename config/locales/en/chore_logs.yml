@@ -1,0 +1,12 @@
+en:
+  chore_logs:
+    new:
+      title: "Log this chore"
+    form:
+      load_legend: "What did this involve?"
+      mental_load_label: "Mental load — planning, organising, deciding"
+      execution_load_label: "Execution load — physically doing it"
+      time_spent_label: "Time spent (minutes)"
+      submit: "Log it"
+    flash:
+      created: "Logged: %{chore}."

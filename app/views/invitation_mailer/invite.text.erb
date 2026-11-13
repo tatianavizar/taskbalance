@@ -1,8 +1,12 @@
-You've been invited to join <%= @household.name %> on 50/50.
+<% if @invitation.first_name.present? %><%= t("invitation_mailer.invite.greeting", name: @invitation.first_name) %>
 
-50/50 helps households track domestic task distribution so everyone can see the real numbers.
+<% end %><%= t("invitation_mailer.invite.heading", inviter: @inviter_name) %>
 
-Accept your invitation and create an account:
-<%= @signup_url %>
+<%= t("invitation_mailer.invite.what") %>
 
-This invitation is for <%= @invitation.email %>. If that's not you, ignore this email.
+<%= t("invitation_mailer.invite.visibility", household: @household.name, inviter: @inviter_name) %>
+
+<%= t("invitation_mailer.invite.cta") %> :
+<%= @invitation_url %>
+
+<%= t("invitation_mailer.invite.footer", date: @expires_on, email: @invitation.email) %>

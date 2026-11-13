@@ -1,0 +1,80 @@
+<%# B5: invitation pending. B13: declined. Expired: same card, with a way to invite again. %>
+<% provide :chrome, "none" %>
+<% state = @invitation.current_state %>
+<% provide :title, t("invitations.show.title.#{state}") %>
+<% sent_at = @invitation.last_sent_at.in_time_zone(@household.zone) %>
+<% expires_at = @invitation.expires_at.in_time_zone(@household.zone) %>
+<div class="flex items-center gap-2.5">
+  <%= back_button household_path(@household) %>
+  <%= logo %>
+</div>
+
+<h1 class="screen-title"><%= t("invitations.show.title.#{state}") %></h1>
+
+<% if state == "pending" %>
+  <%= callout do %><%= t("invitations.show.pending_callout", email: @invitation.email, household: @household.name) %><% end %>
+<% end %>
+
+<%= card do %>
+  <div class="flex items-center gap-3">
+    <%= avatar(initials: @invitation.display_name.first.upcase, pending: true) %>
+    <span class="flex-1 min-w-0">
+      <b class="font-semibold"><%= @invitation.display_name %></b> <span class="text-[13px] text-muted break-all"><%= @invitation.email %></span><br>
+      <span class="text-[13px] text-muted">
+        <% if state == "pending" %>
+          <%= t("invitations.show.sent_expires", sent: l(sent_at, format: "%-d %b à %H:%M"), expires: l(expires_at.to_date, format: :short)) %>
+        <% elsif state == "declined" %>
+          <%= t("invitations.show.declined_on", date: l(@invitation.declined_at.in_time_zone(@household.zone).to_date, format: :short)) %>
+        <% else %>
+          <%= t("invitations.show.expired_on", date: l(expires_at.to_date, format: :short)) %>
+        <% end %>
+      </span>
+    </span>
+    <%= status_pill t("invitations.show.pill.#{state}"), tone: (state == "pending" ? :outline : :soft) %>
+  </div>
+
+  <% if state == "pending" %>
+    <% verdict, seconds = @allowance %>
+    <div class="flex items-center gap-5 mt-1.5 pl-[42px]">
+      <% if !@invitation.resendable_by?(current_user) %>
+        <%# Only the sender sees the resend control. %>
+      <% elsif verdict == :ok %>
+        <%= button_to t("invitations.show.resend"), resend_household_invitation_path(@household, @invitation),
+              class: "font-semibold text-sm min-h-[44px] bg-transparent border-0 p-0 cursor-pointer underline" %>
+      <% elsif verdict == :wait %>
+        <span class="font-semibold text-sm min-h-[44px] inline-flex items-center text-muted" aria-disabled="true">
+          <%= t("invitations.show.resend_wait", minutes: (seconds / 60.0).ceil) %>
+        </span>
+      <% else %>
+        <span class="font-semibold text-sm min-h-[44px] inline-flex items-center text-muted" aria-disabled="true">
+          <%= t("invitations.show.resend_limit") %>
+        </span>
+      <% end %>
+      <%= link_to t("invitations.show.cancel"), cancel_household_invitation_path(@household, @invitation),
+            class: "font-semibold text-sm min-h-[44px] inline-flex items-center" %>
+    </div>
+    <div class="pl-[42px] text-[13px] leading-[18px] text-muted">
+      <% unless @invitation.resendable_by?(current_user) %>
+        <%= t("invitations.show.sender_only") %>
+      <% end %>
+      <%= t("invitations.show.resends_used", count: [ @invitation.resends_used, Invitation::MAX_RESENDS ].min, max: Invitation::MAX_RESENDS, minutes: Invitation::MIN_RESEND_GAP.in_minutes.to_i) %>
+    </div>
+  <% end %>
+<% end %>
+
+<% if state == "declined" %>
+  <p class="m-0"><%= t("invitations.show.declined_body", name: @invitation.display_name) %></p>
+<% end %>
+<p class="m-0 text-[13px] leading-[18px] text-muted"><%= t("invitations.show.footnote.#{state}", max: Invitation::MAX_RESENDS) %></p>
+
+<%= sticky_cta do %>
+  <% if state == "pending" %>
+    <%= link_to t("invitations.show.next_setup"), household_chores_setup_path(@household), class: "btn btn-primary" %>
+    <% if @household.room_for_another_person? %>
+      <%= link_to t("invitations.show.invite_another"), new_household_invitation_path(@household), class: "btn btn-secondary" %>
+    <% end %>
+  <% else %>
+    <%= link_to t("invitations.show.invite_again"), new_household_invitation_path(@household, email: @invitation.email, first_name: @invitation.first_name), class: "btn btn-primary" %>
+    <%= link_to t("invitations.show.continue_solo"), household_path(@household), class: "btn btn-secondary" %>
+  <% end %>
+<% end %>

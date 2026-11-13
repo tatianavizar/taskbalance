@@ -1,0 +1,19 @@
+smith_cooking_alice:
+  chore: smith_cooking
+  user: alice
+  created_at: <%= Time.current.to_fs(:db) %>
+
+smith_laundry_bob:
+  chore: smith_laundry
+  user: bob
+  created_at: <%= Time.current.to_fs(:db) %>
+
+smith_custom_alice:
+  chore: smith_custom
+  user: alice
+  created_at: <%= Time.current.to_fs(:db) %>
+
+jones_cooking_carol:
+  chore: jones_cooking
+  user: carol
+  created_at: <%= Time.current.to_fs(:db) %>

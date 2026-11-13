@@ -40,11 +40,6 @@ gem "thruster", require: false
 # Use Active Storage variants [https://guides.rubyonrails.org/active_storage_overview.html#transforming-images]
 # gem "image_processing", "~> 1.2"
 
-gem "bootstrap", "~> 5.2"
-gem "autoprefixer-rails"
-gem "font-awesome-sass", "~> 6.1"
-gem "simple_form", github: "heartcombo/simple_form"
-gem "sassc-rails"
 
 group :development, :test do
   gem "dotenv-rails"
@@ -72,4 +67,13 @@ end
 
 gem "tailwindcss-rails", "~> 4.0"
 gem "devise"
+gem "devise-i18n"
+gem "rails-i18n", "~> 8.0"
 gem "enumerations"
+
+# Back office (lot 9): ActiveAdmin 4 runs on Tailwind and importmap, no Sprockets or Sass.
+# Ransack 6 needs Rails 8.1: stay on 4.x.
+gem "activeadmin", "4.0.0.beta23"
+gem "ransack", "~> 4.4"
+gem "devise-two-factor", "~> 6.4"
+gem "rotp", "~> 6.4"

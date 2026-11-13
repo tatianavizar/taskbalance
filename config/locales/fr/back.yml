@@ -1,0 +1,9 @@
+fr:
+  weeks:
+    label: "Semaine %{number}"
+  households:
+    flash:
+      already_member: "Vous avez déjà un foyer. Un compte appartient à un seul foyer."
+  account_mailer:
+    already_registered:
+      subject: "Vous avez déjà un compte 50/50"

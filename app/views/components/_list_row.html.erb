@@ -1,0 +1,12 @@
+<% tag_name = href ? :a : :div %>
+<%= content_tag tag_name, **options, href: href, class: [ "list-row", options[:class] ].compact.join(" ") do %>
+  <%= leading %>
+  <span class="flex-1 min-w-0">
+    <span class="block font-semibold truncate"><%= title %></span>
+    <% if subtitle %><span class="block text-[13px] leading-[18px] text-muted"><%= subtitle %></span><% end %>
+  </span>
+  <%= trailing %>
+  <% if href %>
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#55625b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="flex-none"><path d="M9 5l7 7-7 7"></path></svg>
+  <% end %>
+<% end %>

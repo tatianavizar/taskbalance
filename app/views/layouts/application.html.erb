@@ -1,30 +1,47 @@
 <!DOCTYPE html>
-<html>
+<html lang="<%= I18n.locale %>">
   <head>
-    <title><%= content_for(:title) || "Task Balance" %></title>
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title><%= page_title %></title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#f6fbf8">
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
 
     <%= yield :head %>
 
-    <%# Enable PWA manifest for installable apps (make sure to enable in config/routes.rb too!) %>
-    <%#= tag.link rel: "manifest", href: pwa_manifest_path(format: :json) %>
-
+    <%= tag.link rel: "manifest", href: pwa_manifest_path(format: :json) %>
     <link rel="icon" href="/icon.png" type="image/png">
     <link rel="icon" href="/icon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="/icon.png">
 
-    <%# Includes all stylesheet files in app/assets/stylesheets %>
-    <%= stylesheet_link_tag "tailwind", "inter-font", "data-turbo-track": "reload" %>
-
+    <%= stylesheet_link_tag "tailwind", "data-turbo-track": "reload" %>
+    <%= javascript_importmap_tags %>
   </head>
 
-  <body>
-    <main class="container mx-auto mt-28 px-5 flex">
-      <%= yield %>
-    </main>
+  <body class="<%= content_for(:body_class) %>">
+    <% with_chrome = chrome? %>
+    <%= link_to t("common.skip_to_content"), "#main", class: "skip-link" unless hotwire_native_app? %>
+    <% with_header = with_chrome && current_household.present? %>
+    <div class="app-shell <%= "with-tabs" if with_chrome %> <%= "no-header" unless with_header %>">
+      <%= app_header(current_household.name, unread: Notification.unread_count_for(current_user)) if with_header %>
+
+      <main id="main" tabindex="-1" class="app-main <%= "app-main-padded-tabs" if with_chrome %>">
+        <% flash.each do |type, message| %>
+          <% if type.to_s == "alert" %>
+            <div class="alert-box" role="alert"><%= message %></div>
+          <% else %>
+            <div class="callout text-sm" role="status"><%= message %></div>
+          <% end %>
+        <% end %>
+
+        <%= yield %>
+      </main>
+
+      <%= tab_bar if with_chrome %>
+    </div>
+    <%= confirm_dialog %>
+    <%= render "components/cookie_banner", with_tabs: with_chrome if cookie_banner? %>
   </body>
 </html>

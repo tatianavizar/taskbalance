@@ -1,7 +1,10 @@
-<p>You've been invited to join <strong><%= @household.name %></strong> on 50/50.</p>
+<% if @invitation.first_name.present? %><p><%= t("invitation_mailer.invite.greeting", name: @invitation.first_name) %></p><% end %>
+<h1><%= t("invitation_mailer.invite.heading", inviter: @inviter_name) %></h1>
 
-<p>50/50 helps households track domestic task distribution so everyone can see the real numbers.</p>
+<p><%= t("invitation_mailer.invite.what") %></p>
 
-<p><%= link_to "Accept invitation and create your account", @signup_url %></p>
+<p><%= t("invitation_mailer.invite.visibility_html", household: tag.strong(@household.name), inviter: @inviter_name) %></p>
 
-<p>This invitation is for <%= @invitation.email %>. If that's not you, ignore this email.</p>
+<p><%= link_to t("invitation_mailer.invite.cta"), @invitation_url %></p>
+
+<p><%= t("invitation_mailer.invite.footer", date: @expires_on, email: @invitation.email) %></p>

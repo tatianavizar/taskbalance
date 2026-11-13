@@ -1,0 +1,37 @@
+<%# C2 : retirer une tâche déjà enregistrée. Ses enregistrements restent. %>
+<% provide :chrome, "none" %>
+<% provide :title, t("chores.setup.manage_title") %>
+<%= back_button household_chores_setup_path(@household) %>
+<div>
+  <h1 class="screen-title">
+    <%= @logged.size == 1 ? t("chores.setup.retire.title", name: @logged.first.effective_name) : t("chores.setup.retire.title_many", count: @logged.size) %>
+  </h1>
+</div>
+
+<div class="flex flex-col gap-3">
+  <% @logged.each do |chore| %>
+    <% counts = chore.log_counts_by_member %>
+    <% first = chore.chore_logs.minimum(:completed_at) %>
+    <p class="m-0">
+      <% if @logged.size > 1 %><b><%= chore.effective_name %></b> · <% end %>
+      <%= t("chores.setup.retire.logged", count: counts.values.sum,
+            date: l(first.in_time_zone(@household.zone).to_date, format: :short),
+            names: counts.map { |name, count| t("chores.delete.by_member", name: name, count: count) }.to_sentence) %>
+    </p>
+  <% end %>
+  <%= callout do %><p class="m-0 text-sm"><%= t("chores.setup.retire.kept") %></p><% end %>
+</div>
+
+<%= sticky_cta do %>
+  <%= form_with url: household_chores_setup_path(@household), method: :patch do %>
+    <%= hidden_field_tag "task_ids[]", "" %>
+    <% @task_ids.each do |id| %><%= hidden_field_tag "task_ids[]", id, id: nil %><% end %>
+    <%= hidden_field_tag :confirm_retire, "1" %>
+    <%= submit_tag t("chores.setup.retire.confirm"), class: "btn btn-outline", data: { disable_with: false } %>
+  <% end %>
+  <%= form_with url: household_chores_setup_path(@household), method: :patch do %>
+    <%= hidden_field_tag "task_ids[]", "" %>
+    <% (@task_ids + @logged.map(&:task_id)).uniq.each do |id| %><%= hidden_field_tag "task_ids[]", id, id: nil %><% end %>
+    <%= submit_tag t("chores.setup.retire.keep"), class: "btn btn-secondary", data: { disable_with: false } %>
+  <% end %>
+<% end %>

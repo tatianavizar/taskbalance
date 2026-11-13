@@ -1,0 +1,86 @@
+fr:
+  households:
+    index:
+      title: "Mon foyer"
+      empty: "Vous n'avez pas encore de foyer."
+      new_link: "Créer le foyer"
+    show:
+      title: "Foyer"
+      created: "Créé le %{date}"
+      level: "niveau %{level}"
+      members_title: "Membres"
+      you: "%{name} (vous)"
+      role_since:
+        manager: "Gestionnaire · depuis le %{date}"
+        member: "Membre · depuis le %{date}"
+      invite_link: "Inviter un membre"
+      invitations_title: "Invitations"
+      organisation_title: "Organisation"
+      rename: "Modifier le nom du foyer"
+      leave: "Quitter le foyer"
+      delete: "Supprimer le foyer"
+      delete_by_manager: "Seule la personne qui gère le foyer, %{name}, peut le supprimer."
+      back_link: "Retour"
+      breadcrumb_tasks: "Foyer › Tâches du foyer"
+      breadcrumb_split: "Foyer › Répartition"
+    new:
+      title: "Créer le foyer"
+      setup: "Mise en place"
+      steps: [ "Foyer", "Partenaire", "Tâches", "Répartition" ]
+      heading: "Comment s'appelle votre foyer ?"
+      subtitle: "C'est le foyer qui progresse, pas chaque personne. Ce nom n'est visible que par ses membres."
+      submit: "Continuer"
+    edit:
+      title: "Modifier le foyer"
+    form:
+      name_label: "Nom du foyer"
+      name_hint: "%{count} caractères maximum."
+      name_placeholder: "Ex. : Chez Virginie et Karim"
+      submit_create: "Créer le foyer"
+      submit_update: "Enregistrer"
+    flash:
+      created: "Foyer créé."
+      updated: "Foyer modifié."
+      destroyed: "« %{name} » est supprimé."
+    departure:
+      title: "Quitter %{name} ?"
+      journal_html:
+        one: "<b>Votre journal vous suit</b> : votre enregistrement du %{date} reste dans votre compte."
+        other: "<b>Votre journal vous suit</b> : vos %{count} enregistrements depuis le %{date} restent dans votre compte."
+      journal_empty_html: "<b>Votre journal vous suit</b> : il reste dans votre compte."
+      totals: "Le foyer garde ses totaux passés, sans le détail de vos tâches."
+      chores:
+        one: "Votre tâche assignée passe à %{names}. Elle sera revue dans la répartition de lundi."
+        other: "Vos %{count} tâches assignées passent à %{names}. Elles seront revues dans la répartition de lundi."
+      manager: "%{name} devient gestionnaire."
+      last_member: "Vous êtes la seule personne du foyer : il est supprimé, avec ses tâches, sa répartition et sa progression."
+      irreversible: "Pour revenir, il faudra une nouvelle invitation."
+      confirm: "Quitter le foyer"
+      stay: "Rester"
+      flash: "Vous avez quitté « %{name} »."
+    delete:
+      title: "Supprimer %{name} ?"
+      for: "pour %{name}"
+      definitive: "Action définitive, %{names}."
+      what:
+        zero: "Le foyer, sa répartition et sa progression sont supprimés. Chaque membre garde son journal."
+        one: "Le foyer, sa tâche, sa répartition et sa progression sont supprimés. Chaque membre garde son journal."
+        other: "Le foyer, ses %{count} tâches, sa répartition et sa progression sont supprimés. Chaque membre garde son journal."
+      label: "Pour confirmer, saisissez le nom du foyer"
+      manager_hint: "Seule la personne qui gère le foyer peut le supprimer."
+      email_hint:
+        one: "%{names} recevra un email."
+        other: "%{names} recevront un email."
+      confirm: "Supprimer définitivement"
+      manager_only: "Seule la personne qui gère le foyer peut le supprimer."
+  household_members:
+    new:
+      title: "Inviter un membre"
+      household_label: "Foyer"
+      email_label: "Email de la personne à inviter"
+      email_placeholder: "prenom@exemple.fr"
+      submit: "Envoyer l'invitation"
+    flash:
+      created: "%{email} a rejoint le foyer."
+      invited: "Invitation envoyée à %{email}."
+      not_found: "Aucun compte avec cet email."

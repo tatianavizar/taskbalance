@@ -1,7 +1,27 @@
-<h1 class="mb-4"><%= t("households.new.title") %></h1>
-
-<%= render "form" %>
-
-<div class="mt-3">
-  <%= link_to t("common.back"), households_path %>
+<% provide :chrome, "none" %>
+<% provide :title, t("households.new.title") %>
+<div class="flex items-center gap-2.5">
+  <%= back_button(dashboard_path) %>
+  <%= logo %>
+  <span class="font-bold"><%= t("households.new.setup") %></span>
 </div>
+
+<%= step_progress steps: t("households.new.steps"), current: 1 %>
+
+<div>
+  <h1 class="screen-title"><%= t("households.new.heading") %></h1>
+  <p class="screen-subtitle"><%= t("households.new.subtitle") %></p>
+</div>
+
+<%= form_with model: @household, html: { class: "flex flex-col gap-4 flex-1" } do |f| %>
+  <%# One field: the message sits under it (B2), no summary box on top. %>
+  <%= f.field :name, label: t("households.form.name_label"), autofocus: true, autocomplete: "off",
+        hint: t("households.form.name_hint", count: Household::NAME_MAX_LENGTH) %>
+  <% @household.errors[:base].each do |message| %>
+    <div class="alert-box" role="alert"><%= message %></div>
+  <% end %>
+
+  <%= sticky_cta do %>
+    <%= f.submit t("households.new.submit") %>
+  <% end %>
+<% end %>

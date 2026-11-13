@@ -1,0 +1,5 @@
+<%# Bandeau cookies : il informe (pas de choix à faire, seuls des cookies nécessaires sont posés) et un « OK » le ferme. %>
+<aside id="cookie-banner" class="cookie-banner <%= "with-tabs" if with_tabs %>" role="region" aria-label="<%= t("cookies.banner.label") %>">
+  <p class="m-0 flex-1"><%= t("cookies.banner.text_html", more: link_to(t("cookies.banner.more"), privacy_path)) %></p>
+  <%= button_to t("cookies.banner.ok"), cookie_notice_path, class: "cookie-ok", form: { class: "m-0" } %>
+</aside>

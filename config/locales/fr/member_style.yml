@@ -1,0 +1,23 @@
+fr:
+  member_style:
+    title: "Votre pastille"
+    subtitle: "Elle vous représente partout dans le foyer : tâches, répartition, bilan."
+    step: "Étape 1 sur 3"
+    color: "Couleur"
+    color_hint: "Une couleur par personne dans le foyer."
+    letters: "Lettres affichées"
+    letters_hint: "%{max} lettres au plus. Vide : l'initiale, ou initiale et dernière lettre du prénom quand deux initiales coïncident."
+    continue: "Continuer"
+    row: "Ma pastille"
+    colors:
+      mint: "Menthe"
+      blue: "Bleu"
+      stone: "Pierre"
+      sky: "Ciel"
+      sage: "Sauge"
+      sand: "Sable"
+    errors:
+      color_taken: "Cette couleur est déjà prise dans le foyer. Choisissez-en une autre."
+      monogram_length: "Les lettres affichées : %{max} au plus."
+    flash:
+      saved: "Pastille enregistrée."

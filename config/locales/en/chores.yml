@@ -44,7 +44,5 @@ en:
       created: "Chore added."
       updated: "Chore updated."
       destroyed: "Chore removed."
-      added: "Selected tasks have been added."
-      none_selected: "No tasks selected."
       household_required: "Please select a household first."
       cannot_delete_catalogue: "Catalogue chores cannot be deleted. Remove it from the household chores setup instead."

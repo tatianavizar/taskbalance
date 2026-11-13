@@ -1,95 +1,72 @@
-<%= form_with model: @chore, local: true do |f| %>
-  <%= f.hidden_field :household_id %>
-
-  <% if @chore.new_record? %>
-    <%# Custom chore create: category select + free-text name %>
-    <div class="mb-3">
-      <%= f.label :category, t("chores.form.category_label"), class: "form-label fw-semibold" %>
-      <%= f.select :category,
-            Chore::CATEGORIES.map { |c| [t("tasks.categories.#{c}"), c] },
-            { prompt: t("chores.form.category_prompt") },
-            { class: "form-select #{'is-invalid' if @chore.errors[:category].any?}" } %>
-      <% if @chore.errors[:category].any? %>
-        <div class="invalid-feedback"><%= @chore.errors[:category].first %></div>
-      <% end %>
+<%# C5, C6 : tâche perso (ou modification d'une tâche du foyer). %>
+<%= form_with model: @chore, html: { class: "flex flex-col gap-5 flex-1" } do |f| %>
+  <%= hidden_field_tag :return_to, @return_to if @return_to %>
+  <% if @chore.errors.any? %>
+    <% order = %i[custom_name category loads time_required assignees frequency times_per_period anchor_on] %>
+    <% fields = (@chore.errors.attribute_names - [ :base ]).sort_by { |a| order.index(a) || order.size }.map { |a| Chore.human_attribute_name(a) } %>
+    <div class="alert-box" role="alert" id="chore_error_summary">
+      <%= sanitize t("forms.error_summary", count: fields.size), tags: %w[b] %>
+      <% if fields.any? %><br><%= fields.join(" · ") %><% end %>
+      <% @chore.errors[:base].each do |message| %><br><%= message %><% end %>
     </div>
+  <% end %>
 
-    <div class="mb-3">
-      <%= f.label :custom_name, t("chores.form.name_label"), class: "form-label fw-semibold" %>
-      <%= f.text_field :custom_name, placeholder: t("chores.form.name_placeholder"),
-            class: "form-control #{'is-invalid' if @chore.errors[:base].any?}" %>
+  <% if @chore.catalogue_chore? %>
+    <div>
+      <span class="field-label"><%= t("chores.form.task_label") %></span>
+      <p class="field-input flex items-center bg-soft-2 text-muted m-0"><%= @chore.effective_name %></p>
     </div>
-
-  <% elsif @chore.catalogue_chore? %>
-    <%# Catalogue chore edit: name is read-only %>
-    <div class="mb-3">
-      <%= f.label :task_id, t("chores.form.task_label"), class: "form-label fw-semibold" %>
-      <p class="form-control-plaintext"><%= @chore.task.name %></p>
-    </div>
-
   <% else %>
-    <%# Custom chore edit: name + category are editable %>
-    <div class="mb-3">
-      <%= f.label :category, t("chores.form.category_label"), class: "form-label fw-semibold" %>
-      <%= f.select :category,
-            Chore::CATEGORIES.map { |c| [t("tasks.categories.#{c}"), c] },
-            { include_blank: false },
-            { class: "form-select" } %>
-    </div>
-
-    <div class="mb-3">
-      <%= f.label :custom_name, t("chores.form.name_label"), class: "form-label fw-semibold" %>
-      <%= f.text_field :custom_name, class: "form-control" %>
-    </div>
+    <%= f.field :custom_name, label: t("chores.form.name_label"), placeholder: t("chores.form.name_placeholder"), autocomplete: "off" %>
   <% end %>
 
-  <% if @chore.errors[:base].any? %>
-    <div class="alert alert-danger py-1 mb-3"><%= @chore.errors[:base].first %></div>
-  <% end %>
-
-  <div class="mb-3">
-    <%= f.label :time_required, t("chores.form.time_required_label"), class: "form-label fw-semibold" %>
-    <%= f.number_field :time_required, min: 1,
-          placeholder: @chore.task&.time_required || "e.g. 30",
-          class: "form-control #{'is-invalid' if @chore.errors[:time_required].any?}" %>
-    <% if @chore.persisted? && @chore.catalogue_chore? %>
-      <div class="form-text"><%= t("chores.form.time_required_hint", task_default: @chore.task.time_required) %></div>
+  <fieldset class="min-w-0 flex flex-col gap-2" <%= tag.attributes("aria-describedby": ("chore_loads_error" if @chore.errors[:loads].any?)) %>>
+    <legend class="field-label"><%= t("chores.form.loads_legend") %></legend>
+    <% [ [ :mental_load, :mental ], [ :execution_load, :execution ] ].each do |attribute, key| %>
+      <label class="card flex items-start gap-3 cursor-pointer" for="chore_<%= attribute %>">
+        <%= f.check_box attribute, class: "check-input" %>
+        <span class="check-box"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5 9-10"/></svg></span>
+        <span><b><%= t("chores.form.#{key}_title") %></b><br><span class="text-[13px] leading-[18px] text-muted"><%= t("chores.form.#{key}_hint") %></span></span>
+      </label>
     <% end %>
-  </div>
-
-  <div class="mb-3">
-    <p class="form-label fw-semibold mb-1"><%= t("chores.form.assigned_to_label") %></p>
-    <%= f.collection_select :assigned_to_id, @members, :id, :email,
-          { include_blank: t("chores.form.assigned_to_prompt") },
-          { class: "form-select" } %>
-  </div>
-
-  <fieldset class="mb-3">
-    <legend class="form-label fw-semibold">
-      Load type
-      <small class="text-muted fw-normal">— <%= t("chores.form.load_note") %></small>
-    </legend>
-    <div class="form-check">
-      <%= f.check_box :mental_load, class: "form-check-input", id: "chore_mental_load" %>
-      <%= f.label :mental_load, t("chores.form.mental_load_label"), class: "form-check-label" %>
-    </div>
-    <div class="form-check">
-      <%= f.check_box :execution_load, class: "form-check-input", id: "chore_execution_load" %>
-      <%= f.label :execution_load, t("chores.form.execution_load_label"), class: "form-check-label" %>
-    </div>
+    <% if @chore.errors[:loads].any? %>
+      <div class="field-error" id="chore_loads_error"><span class="field-error-icon" aria-hidden="true">!</span><span><%= @chore.errors[:loads].first %></span></div>
+    <% end %>
   </fieldset>
 
-  <div class="mb-4">
-    <%= f.label :due_date, t("chores.form.due_date_label"), class: "form-label fw-semibold" %>
-    <%= f.date_field :due_date, class: "form-control" %>
-  </div>
+  <%= f.field :time_required, as: :number, label: t("chores.form.time_required_label"), min: 1, inputmode: "numeric",
+        placeholder: (@chore.task&.time_required || 30), hint: t("chores.form.time_required_hint") %>
 
-  <div class="d-flex gap-2 align-items-center">
-    <%= f.submit @chore.new_record? ? t("chores.form.submit_create") : t("chores.form.submit_update"),
-          class: "btn btn-primary" %>
-
-    <% if @chore.persisted? && @chore.custom_chore? %>
-      <%= link_to t("chores.form.delete"), chore_path(@chore), data: { turbo_method: :delete, turbo_confirm: t("chores.form.delete_confirm") }, class: "btn btn-outline-danger ms-auto" %>
+  <fieldset class="min-w-0" <%= tag.attributes("aria-describedby": [ "chore_assignees_hint", ("chore_assignees_error" if @chore.errors[:assignees].any?) ].compact.join(" ")) %>>
+    <legend class="field-label"><%= t("chores.form.assignees_label") %></legend>
+    <%= hidden_field_tag "chore[assignee_keys][]", "" %>
+    <div class="flex gap-2 flex-wrap">
+      <% @participants.each do |participant| %>
+        <% id = "chore_assignee_#{participant.key.tr(':', '_')}" %>
+        <%= check_box_tag "chore[assignee_keys][]", participant.key, @chore.assignee_keys.include?(participant.key), id: id, class: "person-input", multiple: true %>
+        <label for="<%= id %>" class="person-chip">
+          <%= avatar(initials: participant.monogram, color: participant.color, pending: participant.provisional?, size: 30) %>
+          <%= participant.first_name %>
+        </label>
+      <% end %>
+    </div>
+    <div class="field-hint" id="chore_assignees_hint"><%= t("chores.form.assignees_hint") %></div>
+    <% if @chore.errors[:assignees].any? %>
+      <div class="field-error" id="chore_assignees_error"><span class="field-error-icon" aria-hidden="true">!</span><span><%= @chore.errors[:assignees].first %></span></div>
     <% end %>
-  </div>
+  </fieldset>
+
+  <%= f.segmented :frequency, Recurrence::FREQUENCIES.keys.rotate(-1).map { |k| [ t("chores.form.frequencies.#{k}"), k.to_s ] },
+        label: t("chores.form.frequency_label") %>
+
+  <%= f.field :times_per_period, as: :number, label: t("chores.form.times_label"), min: 1, max: Recurrence::MAX_TIMES_PER_PERIOD, inputmode: "numeric" %>
+
+  <%= f.field :anchor_on, as: :date, label: t("chores.form.anchor_label"), hint: t("chores.form.anchor_hint") %>
+
+  <%= sticky_cta do %>
+    <%= f.submit @chore.new_record? ? t("chores.form.submit_create") : t("chores.form.submit_update") %>
+    <% if @chore.persisted? && @chore.custom_chore? %>
+      <%= link_to t("chores.form.delete"), delete_chore_path(@chore), class: "btn btn-outline" %>
+    <% end %>
+  <% end %>
 <% end %>

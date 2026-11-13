@@ -2,7 +2,9 @@ en:
   tasks:
     index:
       title: "Task catalogue"
-      submit: "Next"
+      intro: "Chores are added to a household from its setup screen."
+      empty: "The catalogue is empty."
+      time_required: "%{count} min"
     categories:
       cooking: "Cooking"
       groceries: "Groceries"
@@ -12,13 +14,3 @@ en:
       admin: "Admin"
       maintenance: "Maintenance"
       other: "Other"
-    liking_session:
-      title: "My preferences"
-      submit: "Save preferences"
-      empty: "No chores set up for this household yet."
-      flash:
-        saved: "Preferences saved."
-  liked_tasks:
-    flash:
-      saved: "Preference saved."
-      error: "Could not save preference."

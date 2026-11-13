@@ -1,9 +1,8 @@
-<%= simple_form_for @household do |f| %>
-  <%= f.error_notification %>
+<%= form_with model: @household, html: { class: "flex flex-col gap-4 flex-1" } do |f| %>
+  <%= f.error_summary %>
+  <%= f.field :name, label: t("households.form.name_label"), placeholder: t("households.form.name_placeholder"), autofocus: true %>
 
-  <div class="mb-3">
-    <%= f.input :name, label: t("households.form.name_label"), placeholder: t("households.form.name_placeholder") %>
-  </div>
-
-  <%= f.submit @household.new_record? ? t("households.form.submit_create") : t("households.form.submit_update"), class: "btn btn-primary" %>
+  <%= sticky_cta do %>
+    <%= f.submit @household.new_record? ? t("households.form.submit_create") : t("households.form.submit_update") %>
+  <% end %>
 <% end %>

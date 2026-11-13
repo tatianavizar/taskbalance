@@ -1,0 +1,12 @@
+<%# E11, P5 : une question d'absence est ouverte. La carte mène à l'écran où répondre. %>
+<% name = inquiry.concerned_first_name %>
+<%= card href: absence_inquiry_path(inquiry), id: "alert-inquiry-#{inquiry.id}", class: "flex items-center justify-between gap-3 min-h-[44px]" do %>
+  <span>
+    <b class="block"><%= viewer_concerned ? t("absence.title_self") : t("absence.title", name: name) %></b>
+    <span class="block text-[13px] leading-[18px] text-muted">
+      <%= t("absence.deadline", moment: moment_label(inquiry.deadline_at, inquiry.household.zone)) %>
+      · <%= viewer_answered ? t("absence.you_answered") : t("absence.you_not_answered") %>
+    </span>
+  </span>
+  <span aria-hidden="true">›</span>
+<% end %>

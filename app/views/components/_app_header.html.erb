@@ -1,0 +1,12 @@
+<header class="app-header">
+  <%= logo %>
+  <span class="flex-1 font-bold truncate"><%= name %></span>
+  <% if unread %>
+    <%= link_to notifications_path, class: "relative flex items-center justify-center w-11 h-11 -mr-2", aria: { label: (unread.to_i.positive? ? t("notifications.feed.bell_unread", count: unread.to_i) : t("notifications.feed.bell")) } do %>
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"></path></svg>
+      <% if unread.to_i.positive? %>
+        <span class="absolute top-1.5 right-1 min-w-4 h-4 px-1 rounded-full bg-ink text-white text-[10px] leading-4 font-bold text-center" aria-hidden="true"><%= unread %></span>
+      <% end %>
+    <% end %>
+  <% end %>
+</header>

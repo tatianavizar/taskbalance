@@ -1,0 +1,45 @@
+fr:
+  common:
+    back: "Retour"
+    cancel: "Annuler"
+    close: "Fermer"
+    skip_to_content: "Aller au contenu"
+    confirm: "Confirmer"
+    next: "Suivant"
+    save: "Enregistrer"
+    edit: "Modifier"
+    delete: "Supprimer"
+    not_authorized: "Vous n'avez pas accès à cette page."
+    members_count:
+      one: "%{count} membre"
+      other: "%{count} membres"
+  nav:
+    label: "Navigation principale"
+    home: "Accueil"
+    tasks: "Tâches"
+    report: "Bilan"
+    household: "Foyer"
+    log_out: "Se déconnecter"
+    log_in: "Se connecter"
+  forms:
+    error_summary:
+      one: "<b>1 champ à corriger</b> avant de continuer."
+      other: "<b>%{count} champs à corriger</b> avant de continuer."
+  app:
+    name: "50/50"
+  errors:
+    back_home: "Retour à l'accueil"
+    code: "Erreur %{code}"
+    not_found:
+      title: "Page introuvable"
+      body: "Ce lien ne mène à rien. La tâche ou le foyer a peut-être été supprimé, ou l'adresse est incomplète."
+    forbidden:
+      title: "Ce foyer n'est pas le vôtre"
+      cta: "Retour à mon foyer"
+      body: "Vous n'êtes pas membre de ce foyer : ses tâches et ses chiffres ne sont visibles que par ses membres. Pour le rejoindre, demandez une invitation à l'un d'eux."
+    unprocessable:
+      title: "Action refusée"
+      body: "La demande n'a pas pu être traitée. Rechargez la page et réessayez."
+    server:
+      title: "Erreur de notre côté"
+      body: "Quelque chose a cassé sur nos serveurs. Rien de ce que vous avez déjà enregistré n'est perdu. Réessayez dans un instant."

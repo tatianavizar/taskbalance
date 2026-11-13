@@ -1,0 +1,26 @@
+<%# E16 : confirmer avant de supprimer. Rien n'est supprimé avant ce bouton. %>
+<% provide :chrome, "none" %>
+<% provide :title, t("chore_logs.delete.title") %>
+<%= back_button edit_chore_log_path(@log) %>
+<div>
+  <h1 class="screen-title"><%= t("chore_logs.delete.title") %></h1>
+</div>
+
+<div class="flex flex-col gap-4">
+  <p class="m-0 text-sm leading-5">
+    <%= t("chore_logs.delete.summary", name: @log.chore_name, minutes: @log.time_spent, day: l(@log.completed_on, format: "%A %-d %b")) %>
+    <% if @log.household_id.nil? %>
+      <%= t("chore_logs.delete.consequence_detached") %>
+    <% elsif @log.counts_in_report? %>
+      <%= t("chore_logs.delete.consequence_open", week: @log.week.number) %>
+    <% else %>
+      <%= t("chore_logs.delete.consequence_closed", week: @log.week.number) %>
+    <% end %>
+    <%= t("chore_logs.delete.final") %>
+  </p>
+</div>
+
+<%= sticky_cta do %>
+  <%= button_to t("chore_logs.delete.confirm"), chore_log_path(@log), method: :delete, class: "btn btn-outline", form: { class: "m-0" } %>
+  <%= link_to t("chore_logs.delete.keep"), edit_chore_log_path(@log), class: "btn btn-secondary" %>
+<% end %>

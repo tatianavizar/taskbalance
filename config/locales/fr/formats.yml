@@ -1,0 +1,10 @@
+fr:
+  date:
+    abbr_month_names: [~, janv, févr, mars, avr, mai, juin, juil, août, sept, oct, nov, déc]
+    formats:
+      short: "%-d %b"
+      day_month: "%-d %B"
+      weekday_day_month: "%A %-d %B"
+  time:
+    formats:
+      hour: "%H:%M"
