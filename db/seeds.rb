@@ -93,3 +93,14 @@ Chore.catalogue.where(mental_load: false, execution_load: false).joins(:task).fi
 end
 
 puts "Done — #{Task.count} tasks in catalogue."
+
+# Development only: a ready-made, confirmed account to sign in with.
+# Never in production (bin/docker-entrypoint runs these seeds on every boot).
+if Rails.env.development?
+  dev_user = User.find_or_initialize_by(email: "test@exemple.fr")
+  dev_user.first_name = "Test" if dev_user.first_name.blank?
+  dev_user.password = "Password123*"
+  dev_user.skip_confirmation! unless dev_user.confirmed?
+  dev_user.save!
+  puts "Dev account: test@exemple.fr / Password123*"
+end
