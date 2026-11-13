@@ -332,3 +332,4 @@ The whole UI and the 49-task catalogue are in English.
 | Journal CSV export (data portability) — **out of V1**, product decision 2026-11-08 | Medium | S |
 | Dormant households: email at 12 months of inactivity, then deletion 30 days later | Low before launch | M |
 | Wire `RecurringChoreScheduler` (it exists but is never called) | Medium | S |
+| Passkeys (Face ID, Touch ID, empreinte Android) : connexion sans mot de passe sur le web et dans les apps natives (WebAuthn, table des clés par compte, « Ajouter Face ID » dans Mon compte). Retire la friction de la connexion qui suit une confirmation d'email ouverte sur un autre appareil ; la première connexion sur un appareil reste au mot de passe. **Après le lancement**, décision 2026-11-13. La confirmation d'email ne connecte jamais d'elle-même (compte créé avec l'adresse de quelqu'un d'autre, liens ouverts par les antivirus de messagerie). | High | M |
